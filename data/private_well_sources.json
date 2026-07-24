@@ -1,0 +1,103 @@
+{
+  "family": "private-wells-and-septic",
+  "policy": "These are private-infrastructure records and contextual risk indicators for the roughly 15-20% of county residents on private wells that regulated public-utility (SDWIS) data misses. A neighborhood well measurement is never presented as the submitted household's water; only an address-specific laboratory sample can do that.",
+  "sources": [
+    {
+      "id": "fava",
+      "role": "aquifer-vulnerability",
+      "authority": "FGS/FDEP Florida Aquifer Vulnerability Assessment"
+    },
+    {
+      "id": "fdoi-well-permits",
+      "role": "well-permit-history",
+      "authority": "SJRWMD / delegated county well construction permits"
+    },
+    {
+      "id": "fdep-contamination-sites",
+      "role": "site-proximity",
+      "authority": "Florida DEP"
+    },
+    {
+      "id": "septic-density",
+      "role": "nitrate-risk-context",
+      "authority": "FDOH / FDEP OSTDS inventory"
+    },
+    {
+      "id": "seminole-14-dioxane-study",
+      "name": "Seminole County 1,4-Dioxane Private Well Data Study",
+      "role": "measured-private-well-contaminant",
+      "authority": "Seminole County",
+      "kind": "official_county_field_study",
+      "url": "https://www.seminolecountyfl.gov/departments-services/utilities/utilities-engineering/dioxane",
+      "maps": "Measured 1,4-dioxane concentrations inside actual private neighborhood wells",
+      "granularity": "private-well-sample",
+      "trust": 1.0,
+      "notes": "County-issued field data on private infrastructure. A measurement here applies to the sampled well, not automatically to any other address.",
+      "publishes": [
+        "Recent 1,4-Dioxane testing results from Seminole County water treatment plants",
+        "Latest available 1,4-dioxane concentrations from utility providers other than Seminole County",
+        "1,4-Dioxane concentrations: private well data collected during the 2023-2024 Seminole County Water Quality Study"
+      ],
+      "format": "Linked PDF data sheets discovered from the official county page",
+      "action_level_ug_L": 0.35,
+      "action_level_note": "0.35 ug/L is a health advisory / cleanup target level, not an enforceable federal MCL.",
+      "verified_on": "2026-07-22"
+    },
+    {
+      "id": "fdoh-seminole-dws",
+      "name": "FDOH in Seminole County - Drinking Water Services",
+      "role": "private-system-regulation-and-testing",
+      "authority": "Florida Department of Health in Seminole County",
+      "kind": "official_state_health_records",
+      "url": "https://seminole.floridahealth.gov/programs-and-services/environmental-health/drinking-water/index.html",
+      "monitors": "Limited-use commercial wells and private testing records; localized permitting metrics",
+      "granularity": "private-and-limited-use-well",
+      "trust": 1.0
+    },
+    {
+      "id": "sjrwmd-well-permits",
+      "name": "SJRWMD Water Well Construction Permit sites (District issued)",
+      "role": "well-location",
+      "authority": "St. Johns River Water Management District",
+      "kind": "official_well_location_geometry",
+      "url": "https://data-floridaswater.opendata.arcgis.com/items/1ae18f9ade2b4af293e8de9251f6336d",
+      "arcgis_host": "https://services.arcgis.com/s8wtJX9suxFen6TA",
+      "county_field": "COUNTY",
+      "county_value": "SEMINOLE",
+      "granularity": "well-point",
+      "trust": 0.95
+    },
+    {
+      "id": "sjrwmd-well-completion-delegated",
+      "name": "SJRWMD Well completion report sites (delegated counties)",
+      "role": "well-location",
+      "authority": "St. Johns River Water Management District",
+      "kind": "official_well_location_geometry",
+      "url": "https://data-floridaswater.opendata.arcgis.com/datasets/86b251b0729c4249b2b890b567a51af4_0",
+      "arcgis_host": "https://services.arcgis.com/s8wtJX9suxFen6TA",
+      "county_field": "COUNTY",
+      "county_value": "SEMINOLE",
+      "granularity": "well-point",
+      "trust": 0.9,
+      "notes": "Geocoded from drill reports; location quality varies and erroneous tabular values may exist."
+    },
+    {
+      "id": "sjrwmd-cup",
+      "name": "SJRWMD Consumptive Use Permits (public water supply areas)",
+      "role": "allocation-and-service-area",
+      "authority": "St. Johns River Water Management District",
+      "kind": "official_permit_geometry",
+      "url": "https://data-floridaswater.opendata.arcgis.com/datasets/f2f54ba2896e464a890ce827644f250d_0",
+      "arcgis_host": "https://services.arcgis.com/s8wtJX9suxFen6TA",
+      "granularity": "permit-area",
+      "trust": 0.95
+    }
+  ],
+  "resolution_precedence": [
+    "address_specific_lab_sample",
+    "same_parcel_private_well",
+    "adjacent_well_within_radius",
+    "aquifer_vulnerability_context"
+  ],
+  "disclaimer": "These are contextual risk indicators and neighboring-well records, not contaminant measurements of the submitted home."
+}

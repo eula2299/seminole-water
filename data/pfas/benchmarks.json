@@ -1,0 +1,86 @@
+{
+  "rule": "EPA National Primary Drinking Water Regulation for PFAS (final rule April 10, 2024)",
+  "authority": "U.S. Environmental Protection Agency",
+  "rule_url": "https://www.epa.gov/sdwa/and-polyfluoroalkyl-substances-pfas",
+  "unit": "ng/L",
+  "unit_aliases": ["ng/l", "ppt", "parts per trillion"],
+  "verified_on": "2026-07-22",
+  "compliance_determination": {
+    "method": "running-annual-average",
+    "note": "EPA determines MCL compliance using the running annual average at the sampling point. A single sample above an MCL is NOT by itself a violation. This application therefore reports a single high sample as 'above the benchmark' and only reports a compliance-relevant exceedance when a running annual average of four or more quarters meets or exceeds the MCL.",
+    "source": "https://www.epa.gov/sdwa/and-polyfluoroalkyl-substances-pfas"
+  },
+  "regulatory_status": {
+    "as_of": "2026-07-22",
+    "summary": "The April 2024 PFAS NPDWR remains in force as written. On May 18, 2026 EPA proposed two rules that would change it. Neither proposal is final, and a proposal does not change the current legal limits.",
+    "proposals": [
+      {
+        "id": "pfas-rescission",
+        "announced": "2026-05-18",
+        "docket": "EPA-HQ-OW-2025-0654",
+        "url": "https://www.epa.gov/sdwa/proposed-pfas-rescission-rule",
+        "federal_register": "https://www.federalregister.gov/documents/2026/05/20/2026-10085/rescission-of-regulatory-determinations-and-removal-of-related-provisions-for-four-pfas-substances",
+        "effect": "Would rescind the regulatory determinations and MCLs for PFHxS, PFNA, HFPO-DA, and the Hazard Index mixture of these three plus PFBS.",
+        "comment_period_closed": "2026-07-20",
+        "status": "proposed-not-final"
+      },
+      {
+        "id": "pfoa-pfos-compliance-extension",
+        "announced": "2026-05-18",
+        "url": "https://www.epa.gov/sdwa/proposed-pfoa-and-pfos-compliance-extension-rule",
+        "effect": "Would extend the PFOA and PFOS MCL compliance deadline from April 2029 to April 2031 via a federal exemption framework. The 4 ng/L MCLs themselves would be retained.",
+        "comment_period_closed": "2026-07-20",
+        "status": "proposed-not-final"
+      }
+    ],
+    "litigation": {
+      "court": "U.S. Court of Appeals for the D.C. Circuit",
+      "events": [
+        {"date": "2026-01-21", "event": "Court denied EPA's request to summarily vacate the MCLs for PFHxS, PFNA, HFPO-DA, and mixtures with PFBS."},
+        {"date": "2026-03-23", "event": "Court denied EPA's motion to sever and stay challenges to those MCLs."}
+      ]
+    },
+    "monitoring_deadline": {
+      "date": "2027-04-26",
+      "note": "All community and non-transient non-community water systems must complete initial PFAS monitoring by April 26, 2027. Florida DEP states the May 2026 proposals did not indicate this requirement would be revised or extended.",
+      "source": "https://floridadep.gov/water/source-drinking-water/content/and-polyfluoroalkyl-substances-pfas"
+    },
+    "compliance_deadline": {"current": "2029-04", "proposed": "2031-04"},
+    "enforcement_note": "Florida DEP provides technical assistance and manages PFAS records on EPA's behalf; EPA conducts formal enforcement."
+  },
+  "analyte_status": {
+    "PFOA": "in-force",
+    "PFOS": "in-force",
+    "PFHxS": "in-force-proposed-for-rescission",
+    "PFNA": "in-force-proposed-for-rescission",
+    "HFPO-DA": "in-force-proposed-for-rescission",
+    "PFBS": "hazard-index-component-proposed-for-rescission"
+  },
+  "mcl": {"PFOA": 4.0, "PFOS": 4.0, "PFHxS": 10.0, "PFNA": 10.0, "HFPO-DA": 10.0},
+  "mclg": {"PFOA": 0, "PFOS": 0, "PFHxS": 10.0, "PFNA": 10.0, "HFPO-DA": 10.0},
+  "hazard_index": {
+    "applies_to": ["PFHxS", "PFNA", "HFPO-DA", "PFBS"],
+    "limit": 1.0,
+    "status": "in-force-proposed-for-rescission",
+    "health_based_water_concentrations_ng_L": {"PFHxS": 10.0, "PFNA": 10.0, "HFPO-DA": 10.0, "PFBS": 2000.0},
+    "note": "Hazard Index = sum of (measured / health-based concentration) across the four listed analytes. HI at or above 1.0 is an exceedance."
+  },
+  "other_contaminants": {
+    "1,4-Dioxane": {
+      "unit": "ug/L",
+      "advisory_level": 0.35,
+      "enforceable": false,
+      "status": "no-federal-mcl",
+      "note": "1,4-dioxane has no federal enforceable MCL. 0.35 ug/L is the health advisory / cleanup target level referenced by Florida and EPA and used by Seminole County as an action level. A result above it is an action-level exceedance, not a regulatory violation.",
+      "source": "https://www.seminolecountyfl.gov/departments-services/utilities/utilities-engineering/dioxane"
+    }
+  },
+  "synonyms": {
+    "PFOA": ["perfluorooctanoic acid", "perfluorooctanoate"],
+    "PFOS": ["perfluorooctane sulfonic acid", "perfluorooctanesulfonate", "perfluorooctane sulfonate", "perfluorooctanesulfonic acid"],
+    "PFHxS": ["perfluorohexane sulfonic acid", "perfluorohexanesulfonate", "perfluorohexanesulfonic acid"],
+    "PFNA": ["perfluorononanoic acid", "perfluorononanoate"],
+    "HFPO-DA": ["genx", "hexafluoropropylene oxide dimer acid", "hfpo dimer acid"],
+    "PFBS": ["perfluorobutane sulfonic acid", "perfluorobutanesulfonate", "perfluorobutanesulfonic acid"]
+  }
+}

@@ -1,0 +1,6 @@
+[
+ {"id":"lead-service-line-inventory","name":"Address-level service-line inventory","verdict_flip_probability":0.65,"severity_impact":1.0,"acquisition_cost":0.35,"freshness_gain":1,"coverage_gain":1},
+ {"id":"current-pfas-results","name":"Current PFAS monitoring results","verdict_flip_probability":0.55,"severity_impact":1.0,"acquisition_cost":0.4,"freshness_gain":1,"coverage_gain":0.9},
+ {"id":"hydraulic-zone-map","name":"Current hydraulic zone and interconnection map","verdict_flip_probability":0.45,"severity_impact":0.9,"acquisition_cost":0.5,"freshness_gain":0.9,"coverage_gain":1},
+ {"id":"private-well-permits","name":"Well construction and aquifer-unit permits","verdict_flip_probability":0.4,"severity_impact":0.8,"acquisition_cost":0.55,"freshness_gain":0.8,"coverage_gain":0.8}
+]

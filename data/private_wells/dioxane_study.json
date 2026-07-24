@@ -1,0 +1,26 @@
+[
+  {
+    "url": "https://www.floridahealth.gov/environmental-health/hazardous-waste-sites/contaminant-facts/_documents/final-faq-14dx.pdf",
+    "title": "final faq 14dx",
+    "source": "seminole-14-dioxane-study",
+    "discovered_at": "2026-07-24T22:33:28Z",
+    "granularity": "official-county-document",
+    "is_private_well_study": false
+  },
+  {
+    "url": "https://www.seminolecountyfl.gov/docs/default-source/pdf/\nSeminole-County-Dioxane-Frequently-Asked-Questions-7_25_23-ADA.pdf",
+    "title": "\nSeminole County Dioxane Frequently Asked Questions 7_25_23 ADA",
+    "source": "seminole-14-dioxane-study",
+    "discovered_at": "2026-07-24T22:33:28Z",
+    "granularity": "official-county-document",
+    "is_private_well_study": false
+  },
+  {
+    "url": "https://www.seminolecountyfl.gov/docs/default-source/pdf/\nSeminole-County-BCC-Meeting-and-Work-Session-14d-7-25-23-Final-ADA-.pdf",
+    "title": "\nSeminole County BCC Meeting and Work Session 14d 7 25 23 Final ADA ",
+    "source": "seminole-14-dioxane-study",
+    "discovered_at": "2026-07-24T22:33:28Z",
+    "granularity": "official-county-document",
+    "is_private_well_study": false
+  }
+]

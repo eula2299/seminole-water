@@ -1,0 +1,1 @@
+{"status":"fit-on-deployment","method":"lag-1 temporal autocorrelation by analyte × aquifer/system stratum","fallback_policy":"confidence capped when empirical half-life is unavailable","estimates":[]}

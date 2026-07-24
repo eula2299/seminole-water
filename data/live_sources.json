@@ -1,0 +1,27 @@
+{
+  "max_address_sources": 6,
+  "sources": [
+    {"id":"epa-echo-sdwis","title":"EPA ECHO Drinking Water System Search","publisher":"U.S. EPA","url_template":"https://echo.epa.gov/detailed-facility-report?fid={pwsid}","source_kind":"official-system-context"},
+    {"id":"fdep-public-reports","title":"Florida DEP drinking-water public reports","publisher":"Florida DEP","url":"https://floridadep.gov/water/source-drinking-water/content/reports-and-information-public","source_kind":"official-system-context"},
+    {"id":"fdep-ccr","title":"Florida DEP Consumer Confidence Report resources","publisher":"Florida DEP","url":"https://floridadep.gov/water/source-drinking-water/content/consumer-confidence-reports-ccrs","source_kind":"official-system-context"},
+    {"id":"fdep-lead-inventory","title":"Florida DEP Lead Service Line Inventory links","publisher":"Florida DEP","url":"https://floridadep.gov/water/source-drinking-water/content/lead-service-line-inventory-links","source_kind":"official-system-context"}
+  ],
+  "address_sources": [
+    {"id":"seminole-county-boil-notices","title":"Seminole County boil-water notices","publisher":"Seminole County Utilities","url":"https://www.seminolecountyfl.gov/departments-services/utilities/water/boil-water-testpage","provider_patterns":["SEMINOLE COUNTY"],"source_kind":"official-address-notice"},
+    {"id":"sanford-water-alerts","title":"City of Sanford alerts and water notices","publisher":"City of Sanford","url":"https://sanfordfl.gov/alerts-and-notifications/","provider_patterns":["SANFORD"],"source_kind":"official-address-notice"},
+    {"id":"sanford-water-utility","title":"City of Sanford Water and Sewer Utilities","publisher":"City of Sanford","url":"https://sanfordfl.gov/government/public-works-utilities/water_and_sewer/","provider_patterns":["SANFORD"],"source_kind":"official-neighborhood-water-context"},
+    {"id":"oviedo-boil-alerts","title":"City of Oviedo boil-water alerts","publisher":"City of Oviedo","url":"https://www.cityofoviedo.net/AlertCenter.aspx?CID=Boil-Water-Advisory-4","provider_patterns":["OVIEDO"],"source_kind":"official-address-notice"},
+    {"id":"lake-mary-boil-notice","title":"City of Lake Mary precautionary boil-water notice","publisher":"City of Lake Mary","url":"https://www.lakemaryfl.com/1657/Precautionary-Boil-Water-Notice","pwsids":["3590201"],"source_kind":"official-address-notice"},
+    {"id":"lake-mary-water-quality","title":"City of Lake Mary water quality","publisher":"City of Lake Mary","url":"https://www.lakemaryfl.com/341/Water-Quality","pwsids":["3590201"],"source_kind":"official-neighborhood-water-context"},
+    {"id":"casselberry-boil-alerts","title":"City of Casselberry boil-water alerts","publisher":"City of Casselberry","url":"https://www.casselberry.org/AlertCenter.aspx?CID=Boil-Water-Advisory-4","provider_patterns":["CASSELBERRY"],"source_kind":"official-address-notice"},
+    {"id":"altamonte-water-alerts","title":"City of Altamonte Springs water alerts","publisher":"City of Altamonte Springs","url":"https://www.altamonte.org/m/newsflash?cat=15","provider_patterns":["ALTAMONTE"],"source_kind":"official-address-notice"},
+    {"id":"altamonte-drinking-water","title":"City of Altamonte Springs drinking-water information","publisher":"City of Altamonte Springs","url":"https://www.altamonte.org/464/Drinking-Water","provider_patterns":["ALTAMONTE"],"source_kind":"official-neighborhood-water-context"},
+    {"id":"winter-springs-boil-alerts","title":"City of Winter Springs boil-water alerts","publisher":"City of Winter Springs","url":"https://www.winterspringsfl.org/AlertCenter.aspx","provider_patterns":["WINTER SPRINGS"],"source_kind":"official-address-notice"},
+    {"id":"winter-springs-water-reports","title":"City of Winter Springs annual drinking-water reports","publisher":"City of Winter Springs","url":"https://www.winterspringsfl.org/475/Annual-Drinking-Water-Reports","provider_patterns":["WINTER SPRINGS"],"source_kind":"official-neighborhood-water-context"}
+  ],
+  "search_providers": [
+    {"id":"bing","type":"json","requires_key":"BING_SEARCH_KEY","header_name":"Ocp-Apim-Subscription-Key","url_template":"https://api.bing.microsoft.com/v7.0/search?q={query}"},
+    {"id":"brave","type":"json","requires_key":"BRAVE_SEARCH_KEY","header_name":"X-Subscription-Token","url_template":"https://api.search.brave.com/res/v1/web/search?q={query}"},
+    {"id":"duckduckgo","type":"duckduckgo-html","url_template":"https://html.duckduckgo.com/html/?q={query}"}
+  ]
+}

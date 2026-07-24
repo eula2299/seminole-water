@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "adjudications": [],
+  "schema": {"case_id":"string","agent":"string","correct":"boolean","weight":"number 0-1","reviewer":"string","reviewed_at":"ISO date","notes":"string"},
+  "policy": "Only independently reviewed outcomes should be added. The calibrator never changes hard evidence-scope rules."
+}

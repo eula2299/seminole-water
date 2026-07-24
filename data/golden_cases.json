@@ -1,0 +1,1 @@
+{"cases":[],"schema":{"id":"string","address":"string","as_of":"date","expected_provider":"PWSID|null","expected_findings":"array","source_documents":"array"},"notes":"Populate with documented historical violations and corrected reports. CI must replay these after parser, source, or agent changes."}

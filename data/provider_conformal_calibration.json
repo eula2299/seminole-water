@@ -1,0 +1,11 @@
+{
+  "nonconformity_scores": [],
+  "schema": {
+    "nonconformity_scores": "Held-out values of 1 minus the correct-provider score, generated only from independently adjudicated address cases."
+  },
+  "policy": {
+    "minimum_recommended_cases": 100,
+    "never_use_training_or_alias-construction_cases_as_calibration": true,
+    "uncalibrated_outputs_must_not_claim_coverage": true
+  }
+}

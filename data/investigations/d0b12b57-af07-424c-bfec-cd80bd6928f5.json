@@ -1,0 +1,3939 @@
+{
+  "investigation_id": "d0b12b57-af07-424c-bfec-cd80bd6928f5",
+  "created_at": "2026-07-23T02:46:10.493Z",
+  "input": {
+    "address": "1101 E 1st St",
+    "city": "Sanford",
+    "address_hash": "4585055c993373e8d103b014fc710727e7092149cee38318988f2aaaf285856b"
+  },
+  "statuses": {
+    "location": "address-not-resolved",
+    "direct_data": "no-exact-household-sample-found",
+    "online_address_evidence": "none",
+    "result_level": "unresolved",
+    "confidence": "insufficient",
+    "calibrated_system_confidence": "insufficient",
+    "calibrated_system_confidence_score": 0.2034,
+    "household_exposure_confidence": "insufficient",
+    "household_exposure_confidence_score": 0.2534
+  },
+  "geocode": {
+    "primary": null,
+    "secondary": null,
+    "consensus": {
+      "primary_available": false,
+      "secondary_available": false,
+      "disagreement_meters": null,
+      "low_confidence": true,
+      "selected": "none"
+    }
+  },
+  "provider": {
+    "consensus": {
+      "accepted": false,
+      "pwsid": null,
+      "confidence": "unresolved",
+      "score": 0,
+      "candidates": []
+    },
+    "system": null,
+    "service_area_matches": [],
+    "spatial_assessment": {
+      "gap": true,
+      "overlap": false,
+      "near_boundary": false
+    },
+    "service_area_version": {
+      "id": "current-public-layer",
+      "valid_from": "2026-01-01",
+      "valid_to": null,
+      "file": "../water_service_areas.geojson",
+      "source_item_id": "41f6f18ec9cd48a5b89b94e946cf2143",
+      "status": "current"
+    },
+    "utility_lineage": {
+      "active": null,
+      "chain": []
+    },
+    "source_interconnections": [],
+    "crosswalk": {
+      "diagnostics": [],
+      "resolutions": []
+    }
+  },
+  "agents": [
+    {
+      "name": "Dual-Geocoder Resolution Agent",
+      "status": "failed",
+      "output": {
+        "primary": null,
+        "secondary": null,
+        "consensus": {
+          "primary_available": false,
+          "secondary_available": false,
+          "disagreement_meters": null,
+          "low_confidence": true,
+          "selected": "none"
+        }
+      }
+    },
+    {
+      "name": "Versioned Service-Area Agent",
+      "status": "no-match",
+      "output": {
+        "matches": [],
+        "assessment": {
+          "gap": true,
+          "overlap": false,
+          "near_boundary": false
+        },
+        "version": {
+          "id": "current-public-layer",
+          "valid_from": "2026-01-01",
+          "valid_to": null,
+          "file": "../water_service_areas.geojson",
+          "source_item_id": "41f6f18ec9cd48a5b89b94e946cf2143",
+          "status": "current"
+        }
+      }
+    },
+    {
+      "name": "Provider/PWS Crosswalk Agent",
+      "status": "unresolved",
+      "output": {
+        "consensus": {
+          "accepted": false,
+          "pwsid": null,
+          "confidence": "unresolved",
+          "score": 0,
+          "candidates": []
+        },
+        "diagnostics": []
+      }
+    },
+    {
+      "name": "Direct Household Sample Agent",
+      "status": "none-found",
+      "output": {
+        "count": 0
+      }
+    },
+    {
+      "name": "Expanded Contaminant-Class Agent Swarm",
+      "status": "blocked",
+      "output": {
+        "analytes": 0,
+        "records": 0,
+        "configured_classes": [
+          "metals",
+          "PFAS",
+          "nitrate/nitrite",
+          "disinfection byproducts",
+          "radionuclides",
+          "microbial indicators",
+          "corrosion chemistry",
+          "VOCs/SVOCs"
+        ]
+      }
+    },
+    {
+      "name": "EPA SDWIS System & Compliance Agent",
+      "status": "blocked",
+      "output": {
+        "pwsid": "",
+        "synced": false,
+        "system": null,
+        "facilities": [],
+        "geographic_areas": [],
+        "service_areas": [],
+        "violations": {
+          "all": [],
+          "active": [],
+          "active_health_based_or_treatment": [],
+          "active_monitoring_or_reporting": []
+        },
+        "lcr_samples": [],
+        "site_visits": [],
+        "events": [],
+        "public_notices": [],
+        "compliance_status": "not-synced",
+        "disclaimer": "EPA SDWIS/ECHO is a system and compliance repository. Federal reporting can lag state or local records and does not represent a sample from the submitted household unless a row explicitly identifies that home."
+      }
+    },
+    {
+      "name": "EPA Water Quality Portal Source-Water Agent",
+      "status": "blocked",
+      "output": {
+        "synced": false,
+        "stations": [],
+        "reason": "address coordinates unavailable",
+        "disclaimer": "Water Quality Portal records are environmental monitoring data from nearby stations (such as lakes, streams, groundwater wells, or source-water locations). They are contextual evidence only and are not household tap samples or proof of the public water system’s compliance."
+      }
+    },
+    {
+      "name": "Consumer Confidence Report Agent",
+      "status": "blocked",
+      "output": {
+        "pwsid": "",
+        "synced": true,
+        "latest": null,
+        "reports": [],
+        "disclaimer": "A Consumer Confidence Report is an annual system-level report. It describes the utility’s source water, detected contaminants, and compliance; it is not a laboratory test of the submitted home."
+      }
+    },
+    {
+      "name": "Redundant Confirmation Agent",
+      "status": "passed",
+      "output": {
+        "confirmed": 0,
+        "single_source": 0,
+        "rule": "At least two distinct originating sample events are required. DEP, SDWIS, and CCR republications of the same lab sample count once."
+      }
+    },
+    {
+      "name": "Laboratory Accreditation Agent",
+      "status": "passed",
+      "output": {
+        "accredited": 0,
+        "unverified_or_unaccredited": 0
+      }
+    },
+    {
+      "name": "Live Official-Source Agent",
+      "status": "partial",
+      "output": {
+        "official_context": [],
+        "errors": [
+          {
+            "source": "epa-echo-sdwis",
+            "error": "HTTP 403"
+          },
+          {
+            "source": "fdep-public-reports",
+            "error": "HTTP 403"
+          },
+          {
+            "source": "fdep-ccr",
+            "error": "HTTP 403"
+          },
+          {
+            "source": "fdep-lead-inventory",
+            "error": "HTTP 403"
+          }
+        ],
+        "snapshot_required": true
+      }
+    },
+    {
+      "name": "Address & Neighborhood Online Evidence Agent",
+      "status": "partial-no-match",
+      "output": {
+        "searched": true,
+        "raw_items_checked": 0,
+        "counts": {
+          "exact_address": 0,
+          "affected_address_range": 0,
+          "street": 0,
+          "neighborhood": 0,
+          "system_context": 0
+        },
+        "best_scope": "none",
+        "best_match": null,
+        "matches": [],
+        "system_context": [],
+        "disclaimer": "Online address, street, and neighborhood matches are contextual public evidence. They do not become a household contaminant measurement unless the source explicitly reports a sample from that home.",
+        "public_search_enabled": false,
+        "errors": [
+          {
+            "source": "epa-echo-sdwis",
+            "error": "HTTP 403"
+          },
+          {
+            "source": "fdep-public-reports",
+            "error": "HTTP 403"
+          },
+          {
+            "source": "fdep-ccr",
+            "error": "HTTP 403"
+          },
+          {
+            "source": "fdep-lead-inventory",
+            "error": "HTTP 403"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Community Leads Quarantine Agent",
+      "status": "completed",
+      "output": {
+        "leads_only": [],
+        "may_corroborate": false
+      }
+    },
+    {
+      "name": "Household Lead / Service-Line Risk Agent",
+      "status": "completed",
+      "output": {
+        "tier": "lower-indicator-risk",
+        "score": 0,
+        "year_built": null,
+        "service_line_status": "UNKNOWN",
+        "reasons": [],
+        "disclaimer": "This is a plumbing/service-line risk indicator, not a predicted lead concentration."
+      }
+    },
+    {
+      "name": "Private Well Pathway Agent",
+      "status": "activated",
+      "output": {
+        "activated": true,
+        "coordinates": null,
+        "well_permits": [],
+        "nearby_contamination_sites": [],
+        "septic_density": null,
+        "aquifer_vulnerability": null,
+        "recommendation": "Obtain a certified private-well laboratory test; modeled proximity and vulnerability indicators are not measurements."
+      }
+    },
+    {
+      "name": "Public Records / Litigation Tracker Agent",
+      "status": "completed",
+      "output": {
+        "matching_requests": []
+      }
+    },
+    {
+      "name": "Contradiction Validator Agent",
+      "status": "review-needed",
+      "output": {
+        "contradictions": [
+          "Address falls in a mapped service-area gap."
+        ]
+      }
+    },
+    {
+      "name": "Cross-Contaminant Chemistry Agent",
+      "status": "completed",
+      "output": {
+        "relationships": [
+          "lead-copper-pH-alkalinity-corrosion",
+          "nitrate-septic-land-use",
+          "radium-aquifer-geology"
+        ],
+        "note": "Relationship logic may contextualize measurements but cannot invent measurements."
+      }
+    },
+    {
+      "name": "Statistical Rigor Agent",
+      "status": "completed",
+      "output": {
+        "censored_method": "ROS/Kaplan-Meier when data suffices",
+        "trend_method": "Mann-Kendall",
+        "multiple_comparisons": "Benjamini-Hochberg FDR",
+        "half_DL_substitution": false
+      }
+    },
+    {
+      "name": "Evidence Compilation Agent",
+      "status": "completed",
+      "output": {
+        "evidence_items": 0,
+        "live_evidence_items": 0
+      }
+    },
+    {
+      "name": "Counterfactual Boundary Stability Agent",
+      "status": "not-computed",
+      "output": {
+        "status": "not-computed",
+        "reason": "address not geocoded",
+        "samples": [],
+        "rings": [],
+        "stable_fraction": 0,
+        "stability_score": 0,
+        "max_unanimous_radius_m": 0,
+        "alternate_pwsids": []
+      }
+    },
+    {
+      "name": "Uncertainty Budget Agent",
+      "status": "review-needed",
+      "output": {
+        "method": "dimension-separated weighted geometric confidence with hard epistemic caps",
+        "dimensions": {
+          "geolocation": 0,
+          "provider_identity": 0,
+          "spatial_robustness": 0.18,
+          "evidence_scope": 0.2,
+          "temporal_freshness": 0.2,
+          "contaminant_coverage": 0.1,
+          "originating_sample_independence": 0.1,
+          "source_conflict": 0.7407,
+          "federal_context_availability": 0.7167
+        },
+        "system_evidence_confidence": 0.2034,
+        "system_evidence_label": "insufficient",
+        "household_exposure_confidence": 0.2534,
+        "household_exposure_label": "insufficient",
+        "dominant_uncertainties": [
+          {
+            "dimension": "geolocation",
+            "confidence": 0,
+            "uncertainty": 1
+          },
+          {
+            "dimension": "provider_identity",
+            "confidence": 0,
+            "uncertainty": 1
+          },
+          {
+            "dimension": "contaminant_coverage",
+            "confidence": 0.1,
+            "uncertainty": 0.9
+          },
+          {
+            "dimension": "originating_sample_independence",
+            "confidence": 0.1,
+            "uncertainty": 0.9
+          }
+        ],
+        "hard_caps": {
+          "unresolved_provider": 0.25,
+          "service_area_gap": 0.3,
+          "no_exact_household_sample": 0.49
+        },
+        "interpretation": "The system-level evidence may be strong while household-exposure confidence remains capped because no sample from the submitted home exists."
+      }
+    },
+    {
+      "name": "Agent Reliability Calibration Agent",
+      "status": "prior-only",
+      "output": {
+        "adjudication_count": 0,
+        "reliability": {
+          "Provider Identity Agent": 0.95,
+          "Boundary Robustness Agent": 0.95,
+          "Evidence Scope Guardian": 0.999,
+          "SDWIS Compliance Agent": 0.975,
+          "CCR Context Agent": 0.95,
+          "WQP Context Agent": 0.99,
+          "Originating-Sample Independence Agent": 0.98,
+          "Temporal Freshness Agent": 0.95,
+          "Contradiction Agent": 0.95,
+          "Direct Household Sample Agent": 0.999
+        },
+        "policy": "Values are transparent Bayesian priors, not claimed empirical accuracies. Run npm run calibrate:agents after adding human-adjudicated outcomes. Hard epistemic guards are policy constraints and are not learned away."
+      }
+    },
+    {
+      "name": "Evidence Scope Guardian Agent",
+      "status": "household-claim-blocked",
+      "output": {
+        "household_claims_blocked": [
+          {
+            "key": "household-measurement::The report establishes contaminant concentrations at the submitted household tap",
+            "topic": "household-measurement",
+            "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+            "scope": "system",
+            "support_score": 0,
+            "opposition_score": 0.999,
+            "confidence": 0,
+            "supporting_agents": [],
+            "opposing_agents": [
+              "Evidence Scope Guardian"
+            ],
+            "evidence_ids": [],
+            "independent_support_origins": 0,
+            "status": "rejected",
+            "reason": "hard epistemic veto by Evidence Scope Guardian: no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Multi-Agent Negotiation Council",
+      "status": "partial-consensus",
+      "output": {
+        "protocol": "Auditable Dialectical Evidence Negotiation v1.0",
+        "accepted_claims": [],
+        "rejected_claims": [
+          {
+            "key": "provider-identity::A unique PWS serves the geocoded point",
+            "topic": "provider-identity",
+            "proposition": "A unique PWS serves the geocoded point",
+            "scope": "system",
+            "support_score": 0,
+            "opposition_score": 0.9405,
+            "confidence": 0,
+            "supporting_agents": [],
+            "opposing_agents": [
+              "Provider Identity Agent"
+            ],
+            "evidence_ids": [],
+            "independent_support_origins": 0,
+            "status": "rejected",
+            "reason": "hard epistemic veto by Provider Identity Agent: the provider crosswalk did not accept a unique PWS"
+          },
+          {
+            "key": "household-measurement::The report establishes contaminant concentrations at the submitted household tap",
+            "topic": "household-measurement",
+            "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+            "scope": "system",
+            "support_score": 0,
+            "opposition_score": 0.999,
+            "confidence": 0,
+            "supporting_agents": [],
+            "opposing_agents": [
+              "Evidence Scope Guardian"
+            ],
+            "evidence_ids": [],
+            "independent_support_origins": 0,
+            "status": "rejected",
+            "reason": "hard epistemic veto by Evidence Scope Guardian: no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+          }
+        ],
+        "undecided_claims": [
+          {
+            "key": "unqualified-high-confidence::The report can be presented without unresolved limitations",
+            "topic": "unqualified-high-confidence",
+            "proposition": "The report can be presented without unresolved limitations",
+            "scope": "system",
+            "support_score": 0,
+            "opposition_score": 0.57,
+            "confidence": 0,
+            "supporting_agents": [],
+            "opposing_agents": [
+              "Contradiction Agent"
+            ],
+            "evidence_ids": [],
+            "independent_support_origins": 0,
+            "status": "undecided",
+            "reason": "support and opposition did not separate enough for a defensible conclusion"
+          }
+        ],
+        "dissent": [
+          {
+            "topic": "provider-identity",
+            "proposition": "A unique PWS serves the geocoded point",
+            "agents": [
+              "Provider Identity Agent"
+            ],
+            "reasons": [
+              "the provider crosswalk did not accept a unique PWS"
+            ]
+          },
+          {
+            "topic": "household-measurement",
+            "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+            "agents": [
+              "Evidence Scope Guardian"
+            ],
+            "reasons": [
+              "no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+            ]
+          },
+          {
+            "topic": "unqualified-high-confidence",
+            "proposition": "The report can be presented without unresolved limitations",
+            "agents": [
+              "Contradiction Agent"
+            ],
+            "reasons": [
+              "Address falls in a mapped service-area gap."
+            ]
+          }
+        ],
+        "vetoes": [
+          {
+            "key": "provider-identity::A unique PWS serves the geocoded point",
+            "topic": "provider-identity",
+            "proposition": "A unique PWS serves the geocoded point",
+            "scope": "system",
+            "support_score": 0,
+            "opposition_score": 0.9405,
+            "confidence": 0,
+            "supporting_agents": [],
+            "opposing_agents": [
+              "Provider Identity Agent"
+            ],
+            "evidence_ids": [],
+            "independent_support_origins": 0,
+            "status": "rejected",
+            "reason": "hard epistemic veto by Provider Identity Agent: the provider crosswalk did not accept a unique PWS"
+          },
+          {
+            "key": "household-measurement::The report establishes contaminant concentrations at the submitted household tap",
+            "topic": "household-measurement",
+            "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+            "scope": "system",
+            "support_score": 0,
+            "opposition_score": 0.999,
+            "confidence": 0,
+            "supporting_agents": [],
+            "opposing_agents": [
+              "Evidence Scope Guardian"
+            ],
+            "evidence_ids": [],
+            "independent_support_origins": 0,
+            "status": "rejected",
+            "reason": "hard epistemic veto by Evidence Scope Guardian: no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+          }
+        ],
+        "transcript": [
+          {
+            "round": 1,
+            "name": "proposal",
+            "message": "0 supporting and 3 opposing claims entered the council."
+          },
+          {
+            "round": 2,
+            "name": "challenge",
+            "message": "2 hard veto(es) and 3 dissent set(s) were recorded. Publisher replicas were collapsed by origin key."
+          },
+          {
+            "round": 3,
+            "name": "revision",
+            "message": "Claims violating household/system/environmental scope rules were rejected rather than softened into unsupported household conclusions."
+          },
+          {
+            "round": 4,
+            "name": "final",
+            "message": "Council finalized 0 accepted, 2 rejected, and 1 undecided claim(s)."
+          }
+        ],
+        "consensus_fraction": 0,
+        "policy": {
+          "one_origin_one_vote": true,
+          "hard_scope_vetoes": true,
+          "agent_reliability_weighted": true,
+          "undecided_is_allowed": true
+        }
+      }
+    },
+    {
+      "name": "Claim Robustness Certifier Agent",
+      "status": "fragile",
+      "output": {
+        "level": "fragile",
+        "checks": [
+          {
+            "id": "provider-accepted",
+            "passed": false,
+            "detail": "No unique PWS accepted"
+          },
+          {
+            "id": "coordinate-perturbation",
+            "passed": false,
+            "detail": "not computed"
+          },
+          {
+            "id": "scope-firewall",
+            "passed": true,
+            "detail": "No household concentration claim was accepted"
+          },
+          {
+            "id": "negotiation-no-hard-veto",
+            "passed": false,
+            "detail": "2 total hard veto(es)"
+          },
+          {
+            "id": "system-confidence",
+            "passed": false,
+            "detail": "system score 0.2034"
+          },
+          {
+            "id": "contradiction-load",
+            "passed": true,
+            "detail": "1 contradiction/limitation item(s)"
+          }
+        ],
+        "passed": 2,
+        "total": 6,
+        "scope": "system-level-only",
+        "certificate_statement": "The conclusion should be treated as provisional because multiple robustness checks did not pass."
+      }
+    },
+    {
+      "name": "Peer-System Comparative Toxicology Agent",
+      "status": "unresolved-provider",
+      "output": {
+        "status": "unresolved-provider",
+        "comparisons": [],
+        "disclaimer": "A peer comparison requires an exact PWS."
+      }
+    },
+    {
+      "name": "Active Evidence Acquisition Agent",
+      "status": "recommendations-generated",
+      "output": {
+        "recommendations": [
+          {
+            "id": "utility-confirmation",
+            "title": "Obtain utility service confirmation for the parcel",
+            "reason": "Provider identity is unresolved or sensitive to coordinate perturbation.",
+            "expected_verdict_flip_probability": 0.75,
+            "expected_confidence_gain": 0.45,
+            "severity": 0.9,
+            "effort": 0.35,
+            "source_type": "official",
+            "priority_score": 0.8679
+          },
+          {
+            "id": "household-sample",
+            "title": "Obtain an accredited first-draw and flushed household tap sample",
+            "reason": "No public record can establish this home’s tap concentration without a sample from the home.",
+            "expected_verdict_flip_probability": 0.65,
+            "expected_confidence_gain": 0.5,
+            "severity": 1,
+            "effort": 0.8,
+            "source_type": "laboratory",
+            "priority_score": 0.4063
+          },
+          {
+            "id": "fresh-chemistry",
+            "title": "Acquire current Florida DEP chemistry or utility sampling results",
+            "reason": "The most recent bundled chemistry is old enough to dominate the uncertainty budget.",
+            "expected_verdict_flip_probability": 0.45,
+            "expected_confidence_gain": 0.35,
+            "severity": 0.7,
+            "effort": 0.35,
+            "source_type": "official",
+            "priority_score": 0.315
+          },
+          {
+            "id": "contradiction-resolution",
+            "title": "Resolve the highest-impact contradiction",
+            "reason": "Conflicting or incomplete evidence currently limits the defensible confidence.",
+            "expected_verdict_flip_probability": 0.5,
+            "expected_confidence_gain": 0.3,
+            "severity": 0.8,
+            "effort": 0.4,
+            "source_type": "official",
+            "priority_score": 0.3
+          },
+          {
+            "id": "current-ccr",
+            "title": "Acquire the newest exact-PWS Consumer Confidence Report",
+            "reason": "The annual utility report is absent from the synchronized index.",
+            "expected_verdict_flip_probability": 0.25,
+            "expected_confidence_gain": 0.2,
+            "severity": 0.5,
+            "effort": 0.15,
+            "source_type": "official",
+            "priority_score": 0.1667
+          },
+          {
+            "id": "coverage-gap",
+            "title": "Acquire missing contaminant classes and monitoring schedules",
+            "reason": "Sparse analyte or class coverage prevents a broad water-quality conclusion.",
+            "expected_verdict_flip_probability": 0.35,
+            "expected_confidence_gain": 0.3,
+            "severity": 0.65,
+            "effort": 0.5,
+            "source_type": "official",
+            "priority_score": 0.1365
+          }
+        ]
+      }
+    },
+    {
+      "name": "Set-Valued Provider Uncertainty Agent",
+      "status": "no-candidates",
+      "output": {
+        "status": "no-candidates",
+        "prediction_set": [],
+        "coverage_target": 0.9,
+        "calibration_count": 0
+      }
+    },
+    {
+      "name": "Evidence Applicability Lattice Agent",
+      "status": "review-needed",
+      "output": {
+        "method": "Monotone Evidence Applicability Lattice v1.0",
+        "scope_order": [
+          {
+            "scope": "nearby-environmental-station",
+            "rank": 0
+          },
+          {
+            "scope": "regional-context",
+            "rank": 1
+          },
+          {
+            "scope": "public-water-system-record",
+            "rank": 2
+          },
+          {
+            "scope": "source-well-record",
+            "rank": 3
+          },
+          {
+            "scope": "treatment-entry-record",
+            "rank": 4
+          },
+          {
+            "scope": "distribution-point-record",
+            "rank": 5
+          },
+          {
+            "scope": "tap-sampling-record",
+            "rank": 6
+          },
+          {
+            "scope": "exact-household-sample",
+            "rank": 7
+          }
+        ],
+        "by_claim_scope": {
+          "public-water-system-record": {
+            "eligible": 0,
+            "total": 0,
+            "mean_applicability": 0,
+            "vetoed": 0,
+            "top": []
+          },
+          "exact-household-sample": {
+            "eligible": 0,
+            "total": 0,
+            "mean_applicability": 0,
+            "vetoed": 0,
+            "top": []
+          }
+        },
+        "system_applicable_fraction": 0,
+        "household_applicable_fraction": 0,
+        "household_scope_blocked": true,
+        "evaluated_count": 0,
+        "interpretation": "Evidence may move to an equal or coarser claim scope, never to a finer scope. Spatial, temporal, hydraulic, provenance, laboratory, and regulatory dimensions are jointly required."
+      }
+    },
+    {
+      "name": "Origin Influence Stress-Test Agent",
+      "status": "fragility-found",
+      "output": {
+        "method": "Leave-One-Origin-Out Negotiation Influence Audit v1.0",
+        "baseline": {
+          "protocol": "Auditable Dialectical Evidence Negotiation v1.0",
+          "accepted_claims": [],
+          "rejected_claims": [
+            {
+              "key": "provider-identity::A unique PWS serves the geocoded point",
+              "topic": "provider-identity",
+              "proposition": "A unique PWS serves the geocoded point",
+              "scope": "system",
+              "support_score": 0,
+              "opposition_score": 0.9405,
+              "confidence": 0,
+              "supporting_agents": [],
+              "opposing_agents": [
+                "Provider Identity Agent"
+              ],
+              "evidence_ids": [],
+              "independent_support_origins": 0,
+              "status": "rejected",
+              "reason": "hard epistemic veto by Provider Identity Agent: the provider crosswalk did not accept a unique PWS"
+            },
+            {
+              "key": "household-measurement::The report establishes contaminant concentrations at the submitted household tap",
+              "topic": "household-measurement",
+              "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+              "scope": "system",
+              "support_score": 0,
+              "opposition_score": 0.999,
+              "confidence": 0,
+              "supporting_agents": [],
+              "opposing_agents": [
+                "Evidence Scope Guardian"
+              ],
+              "evidence_ids": [],
+              "independent_support_origins": 0,
+              "status": "rejected",
+              "reason": "hard epistemic veto by Evidence Scope Guardian: no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+            }
+          ],
+          "undecided_claims": [
+            {
+              "key": "unqualified-high-confidence::The report can be presented without unresolved limitations",
+              "topic": "unqualified-high-confidence",
+              "proposition": "The report can be presented without unresolved limitations",
+              "scope": "system",
+              "support_score": 0,
+              "opposition_score": 0.57,
+              "confidence": 0,
+              "supporting_agents": [],
+              "opposing_agents": [
+                "Contradiction Agent"
+              ],
+              "evidence_ids": [],
+              "independent_support_origins": 0,
+              "status": "undecided",
+              "reason": "support and opposition did not separate enough for a defensible conclusion"
+            }
+          ],
+          "dissent": [
+            {
+              "topic": "provider-identity",
+              "proposition": "A unique PWS serves the geocoded point",
+              "agents": [
+                "Provider Identity Agent"
+              ],
+              "reasons": [
+                "the provider crosswalk did not accept a unique PWS"
+              ]
+            },
+            {
+              "topic": "household-measurement",
+              "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+              "agents": [
+                "Evidence Scope Guardian"
+              ],
+              "reasons": [
+                "no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+              ]
+            },
+            {
+              "topic": "unqualified-high-confidence",
+              "proposition": "The report can be presented without unresolved limitations",
+              "agents": [
+                "Contradiction Agent"
+              ],
+              "reasons": [
+                "Address falls in a mapped service-area gap."
+              ]
+            }
+          ],
+          "vetoes": [
+            {
+              "key": "provider-identity::A unique PWS serves the geocoded point",
+              "topic": "provider-identity",
+              "proposition": "A unique PWS serves the geocoded point",
+              "scope": "system",
+              "support_score": 0,
+              "opposition_score": 0.9405,
+              "confidence": 0,
+              "supporting_agents": [],
+              "opposing_agents": [
+                "Provider Identity Agent"
+              ],
+              "evidence_ids": [],
+              "independent_support_origins": 0,
+              "status": "rejected",
+              "reason": "hard epistemic veto by Provider Identity Agent: the provider crosswalk did not accept a unique PWS"
+            },
+            {
+              "key": "household-measurement::The report establishes contaminant concentrations at the submitted household tap",
+              "topic": "household-measurement",
+              "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+              "scope": "system",
+              "support_score": 0,
+              "opposition_score": 0.999,
+              "confidence": 0,
+              "supporting_agents": [],
+              "opposing_agents": [
+                "Evidence Scope Guardian"
+              ],
+              "evidence_ids": [],
+              "independent_support_origins": 0,
+              "status": "rejected",
+              "reason": "hard epistemic veto by Evidence Scope Guardian: no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+            }
+          ],
+          "transcript": [
+            {
+              "round": 1,
+              "name": "proposal",
+              "message": "0 supporting and 3 opposing claims entered the council."
+            },
+            {
+              "round": 2,
+              "name": "challenge",
+              "message": "2 hard veto(es) and 3 dissent set(s) were recorded. Publisher replicas were collapsed by origin key."
+            },
+            {
+              "round": 3,
+              "name": "revision",
+              "message": "Claims violating household/system/environmental scope rules were rejected rather than softened into unsupported household conclusions."
+            },
+            {
+              "round": 4,
+              "name": "final",
+              "message": "Council finalized 0 accepted, 2 rejected, and 1 undecided claim(s)."
+            }
+          ],
+          "consensus_fraction": 0,
+          "policy": {
+            "one_origin_one_vote": true,
+            "hard_scope_vetoes": true,
+            "agent_reliability_weighted": true,
+            "undecided_is_allowed": true
+          }
+        },
+        "origin_count": 3,
+        "influences": [
+          {
+            "origin": "contradiction-0",
+            "claim_status_flips": 1,
+            "total_confidence_delta": 0,
+            "flips": [
+              {
+                "claim_key": "unqualified-high-confidence::The report can be presented without unresolved limitations",
+                "from": "undecided",
+                "to": "absent",
+                "confidence_delta": 0
+              }
+            ],
+            "remaining_claims": 2
+          },
+          {
+            "origin": "provider-oppose",
+            "claim_status_flips": 0,
+            "total_confidence_delta": 0,
+            "flips": [],
+            "remaining_claims": 3
+          },
+          {
+            "origin": "scope-veto",
+            "claim_status_flips": 0,
+            "total_confidence_delta": 0,
+            "flips": [],
+            "remaining_claims": 3
+          }
+        ],
+        "dominant_origins": [
+          {
+            "origin": "contradiction-0",
+            "claim_status_flips": 1,
+            "total_confidence_delta": 0,
+            "flips": [
+              {
+                "claim_key": "unqualified-high-confidence::The report can be presented without unresolved limitations",
+                "from": "undecided",
+                "to": "absent",
+                "confidence_delta": 0
+              }
+            ],
+            "remaining_claims": 2
+          }
+        ],
+        "single_origin_fragility": true,
+        "max_confidence_delta": 0,
+        "interpretation": "Each originating evidence unit is removed and the full negotiation is rerun. Publisher replicas sharing an origin are removed together, exposing conclusions dominated by one sample or source."
+      }
+    },
+    {
+      "name": "Minimum Contradiction Cut-Set Agent",
+      "status": "no-explicit-claim-contradictions",
+      "output": {
+        "status": "no-explicit-claim-contradictions",
+        "groups": [],
+        "minimum_cut_size": 0,
+        "cutsets": []
+      }
+    },
+    {
+      "name": "Negative-Evidence Coverage Tensor Agent",
+      "status": "coverage-gaps-found",
+      "output": {
+        "method": "Scope × Time × Analyte × Source Coverage Tensor v1.0",
+        "cell_count": 0,
+        "cells": [],
+        "group_summary": {
+          "INOR": {
+            "measured": false,
+            "analyte_count": 0,
+            "cell_count": 0,
+            "recent_cell_count": 0,
+            "source_families": [],
+            "latest_quarter": null
+          },
+          "DBP": {
+            "measured": false,
+            "analyte_count": 0,
+            "cell_count": 0,
+            "recent_cell_count": 0,
+            "source_families": [],
+            "latest_quarter": null
+          },
+          "VOC": {
+            "measured": false,
+            "analyte_count": 0,
+            "cell_count": 0,
+            "recent_cell_count": 0,
+            "source_families": [],
+            "latest_quarter": null
+          },
+          "SOC": {
+            "measured": false,
+            "analyte_count": 0,
+            "cell_count": 0,
+            "recent_cell_count": 0,
+            "source_families": [],
+            "latest_quarter": null
+          },
+          "RAD": {
+            "measured": false,
+            "analyte_count": 0,
+            "cell_count": 0,
+            "recent_cell_count": 0,
+            "source_families": [],
+            "latest_quarter": null
+          },
+          "PFAS": {
+            "measured": false,
+            "analyte_count": 0,
+            "cell_count": 0,
+            "recent_cell_count": 0,
+            "source_families": [],
+            "latest_quarter": null
+          },
+          "MICRO": {
+            "measured": false,
+            "analyte_count": 0,
+            "cell_count": 0,
+            "recent_cell_count": 0,
+            "source_families": [],
+            "latest_quarter": null
+          },
+          "WQP": {
+            "measured": false,
+            "analyte_count": 0,
+            "cell_count": 0,
+            "recent_cell_count": 0,
+            "source_families": [],
+            "latest_quarter": null
+          }
+        },
+        "expected_groups": [
+          "INOR",
+          "DBP",
+          "VOC",
+          "SOC",
+          "RAD",
+          "PFAS",
+          "MICRO",
+          "WQP"
+        ],
+        "measured_group_count": 0,
+        "missing_groups": [
+          "INOR",
+          "DBP",
+          "VOC",
+          "SOC",
+          "RAD",
+          "PFAS",
+          "MICRO",
+          "WQP"
+        ],
+        "stale_groups": [],
+        "coverage_fraction": 0,
+        "negative_evidence_guard": {
+          "enabled": true,
+          "rule": "A missing cell means not observed in the loaded evidence, never zero and never not present.",
+          "missing_is_zero": false,
+          "non_detect_is_zero": false
+        },
+        "interpretation": "8 expected contaminant group(s) have no loaded system records; absence claims are prohibited for those groups."
+      }
+    },
+    {
+      "name": "Causal Water-Pathway Proof Agent",
+      "status": "review-needed",
+      "output": {
+        "method": "Causal Water-Pathway Proof Graph v1.0",
+        "nodes": [
+          {
+            "id": "source-water",
+            "type": "source-water",
+            "label": "source water not resolved",
+            "observed": false,
+            "confidence": 0.25,
+            "details": {
+              "primary_source": null
+            }
+          },
+          {
+            "id": "treatment",
+            "type": "treatment",
+            "label": "treatment/facility stage",
+            "observed": false,
+            "confidence": 0.45,
+            "details": {}
+          },
+          {
+            "id": "distribution",
+            "type": "distribution-system",
+            "label": "resolved public water system",
+            "observed": false,
+            "confidence": 0.1,
+            "details": {
+              "pwsid": null
+            }
+          },
+          {
+            "id": "service-area",
+            "type": "service-area",
+            "label": "official service-area polygon",
+            "observed": false,
+            "confidence": 0.1,
+            "details": {}
+          },
+          {
+            "id": "premise",
+            "type": "premise",
+            "label": "1101 E 1st St",
+            "observed": true,
+            "confidence": 0.98,
+            "details": {}
+          },
+          {
+            "id": "tap",
+            "type": "household-tap",
+            "label": "household tap",
+            "observed": false,
+            "confidence": 0.15,
+            "details": {
+              "exact_household_samples": 0
+            }
+          }
+        ],
+        "edges": [
+          {
+            "from": "source-water",
+            "to": "treatment",
+            "type": "source-to-treatment",
+            "observed": false,
+            "confidence": 0.35,
+            "basis": "source type plus treatment-entry evidence"
+          },
+          {
+            "from": "treatment",
+            "to": "distribution",
+            "type": "treated-water-entry",
+            "observed": false,
+            "confidence": 0.45,
+            "basis": "inferred from PWS membership; hydraulic graph unavailable"
+          },
+          {
+            "from": "distribution",
+            "to": "service-area",
+            "type": "system-serves-area",
+            "observed": false,
+            "confidence": 0.1,
+            "basis": "official service-area polygon and provider crosswalk"
+          },
+          {
+            "from": "service-area",
+            "to": "premise",
+            "type": "address-inside-service-area",
+            "observed": false,
+            "confidence": 0.1,
+            "basis": "point-in-polygon address resolution"
+          },
+          {
+            "from": "premise",
+            "to": "tap",
+            "type": "premise-to-tap",
+            "observed": false,
+            "confidence": 0.2,
+            "basis": "no address-linked tap sample"
+          }
+        ],
+        "system_path_complete": false,
+        "household_path_observed": false,
+        "bottleneck": {
+          "from": "distribution",
+          "to": "service-area",
+          "type": "system-serves-area",
+          "observed": false,
+          "confidence": 0.1,
+          "basis": "official service-area polygon and provider crosswalk"
+        },
+        "strongest_supported_scope": "regional-context",
+        "prohibited_inference": "The graph does not contain a fully observed path from a measured water sample to the submitted household tap; household concentration causality is therefore blocked.",
+        "interpretation": "The address-to-system path is supported, but one or more source, hydraulic, premise, or tap links are inferred or absent."
+      }
+    },
+    {
+      "name": "Evidence Acquisition Auction Council",
+      "status": "budget-allocated",
+      "output": {
+        "method": "Multi-Agent Evidence Acquisition Auction v1.0",
+        "budget": 1.4,
+        "spent": 0.685,
+        "remaining": 0.715,
+        "max_actions": 3,
+        "privacy_ceiling": 0.8,
+        "selected": [
+          {
+            "id": "current-ccr",
+            "title": "Acquire the newest exact-PWS Consumer Confidence Report",
+            "reason": "The annual utility report is absent from the synchronized index.",
+            "expected_verdict_flip_probability": 0.25,
+            "expected_confidence_gain": 0.2,
+            "severity": 0.5,
+            "effort": 0.15,
+            "source_type": "official",
+            "priority_score": 0.1667,
+            "latency": 0.15,
+            "privacy_risk": 0.1,
+            "expected_flip_probability": 0.25,
+            "health_severity": 0.5,
+            "utility": 0.36,
+            "cost": 0.135,
+            "value_per_cost": 2.6667
+          },
+          {
+            "id": "utility-confirmation",
+            "title": "Obtain utility service confirmation for the parcel",
+            "reason": "Provider identity is unresolved or sensitive to coordinate perturbation.",
+            "expected_verdict_flip_probability": 0.75,
+            "expected_confidence_gain": 0.45,
+            "severity": 0.9,
+            "effort": 0.35,
+            "source_type": "official",
+            "priority_score": 0.8679,
+            "latency": 0.35,
+            "privacy_risk": 0.1,
+            "expected_flip_probability": 0.75,
+            "health_severity": 0.9,
+            "utility": 0.6975,
+            "cost": 0.275,
+            "value_per_cost": 2.5364
+          },
+          {
+            "id": "fresh-chemistry",
+            "title": "Acquire current Florida DEP chemistry or utility sampling results",
+            "reason": "The most recent bundled chemistry is old enough to dominate the uncertainty budget.",
+            "expected_verdict_flip_probability": 0.45,
+            "expected_confidence_gain": 0.35,
+            "severity": 0.7,
+            "effort": 0.35,
+            "source_type": "official",
+            "priority_score": 0.315,
+            "latency": 0.35,
+            "privacy_risk": 0.1,
+            "expected_flip_probability": 0.45,
+            "health_severity": 0.7,
+            "utility": 0.5225,
+            "cost": 0.275,
+            "value_per_cost": 1.9
+          }
+        ],
+        "bids": [
+          {
+            "id": "current-ccr",
+            "title": "Acquire the newest exact-PWS Consumer Confidence Report",
+            "reason": "The annual utility report is absent from the synchronized index.",
+            "expected_verdict_flip_probability": 0.25,
+            "expected_confidence_gain": 0.2,
+            "severity": 0.5,
+            "effort": 0.15,
+            "source_type": "official",
+            "priority_score": 0.1667,
+            "latency": 0.15,
+            "privacy_risk": 0.1,
+            "expected_flip_probability": 0.25,
+            "health_severity": 0.5,
+            "utility": 0.36,
+            "cost": 0.135,
+            "value_per_cost": 2.6667
+          },
+          {
+            "id": "utility-confirmation",
+            "title": "Obtain utility service confirmation for the parcel",
+            "reason": "Provider identity is unresolved or sensitive to coordinate perturbation.",
+            "expected_verdict_flip_probability": 0.75,
+            "expected_confidence_gain": 0.45,
+            "severity": 0.9,
+            "effort": 0.35,
+            "source_type": "official",
+            "priority_score": 0.8679,
+            "latency": 0.35,
+            "privacy_risk": 0.1,
+            "expected_flip_probability": 0.75,
+            "health_severity": 0.9,
+            "utility": 0.6975,
+            "cost": 0.275,
+            "value_per_cost": 2.5364
+          },
+          {
+            "id": "fresh-chemistry",
+            "title": "Acquire current Florida DEP chemistry or utility sampling results",
+            "reason": "The most recent bundled chemistry is old enough to dominate the uncertainty budget.",
+            "expected_verdict_flip_probability": 0.45,
+            "expected_confidence_gain": 0.35,
+            "severity": 0.7,
+            "effort": 0.35,
+            "source_type": "official",
+            "priority_score": 0.315,
+            "latency": 0.35,
+            "privacy_risk": 0.1,
+            "expected_flip_probability": 0.45,
+            "health_severity": 0.7,
+            "utility": 0.5225,
+            "cost": 0.275,
+            "value_per_cost": 1.9
+          },
+          {
+            "id": "contradiction-resolution",
+            "title": "Resolve the highest-impact contradiction",
+            "reason": "Conflicting or incomplete evidence currently limits the defensible confidence.",
+            "expected_verdict_flip_probability": 0.5,
+            "expected_confidence_gain": 0.3,
+            "severity": 0.8,
+            "effort": 0.4,
+            "source_type": "official",
+            "priority_score": 0.3,
+            "latency": 0.4,
+            "privacy_risk": 0.1,
+            "expected_flip_probability": 0.5,
+            "health_severity": 0.8,
+            "utility": 0.545,
+            "cost": 0.31,
+            "value_per_cost": 1.7581
+          },
+          {
+            "id": "coverage-gap",
+            "title": "Acquire missing contaminant classes and monitoring schedules",
+            "reason": "Sparse analyte or class coverage prevents a broad water-quality conclusion.",
+            "expected_verdict_flip_probability": 0.35,
+            "expected_confidence_gain": 0.3,
+            "severity": 0.65,
+            "effort": 0.5,
+            "source_type": "official",
+            "priority_score": 0.1365,
+            "latency": 0.5,
+            "privacy_risk": 0.1,
+            "expected_flip_probability": 0.35,
+            "health_severity": 0.65,
+            "utility": 0.4625,
+            "cost": 0.38,
+            "value_per_cost": 1.2171
+          },
+          {
+            "id": "household-sample",
+            "title": "Obtain an accredited first-draw and flushed household tap sample",
+            "reason": "No public record can establish this home’s tap concentration without a sample from the home.",
+            "expected_verdict_flip_probability": 0.65,
+            "expected_confidence_gain": 0.5,
+            "severity": 1,
+            "effort": 0.8,
+            "source_type": "laboratory",
+            "priority_score": 0.4063,
+            "latency": 0.8,
+            "privacy_risk": 0.6,
+            "expected_flip_probability": 0.65,
+            "health_severity": 1,
+            "utility": 0.66,
+            "cost": 0.74,
+            "value_per_cost": 0.8919
+          }
+        ],
+        "pareto_frontier": [
+          {
+            "id": "current-ccr",
+            "title": "Acquire the newest exact-PWS Consumer Confidence Report",
+            "reason": "The annual utility report is absent from the synchronized index.",
+            "expected_verdict_flip_probability": 0.25,
+            "expected_confidence_gain": 0.2,
+            "severity": 0.5,
+            "effort": 0.15,
+            "source_type": "official",
+            "priority_score": 0.1667,
+            "latency": 0.15,
+            "privacy_risk": 0.1,
+            "expected_flip_probability": 0.25,
+            "health_severity": 0.5,
+            "utility": 0.36,
+            "cost": 0.135,
+            "value_per_cost": 2.6667
+          },
+          {
+            "id": "utility-confirmation",
+            "title": "Obtain utility service confirmation for the parcel",
+            "reason": "Provider identity is unresolved or sensitive to coordinate perturbation.",
+            "expected_verdict_flip_probability": 0.75,
+            "expected_confidence_gain": 0.45,
+            "severity": 0.9,
+            "effort": 0.35,
+            "source_type": "official",
+            "priority_score": 0.8679,
+            "latency": 0.35,
+            "privacy_risk": 0.1,
+            "expected_flip_probability": 0.75,
+            "health_severity": 0.9,
+            "utility": 0.6975,
+            "cost": 0.275,
+            "value_per_cost": 2.5364
+          }
+        ],
+        "expected_combined_confidence_gain": 0.714,
+        "interpretation": "Evidence requests compete on expected error reduction, verdict-flip probability, health severity, acquisition effort, latency, and privacy. The coordinator allocates a bounded budget rather than requesting every possible dataset."
+      }
+    },
+    {
+      "name": "Adversarial Verdict Envelope Agent",
+      "status": "stress-sensitive",
+      "output": {
+        "method": "Adversarial Verdict Envelope v1.0",
+        "base_system_confidence": 0.2034,
+        "pessimistic_system_confidence": 0,
+        "optimistic_system_confidence": 0.2534,
+        "envelope_width": 0.2534,
+        "base_label": "insufficient",
+        "pessimistic_label": "insufficient",
+        "optimistic_label": "insufficient",
+        "stress_scenarios": [
+          {
+            "scenario": "remove-most-influential-origin",
+            "penalty": 0.08
+          },
+          {
+            "scenario": "missing-contaminant-groups",
+            "penalty": 0.15
+          },
+          {
+            "scenario": "household-scope-unobserved",
+            "penalty": 0.35,
+            "household_only": true
+          },
+          {
+            "scenario": "causal-system-path-incomplete",
+            "penalty": 0.2
+          },
+          {
+            "scenario": "negotiation-undecided-claims",
+            "penalty": 0.04
+          }
+        ],
+        "stable_under_stress": false,
+        "interpretation": "The platform computes a bounded confidence envelope after simultaneously applying plausible adverse evidence conditions. This is not a probabilistic confidence interval; it is a structured robustness stress test."
+      }
+    },
+    {
+      "name": "Adversarial Reviewer Agent",
+      "status": "challenged",
+      "output": {
+        "status": "challenged",
+        "challenges": [
+          "No direct household measurement supports a household concentration claim.",
+          "Unresolved contradiction: Address falls in a mapped service-area gap."
+        ],
+        "severity": "normal",
+        "human_review_required": false,
+        "decision": "The synthesis cannot be promoted above the reviewer findings."
+      }
+    }
+  ],
+  "proof": {
+    "claim": "The evidence does not support assigning a water system or contamination result to this address.",
+    "what_is_proven": [
+      "only the evidence listed below"
+    ],
+    "what_is_not_proven": [
+      "the concentration at the individual kitchen tap",
+      "that a historical detection remains present today",
+      "that every home in the system receives identical water",
+      "that an online notice naming a street or neighborhood is a laboratory measurement from this home",
+      "that a nearby Water Quality Portal station represents this home’s tap or the resolved utility’s compliance sample"
+    ],
+    "confidence": "insufficient"
+  },
+  "federal_data": {
+    "sdwis": {
+      "pwsid": "",
+      "synced": false,
+      "system": null,
+      "facilities": [],
+      "geographic_areas": [],
+      "service_areas": [],
+      "violations": {
+        "all": [],
+        "active": [],
+        "active_health_based_or_treatment": [],
+        "active_monitoring_or_reporting": []
+      },
+      "lcr_samples": [],
+      "site_visits": [],
+      "events": [],
+      "public_notices": [],
+      "compliance_status": "not-synced",
+      "disclaimer": "EPA SDWIS/ECHO is a system and compliance repository. Federal reporting can lag state or local records and does not represent a sample from the submitted household unless a row explicitly identifies that home."
+    },
+    "wqp": {
+      "synced": false,
+      "stations": [],
+      "reason": "address coordinates unavailable",
+      "disclaimer": "Water Quality Portal records are environmental monitoring data from nearby stations (such as lakes, streams, groundwater wells, or source-water locations). They are contextual evidence only and are not household tap samples or proof of the public water system’s compliance."
+    },
+    "ccr": {
+      "pwsid": "",
+      "synced": true,
+      "latest": null,
+      "reports": [],
+      "disclaimer": "A Consumer Confidence Report is an annual system-level report. It describes the utility’s source water, detected contaminants, and compliance; it is not a laboratory test of the submitted home."
+    },
+    "summary": {
+      "manifest": {
+        "status": "not-synced",
+        "generated_at": null,
+        "sdwis": {
+          "status": "not-synced",
+          "source": "EPA ECHO/SDWIS"
+        },
+        "wqp": {
+          "status": "not-synced",
+          "source": "EPA/USGS Water Quality Portal",
+          "county_fips": "US:12:117"
+        },
+        "ccr": {
+          "status": "not-synced",
+          "source": "EPA CCR finder and official utility reports"
+        },
+        "errors": []
+      },
+      "sdwis_systems": 0,
+      "sdwis_facilities": 0,
+      "sdwis_violations": 0,
+      "sdwis_active_violations": 0,
+      "sdwis_lcr_samples": 0,
+      "wqp_stations": 0,
+      "wqp_results": 0,
+      "ccr_reports": 38,
+      "pwsids": 38,
+      "status": "not-synced"
+    }
+  },
+  "analyte_reports": [],
+  "metal_reports": [],
+  "household_lead_risk": {
+    "tier": "lower-indicator-risk",
+    "score": 0,
+    "year_built": null,
+    "service_line_status": "UNKNOWN",
+    "reasons": [],
+    "disclaimer": "This is a plumbing/service-line risk indicator, not a predicted lead concentration."
+  },
+  "private_well_pathway": {
+    "activated": true,
+    "coordinates": null,
+    "well_permits": [],
+    "nearby_contamination_sites": [],
+    "septic_density": null,
+    "aquifer_vulnerability": null,
+    "recommendation": "Obtain a certified private-well laboratory test; modeled proximity and vulnerability indicators are not measurements."
+  },
+  "evidence": [],
+  "contradictions": [
+    "Address falls in a mapped service-area gap."
+  ],
+  "source_registry": [
+    {
+      "id": "seminole-water-service-areas",
+      "name": "Seminole County Water Service Areas",
+      "authority": "Seminole County / ArcGIS Online",
+      "kind": "official_service_area_geometry",
+      "item_id": "41f6f18ec9cd48a5b89b94e946cf2143",
+      "url": "https://www.arcgis.com/home/item.html?id=41f6f18ec9cd48a5b89b94e946cf2143",
+      "metadata_url": "https://www.arcgis.com/sharing/rest/content/items/41f6f18ec9cd48a5b89b94e946cf2143?f=json",
+      "trust": 1,
+      "notes": "Public provider-boundary polygons. The layer itself notes uncertainty where roads form service boundaries."
+    },
+    {
+      "id": "fdep-chemical-current",
+      "name": "Florida DEP Current Chemical Data",
+      "authority": "Florida Department of Environmental Protection",
+      "kind": "official_regulatory_results",
+      "url": "https://floridadep.gov/water/source-drinking-water/content/chemical-data",
+      "trust": 1,
+      "notes": "Reported Safe Drinking Water Act chemical results, including inorganic contaminants."
+    },
+    {
+      "id": "fdep-chemical-historical",
+      "name": "Florida DEP Historical Chemical Data",
+      "authority": "Florida Department of Environmental Protection",
+      "kind": "official_historical_results",
+      "url": "https://publicfiles.dep.state.fl.us/DWRM/Drinking%20Water%20Data/CHEM/",
+      "trust": 1,
+      "notes": "Historical annual chemical files."
+    },
+    {
+      "id": "census-geocoder",
+      "name": "U.S. Census Geocoder",
+      "authority": "U.S. Census Bureau",
+      "kind": "official_address_geocoder",
+      "url": "https://geocoding.geo.census.gov/geocoder/",
+      "trust": 0.98,
+      "notes": "Used only to normalize an address and obtain coordinates."
+    },
+    {
+      "id": "seminole-address-points",
+      "name": "Seminole County Situs Address Points",
+      "authority": "Seminole County GIS",
+      "kind": "official_address_points",
+      "url": "https://www.seminolecountyfl.gov/departments-services/information-technology/gis-geographic-information-systems/gis-data",
+      "trust": 1,
+      "notes": "County states address points are updated weekly. Optional secondary verification source."
+    },
+    {
+      "id": "fdep-lead-service-line",
+      "name": "Florida DEP Lead Service Line Inventory",
+      "authority": "Florida Department of Environmental Protection",
+      "kind": "official_service_line_inventory",
+      "url": "https://floridadep.gov/water/source-drinking-water/content/lead-service-line-inventory",
+      "trust": 1,
+      "notes": "Address/building-specific service-line evidence where a utility publishes a matching inventory."
+    },
+    {
+      "id": "epa-sdwis-echo",
+      "name": "EPA ECHO / Safe Drinking Water Information System",
+      "authority": "U.S. Environmental Protection Agency",
+      "kind": "official_federal_system_compliance",
+      "url": "https://echo.epa.gov/tools/data-downloads/sdwa-download-summary",
+      "trust": 0.98,
+      "notes": "Federal system, facility, compliance, violation, lead-and-copper, site-visit, and enforcement context. EPA states that the downloadable SDWA data are refreshed quarterly."
+    },
+    {
+      "id": "epa-usgs-wqp",
+      "name": "EPA/USGS Water Quality Portal",
+      "authority": "U.S. EPA, USGS, and participating agencies",
+      "kind": "official_environmental_monitoring_context",
+      "url": "https://www.waterqualitydata.us/",
+      "trust": 0.9,
+      "notes": "Nearby lake, stream, groundwater, source-water, and other environmental monitoring records. These are not automatically tap-water or PWS compliance samples."
+    },
+    {
+      "id": "consumer-confidence-report",
+      "name": "Consumer Confidence Reports",
+      "authority": "Community water systems / U.S. EPA / Florida DEP",
+      "kind": "official_annual_system_report",
+      "url": "https://sdwis.epa.gov/ords/safewater/f?p=136:102::::::",
+      "trust": 0.96,
+      "notes": "Annual utility reports with source-water, detected-contaminant, and compliance information. System-level, not household-level."
+    }
+  ],
+  "live_web": {
+    "official_context": [],
+    "leads_only": [],
+    "address_evidence": {
+      "searched": true,
+      "raw_items_checked": 0,
+      "counts": {
+        "exact_address": 0,
+        "affected_address_range": 0,
+        "street": 0,
+        "neighborhood": 0,
+        "system_context": 0
+      },
+      "best_scope": "none",
+      "best_match": null,
+      "matches": [],
+      "system_context": [],
+      "disclaimer": "Online address, street, and neighborhood matches are contextual public evidence. They do not become a household contaminant measurement unless the source explicitly reports a sample from that home."
+    },
+    "public_search_enabled": false,
+    "checked_at": "2026-07-23T02:46:10.490Z",
+    "errors": [
+      {
+        "source": "epa-echo-sdwis",
+        "error": "HTTP 403"
+      },
+      {
+        "source": "fdep-public-reports",
+        "error": "HTTP 403"
+      },
+      {
+        "source": "fdep-ccr",
+        "error": "HTTP 403"
+      },
+      {
+        "source": "fdep-lead-inventory",
+        "error": "HTTP 403"
+      }
+    ]
+  },
+  "public_records_tracker": {
+    "matching_requests": [],
+    "official_request_channels": [
+      {
+        "agency": "Florida DEP",
+        "url": "https://floridadep.gov/comm/ombudsman-public-services/content/public-record-request",
+        "email": "PublicRecordsRequests_Regulatory@FloridaDEP.gov"
+      },
+      {
+        "agency": "Seminole County",
+        "url": "https://www.seminolecountyfl.gov/departments-services/county-managers-office/public-records-request"
+      }
+    ]
+  },
+  "verification_policy": {
+    "two_independent_originating_samples_required": true,
+    "publisher_replicas_do_not_count": true,
+    "single_origin_label": "single-origin-sample",
+    "lab_accreditation_required_for_top_tier": true,
+    "community_content_leads_only": true
+  },
+  "errors": [
+    {
+      "stage": "census-geocoder",
+      "message": "HTTP 403 from geocoding.geo.census.gov: Host not in allowlist: geocoding.geo.census.gov. Add this host to your network egress settings to allow access."
+    },
+    {
+      "stage": "arcgis-geocoder",
+      "message": "HTTP 403 from geocode.arcgis.com: Host not in allowlist: geocode.arcgis.com. Add this host to your network egress settings to allow access."
+    },
+    {
+      "stage": "nominatim-geocoder",
+      "message": "HTTP 403 from nominatim.openstreetmap.org: Host not in allowlist: nominatim.openstreetmap.org. Add this host to your network egress settings to allow access."
+    },
+    {
+      "source": "epa-echo-sdwis",
+      "error": "HTTP 403"
+    },
+    {
+      "source": "fdep-public-reports",
+      "error": "HTTP 403"
+    },
+    {
+      "source": "fdep-ccr",
+      "error": "HTTP 403"
+    },
+    {
+      "source": "fdep-lead-inventory",
+      "error": "HTTP 403"
+    }
+  ],
+  "peer_system_comparison": {
+    "status": "unresolved-provider",
+    "comparisons": [],
+    "disclaimer": "A peer comparison requires an exact PWS."
+  },
+  "counterfactual_stability": {
+    "status": "not-computed",
+    "reason": "address not geocoded",
+    "samples": [],
+    "rings": [],
+    "stable_fraction": 0,
+    "stability_score": 0,
+    "max_unanimous_radius_m": 0,
+    "alternate_pwsids": []
+  },
+  "uncertainty_budget": {
+    "method": "dimension-separated weighted geometric confidence with hard epistemic caps",
+    "dimensions": {
+      "geolocation": 0,
+      "provider_identity": 0,
+      "spatial_robustness": 0.18,
+      "evidence_scope": 0.2,
+      "temporal_freshness": 0.2,
+      "contaminant_coverage": 0.1,
+      "originating_sample_independence": 0.1,
+      "source_conflict": 0.7407,
+      "federal_context_availability": 0.7167
+    },
+    "system_evidence_confidence": 0.2034,
+    "system_evidence_label": "insufficient",
+    "household_exposure_confidence": 0.2534,
+    "household_exposure_label": "insufficient",
+    "dominant_uncertainties": [
+      {
+        "dimension": "geolocation",
+        "confidence": 0,
+        "uncertainty": 1
+      },
+      {
+        "dimension": "provider_identity",
+        "confidence": 0,
+        "uncertainty": 1
+      },
+      {
+        "dimension": "contaminant_coverage",
+        "confidence": 0.1,
+        "uncertainty": 0.9
+      },
+      {
+        "dimension": "originating_sample_independence",
+        "confidence": 0.1,
+        "uncertainty": 0.9
+      }
+    ],
+    "hard_caps": {
+      "unresolved_provider": 0.25,
+      "service_area_gap": 0.3,
+      "no_exact_household_sample": 0.49
+    },
+    "interpretation": "The system-level evidence may be strong while household-exposure confidence remains capped because no sample from the submitted home exists."
+  },
+  "agent_negotiation": {
+    "protocol": "Auditable Dialectical Evidence Negotiation v1.0",
+    "accepted_claims": [],
+    "rejected_claims": [
+      {
+        "key": "provider-identity::A unique PWS serves the geocoded point",
+        "topic": "provider-identity",
+        "proposition": "A unique PWS serves the geocoded point",
+        "scope": "system",
+        "support_score": 0,
+        "opposition_score": 0.9405,
+        "confidence": 0,
+        "supporting_agents": [],
+        "opposing_agents": [
+          "Provider Identity Agent"
+        ],
+        "evidence_ids": [],
+        "independent_support_origins": 0,
+        "status": "rejected",
+        "reason": "hard epistemic veto by Provider Identity Agent: the provider crosswalk did not accept a unique PWS"
+      },
+      {
+        "key": "household-measurement::The report establishes contaminant concentrations at the submitted household tap",
+        "topic": "household-measurement",
+        "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+        "scope": "system",
+        "support_score": 0,
+        "opposition_score": 0.999,
+        "confidence": 0,
+        "supporting_agents": [],
+        "opposing_agents": [
+          "Evidence Scope Guardian"
+        ],
+        "evidence_ids": [],
+        "independent_support_origins": 0,
+        "status": "rejected",
+        "reason": "hard epistemic veto by Evidence Scope Guardian: no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+      }
+    ],
+    "undecided_claims": [
+      {
+        "key": "unqualified-high-confidence::The report can be presented without unresolved limitations",
+        "topic": "unqualified-high-confidence",
+        "proposition": "The report can be presented without unresolved limitations",
+        "scope": "system",
+        "support_score": 0,
+        "opposition_score": 0.57,
+        "confidence": 0,
+        "supporting_agents": [],
+        "opposing_agents": [
+          "Contradiction Agent"
+        ],
+        "evidence_ids": [],
+        "independent_support_origins": 0,
+        "status": "undecided",
+        "reason": "support and opposition did not separate enough for a defensible conclusion"
+      }
+    ],
+    "dissent": [
+      {
+        "topic": "provider-identity",
+        "proposition": "A unique PWS serves the geocoded point",
+        "agents": [
+          "Provider Identity Agent"
+        ],
+        "reasons": [
+          "the provider crosswalk did not accept a unique PWS"
+        ]
+      },
+      {
+        "topic": "household-measurement",
+        "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+        "agents": [
+          "Evidence Scope Guardian"
+        ],
+        "reasons": [
+          "no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+        ]
+      },
+      {
+        "topic": "unqualified-high-confidence",
+        "proposition": "The report can be presented without unresolved limitations",
+        "agents": [
+          "Contradiction Agent"
+        ],
+        "reasons": [
+          "Address falls in a mapped service-area gap."
+        ]
+      }
+    ],
+    "vetoes": [
+      {
+        "key": "provider-identity::A unique PWS serves the geocoded point",
+        "topic": "provider-identity",
+        "proposition": "A unique PWS serves the geocoded point",
+        "scope": "system",
+        "support_score": 0,
+        "opposition_score": 0.9405,
+        "confidence": 0,
+        "supporting_agents": [],
+        "opposing_agents": [
+          "Provider Identity Agent"
+        ],
+        "evidence_ids": [],
+        "independent_support_origins": 0,
+        "status": "rejected",
+        "reason": "hard epistemic veto by Provider Identity Agent: the provider crosswalk did not accept a unique PWS"
+      },
+      {
+        "key": "household-measurement::The report establishes contaminant concentrations at the submitted household tap",
+        "topic": "household-measurement",
+        "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+        "scope": "system",
+        "support_score": 0,
+        "opposition_score": 0.999,
+        "confidence": 0,
+        "supporting_agents": [],
+        "opposing_agents": [
+          "Evidence Scope Guardian"
+        ],
+        "evidence_ids": [],
+        "independent_support_origins": 0,
+        "status": "rejected",
+        "reason": "hard epistemic veto by Evidence Scope Guardian: no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+      }
+    ],
+    "transcript": [
+      {
+        "round": 1,
+        "name": "proposal",
+        "message": "0 supporting and 3 opposing claims entered the council."
+      },
+      {
+        "round": 2,
+        "name": "challenge",
+        "message": "2 hard veto(es) and 3 dissent set(s) were recorded. Publisher replicas were collapsed by origin key."
+      },
+      {
+        "round": 3,
+        "name": "revision",
+        "message": "Claims violating household/system/environmental scope rules were rejected rather than softened into unsupported household conclusions."
+      },
+      {
+        "round": 4,
+        "name": "final",
+        "message": "Council finalized 0 accepted, 2 rejected, and 1 undecided claim(s)."
+      }
+    ],
+    "consensus_fraction": 0,
+    "policy": {
+      "one_origin_one_vote": true,
+      "hard_scope_vetoes": true,
+      "agent_reliability_weighted": true,
+      "undecided_is_allowed": true
+    }
+  },
+  "claim_robustness_certificate": {
+    "level": "fragile",
+    "checks": [
+      {
+        "id": "provider-accepted",
+        "passed": false,
+        "detail": "No unique PWS accepted"
+      },
+      {
+        "id": "coordinate-perturbation",
+        "passed": false,
+        "detail": "not computed"
+      },
+      {
+        "id": "scope-firewall",
+        "passed": true,
+        "detail": "No household concentration claim was accepted"
+      },
+      {
+        "id": "negotiation-no-hard-veto",
+        "passed": false,
+        "detail": "2 total hard veto(es)"
+      },
+      {
+        "id": "system-confidence",
+        "passed": false,
+        "detail": "system score 0.2034"
+      },
+      {
+        "id": "contradiction-load",
+        "passed": true,
+        "detail": "1 contradiction/limitation item(s)"
+      }
+    ],
+    "passed": 2,
+    "total": 6,
+    "scope": "system-level-only",
+    "certificate_statement": "The conclusion should be treated as provisional because multiple robustness checks did not pass."
+  },
+  "next_best_evidence": [
+    {
+      "id": "utility-confirmation",
+      "title": "Obtain utility service confirmation for the parcel",
+      "reason": "Provider identity is unresolved or sensitive to coordinate perturbation.",
+      "expected_verdict_flip_probability": 0.75,
+      "expected_confidence_gain": 0.45,
+      "severity": 0.9,
+      "effort": 0.35,
+      "source_type": "official",
+      "priority_score": 0.8679
+    },
+    {
+      "id": "household-sample",
+      "title": "Obtain an accredited first-draw and flushed household tap sample",
+      "reason": "No public record can establish this home’s tap concentration without a sample from the home.",
+      "expected_verdict_flip_probability": 0.65,
+      "expected_confidence_gain": 0.5,
+      "severity": 1,
+      "effort": 0.8,
+      "source_type": "laboratory",
+      "priority_score": 0.4063
+    },
+    {
+      "id": "fresh-chemistry",
+      "title": "Acquire current Florida DEP chemistry or utility sampling results",
+      "reason": "The most recent bundled chemistry is old enough to dominate the uncertainty budget.",
+      "expected_verdict_flip_probability": 0.45,
+      "expected_confidence_gain": 0.35,
+      "severity": 0.7,
+      "effort": 0.35,
+      "source_type": "official",
+      "priority_score": 0.315
+    },
+    {
+      "id": "contradiction-resolution",
+      "title": "Resolve the highest-impact contradiction",
+      "reason": "Conflicting or incomplete evidence currently limits the defensible confidence.",
+      "expected_verdict_flip_probability": 0.5,
+      "expected_confidence_gain": 0.3,
+      "severity": 0.8,
+      "effort": 0.4,
+      "source_type": "official",
+      "priority_score": 0.3
+    },
+    {
+      "id": "current-ccr",
+      "title": "Acquire the newest exact-PWS Consumer Confidence Report",
+      "reason": "The annual utility report is absent from the synchronized index.",
+      "expected_verdict_flip_probability": 0.25,
+      "expected_confidence_gain": 0.2,
+      "severity": 0.5,
+      "effort": 0.15,
+      "source_type": "official",
+      "priority_score": 0.1667
+    },
+    {
+      "id": "coverage-gap",
+      "title": "Acquire missing contaminant classes and monitoring schedules",
+      "reason": "Sparse analyte or class coverage prevents a broad water-quality conclusion.",
+      "expected_verdict_flip_probability": 0.35,
+      "expected_confidence_gain": 0.3,
+      "severity": 0.65,
+      "effort": 0.5,
+      "source_type": "official",
+      "priority_score": 0.1365
+    }
+  ],
+  "provider_prediction_set": {
+    "status": "no-candidates",
+    "prediction_set": [],
+    "coverage_target": 0.9,
+    "calibration_count": 0
+  },
+  "evidence_applicability_lattice": {
+    "method": "Monotone Evidence Applicability Lattice v1.0",
+    "scope_order": [
+      {
+        "scope": "nearby-environmental-station",
+        "rank": 0
+      },
+      {
+        "scope": "regional-context",
+        "rank": 1
+      },
+      {
+        "scope": "public-water-system-record",
+        "rank": 2
+      },
+      {
+        "scope": "source-well-record",
+        "rank": 3
+      },
+      {
+        "scope": "treatment-entry-record",
+        "rank": 4
+      },
+      {
+        "scope": "distribution-point-record",
+        "rank": 5
+      },
+      {
+        "scope": "tap-sampling-record",
+        "rank": 6
+      },
+      {
+        "scope": "exact-household-sample",
+        "rank": 7
+      }
+    ],
+    "by_claim_scope": {
+      "public-water-system-record": {
+        "eligible": 0,
+        "total": 0,
+        "mean_applicability": 0,
+        "vetoed": 0,
+        "top": []
+      },
+      "exact-household-sample": {
+        "eligible": 0,
+        "total": 0,
+        "mean_applicability": 0,
+        "vetoed": 0,
+        "top": []
+      }
+    },
+    "system_applicable_fraction": 0,
+    "household_applicable_fraction": 0,
+    "household_scope_blocked": true,
+    "evaluated_count": 0,
+    "interpretation": "Evidence may move to an equal or coarser claim scope, never to a finer scope. Spatial, temporal, hydraulic, provenance, laboratory, and regulatory dimensions are jointly required."
+  },
+  "origin_influence_audit": {
+    "method": "Leave-One-Origin-Out Negotiation Influence Audit v1.0",
+    "baseline": {
+      "protocol": "Auditable Dialectical Evidence Negotiation v1.0",
+      "accepted_claims": [],
+      "rejected_claims": [
+        {
+          "key": "provider-identity::A unique PWS serves the geocoded point",
+          "topic": "provider-identity",
+          "proposition": "A unique PWS serves the geocoded point",
+          "scope": "system",
+          "support_score": 0,
+          "opposition_score": 0.9405,
+          "confidence": 0,
+          "supporting_agents": [],
+          "opposing_agents": [
+            "Provider Identity Agent"
+          ],
+          "evidence_ids": [],
+          "independent_support_origins": 0,
+          "status": "rejected",
+          "reason": "hard epistemic veto by Provider Identity Agent: the provider crosswalk did not accept a unique PWS"
+        },
+        {
+          "key": "household-measurement::The report establishes contaminant concentrations at the submitted household tap",
+          "topic": "household-measurement",
+          "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+          "scope": "system",
+          "support_score": 0,
+          "opposition_score": 0.999,
+          "confidence": 0,
+          "supporting_agents": [],
+          "opposing_agents": [
+            "Evidence Scope Guardian"
+          ],
+          "evidence_ids": [],
+          "independent_support_origins": 0,
+          "status": "rejected",
+          "reason": "hard epistemic veto by Evidence Scope Guardian: no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+        }
+      ],
+      "undecided_claims": [
+        {
+          "key": "unqualified-high-confidence::The report can be presented without unresolved limitations",
+          "topic": "unqualified-high-confidence",
+          "proposition": "The report can be presented without unresolved limitations",
+          "scope": "system",
+          "support_score": 0,
+          "opposition_score": 0.57,
+          "confidence": 0,
+          "supporting_agents": [],
+          "opposing_agents": [
+            "Contradiction Agent"
+          ],
+          "evidence_ids": [],
+          "independent_support_origins": 0,
+          "status": "undecided",
+          "reason": "support and opposition did not separate enough for a defensible conclusion"
+        }
+      ],
+      "dissent": [
+        {
+          "topic": "provider-identity",
+          "proposition": "A unique PWS serves the geocoded point",
+          "agents": [
+            "Provider Identity Agent"
+          ],
+          "reasons": [
+            "the provider crosswalk did not accept a unique PWS"
+          ]
+        },
+        {
+          "topic": "household-measurement",
+          "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+          "agents": [
+            "Evidence Scope Guardian"
+          ],
+          "reasons": [
+            "no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+          ]
+        },
+        {
+          "topic": "unqualified-high-confidence",
+          "proposition": "The report can be presented without unresolved limitations",
+          "agents": [
+            "Contradiction Agent"
+          ],
+          "reasons": [
+            "Address falls in a mapped service-area gap."
+          ]
+        }
+      ],
+      "vetoes": [
+        {
+          "key": "provider-identity::A unique PWS serves the geocoded point",
+          "topic": "provider-identity",
+          "proposition": "A unique PWS serves the geocoded point",
+          "scope": "system",
+          "support_score": 0,
+          "opposition_score": 0.9405,
+          "confidence": 0,
+          "supporting_agents": [],
+          "opposing_agents": [
+            "Provider Identity Agent"
+          ],
+          "evidence_ids": [],
+          "independent_support_origins": 0,
+          "status": "rejected",
+          "reason": "hard epistemic veto by Provider Identity Agent: the provider crosswalk did not accept a unique PWS"
+        },
+        {
+          "key": "household-measurement::The report establishes contaminant concentrations at the submitted household tap",
+          "topic": "household-measurement",
+          "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+          "scope": "system",
+          "support_score": 0,
+          "opposition_score": 0.999,
+          "confidence": 0,
+          "supporting_agents": [],
+          "opposing_agents": [
+            "Evidence Scope Guardian"
+          ],
+          "evidence_ids": [],
+          "independent_support_origins": 0,
+          "status": "rejected",
+          "reason": "hard epistemic veto by Evidence Scope Guardian: no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+        }
+      ],
+      "transcript": [
+        {
+          "round": 1,
+          "name": "proposal",
+          "message": "0 supporting and 3 opposing claims entered the council."
+        },
+        {
+          "round": 2,
+          "name": "challenge",
+          "message": "2 hard veto(es) and 3 dissent set(s) were recorded. Publisher replicas were collapsed by origin key."
+        },
+        {
+          "round": 3,
+          "name": "revision",
+          "message": "Claims violating household/system/environmental scope rules were rejected rather than softened into unsupported household conclusions."
+        },
+        {
+          "round": 4,
+          "name": "final",
+          "message": "Council finalized 0 accepted, 2 rejected, and 1 undecided claim(s)."
+        }
+      ],
+      "consensus_fraction": 0,
+      "policy": {
+        "one_origin_one_vote": true,
+        "hard_scope_vetoes": true,
+        "agent_reliability_weighted": true,
+        "undecided_is_allowed": true
+      }
+    },
+    "origin_count": 3,
+    "influences": [
+      {
+        "origin": "contradiction-0",
+        "claim_status_flips": 1,
+        "total_confidence_delta": 0,
+        "flips": [
+          {
+            "claim_key": "unqualified-high-confidence::The report can be presented without unresolved limitations",
+            "from": "undecided",
+            "to": "absent",
+            "confidence_delta": 0
+          }
+        ],
+        "remaining_claims": 2
+      },
+      {
+        "origin": "provider-oppose",
+        "claim_status_flips": 0,
+        "total_confidence_delta": 0,
+        "flips": [],
+        "remaining_claims": 3
+      },
+      {
+        "origin": "scope-veto",
+        "claim_status_flips": 0,
+        "total_confidence_delta": 0,
+        "flips": [],
+        "remaining_claims": 3
+      }
+    ],
+    "dominant_origins": [
+      {
+        "origin": "contradiction-0",
+        "claim_status_flips": 1,
+        "total_confidence_delta": 0,
+        "flips": [
+          {
+            "claim_key": "unqualified-high-confidence::The report can be presented without unresolved limitations",
+            "from": "undecided",
+            "to": "absent",
+            "confidence_delta": 0
+          }
+        ],
+        "remaining_claims": 2
+      }
+    ],
+    "single_origin_fragility": true,
+    "max_confidence_delta": 0,
+    "interpretation": "Each originating evidence unit is removed and the full negotiation is rerun. Publisher replicas sharing an origin are removed together, exposing conclusions dominated by one sample or source."
+  },
+  "contradiction_cutsets": {
+    "status": "no-explicit-claim-contradictions",
+    "groups": [],
+    "minimum_cut_size": 0,
+    "cutsets": []
+  },
+  "coverage_tensor": {
+    "method": "Scope × Time × Analyte × Source Coverage Tensor v1.0",
+    "cell_count": 0,
+    "cells": [],
+    "group_summary": {
+      "INOR": {
+        "measured": false,
+        "analyte_count": 0,
+        "cell_count": 0,
+        "recent_cell_count": 0,
+        "source_families": [],
+        "latest_quarter": null
+      },
+      "DBP": {
+        "measured": false,
+        "analyte_count": 0,
+        "cell_count": 0,
+        "recent_cell_count": 0,
+        "source_families": [],
+        "latest_quarter": null
+      },
+      "VOC": {
+        "measured": false,
+        "analyte_count": 0,
+        "cell_count": 0,
+        "recent_cell_count": 0,
+        "source_families": [],
+        "latest_quarter": null
+      },
+      "SOC": {
+        "measured": false,
+        "analyte_count": 0,
+        "cell_count": 0,
+        "recent_cell_count": 0,
+        "source_families": [],
+        "latest_quarter": null
+      },
+      "RAD": {
+        "measured": false,
+        "analyte_count": 0,
+        "cell_count": 0,
+        "recent_cell_count": 0,
+        "source_families": [],
+        "latest_quarter": null
+      },
+      "PFAS": {
+        "measured": false,
+        "analyte_count": 0,
+        "cell_count": 0,
+        "recent_cell_count": 0,
+        "source_families": [],
+        "latest_quarter": null
+      },
+      "MICRO": {
+        "measured": false,
+        "analyte_count": 0,
+        "cell_count": 0,
+        "recent_cell_count": 0,
+        "source_families": [],
+        "latest_quarter": null
+      },
+      "WQP": {
+        "measured": false,
+        "analyte_count": 0,
+        "cell_count": 0,
+        "recent_cell_count": 0,
+        "source_families": [],
+        "latest_quarter": null
+      }
+    },
+    "expected_groups": [
+      "INOR",
+      "DBP",
+      "VOC",
+      "SOC",
+      "RAD",
+      "PFAS",
+      "MICRO",
+      "WQP"
+    ],
+    "measured_group_count": 0,
+    "missing_groups": [
+      "INOR",
+      "DBP",
+      "VOC",
+      "SOC",
+      "RAD",
+      "PFAS",
+      "MICRO",
+      "WQP"
+    ],
+    "stale_groups": [],
+    "coverage_fraction": 0,
+    "negative_evidence_guard": {
+      "enabled": true,
+      "rule": "A missing cell means not observed in the loaded evidence, never zero and never not present.",
+      "missing_is_zero": false,
+      "non_detect_is_zero": false
+    },
+    "interpretation": "8 expected contaminant group(s) have no loaded system records; absence claims are prohibited for those groups."
+  },
+  "causal_pathway_graph": {
+    "method": "Causal Water-Pathway Proof Graph v1.0",
+    "nodes": [
+      {
+        "id": "source-water",
+        "type": "source-water",
+        "label": "source water not resolved",
+        "observed": false,
+        "confidence": 0.25,
+        "details": {
+          "primary_source": null
+        }
+      },
+      {
+        "id": "treatment",
+        "type": "treatment",
+        "label": "treatment/facility stage",
+        "observed": false,
+        "confidence": 0.45,
+        "details": {}
+      },
+      {
+        "id": "distribution",
+        "type": "distribution-system",
+        "label": "resolved public water system",
+        "observed": false,
+        "confidence": 0.1,
+        "details": {
+          "pwsid": null
+        }
+      },
+      {
+        "id": "service-area",
+        "type": "service-area",
+        "label": "official service-area polygon",
+        "observed": false,
+        "confidence": 0.1,
+        "details": {}
+      },
+      {
+        "id": "premise",
+        "type": "premise",
+        "label": "1101 E 1st St",
+        "observed": true,
+        "confidence": 0.98,
+        "details": {}
+      },
+      {
+        "id": "tap",
+        "type": "household-tap",
+        "label": "household tap",
+        "observed": false,
+        "confidence": 0.15,
+        "details": {
+          "exact_household_samples": 0
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "source-water",
+        "to": "treatment",
+        "type": "source-to-treatment",
+        "observed": false,
+        "confidence": 0.35,
+        "basis": "source type plus treatment-entry evidence"
+      },
+      {
+        "from": "treatment",
+        "to": "distribution",
+        "type": "treated-water-entry",
+        "observed": false,
+        "confidence": 0.45,
+        "basis": "inferred from PWS membership; hydraulic graph unavailable"
+      },
+      {
+        "from": "distribution",
+        "to": "service-area",
+        "type": "system-serves-area",
+        "observed": false,
+        "confidence": 0.1,
+        "basis": "official service-area polygon and provider crosswalk"
+      },
+      {
+        "from": "service-area",
+        "to": "premise",
+        "type": "address-inside-service-area",
+        "observed": false,
+        "confidence": 0.1,
+        "basis": "point-in-polygon address resolution"
+      },
+      {
+        "from": "premise",
+        "to": "tap",
+        "type": "premise-to-tap",
+        "observed": false,
+        "confidence": 0.2,
+        "basis": "no address-linked tap sample"
+      }
+    ],
+    "system_path_complete": false,
+    "household_path_observed": false,
+    "bottleneck": {
+      "from": "distribution",
+      "to": "service-area",
+      "type": "system-serves-area",
+      "observed": false,
+      "confidence": 0.1,
+      "basis": "official service-area polygon and provider crosswalk"
+    },
+    "strongest_supported_scope": "regional-context",
+    "prohibited_inference": "The graph does not contain a fully observed path from a measured water sample to the submitted household tap; household concentration causality is therefore blocked.",
+    "interpretation": "The address-to-system path is supported, but one or more source, hydraulic, premise, or tap links are inferred or absent."
+  },
+  "evidence_acquisition_auction": {
+    "method": "Multi-Agent Evidence Acquisition Auction v1.0",
+    "budget": 1.4,
+    "spent": 0.685,
+    "remaining": 0.715,
+    "max_actions": 3,
+    "privacy_ceiling": 0.8,
+    "selected": [
+      {
+        "id": "current-ccr",
+        "title": "Acquire the newest exact-PWS Consumer Confidence Report",
+        "reason": "The annual utility report is absent from the synchronized index.",
+        "expected_verdict_flip_probability": 0.25,
+        "expected_confidence_gain": 0.2,
+        "severity": 0.5,
+        "effort": 0.15,
+        "source_type": "official",
+        "priority_score": 0.1667,
+        "latency": 0.15,
+        "privacy_risk": 0.1,
+        "expected_flip_probability": 0.25,
+        "health_severity": 0.5,
+        "utility": 0.36,
+        "cost": 0.135,
+        "value_per_cost": 2.6667
+      },
+      {
+        "id": "utility-confirmation",
+        "title": "Obtain utility service confirmation for the parcel",
+        "reason": "Provider identity is unresolved or sensitive to coordinate perturbation.",
+        "expected_verdict_flip_probability": 0.75,
+        "expected_confidence_gain": 0.45,
+        "severity": 0.9,
+        "effort": 0.35,
+        "source_type": "official",
+        "priority_score": 0.8679,
+        "latency": 0.35,
+        "privacy_risk": 0.1,
+        "expected_flip_probability": 0.75,
+        "health_severity": 0.9,
+        "utility": 0.6975,
+        "cost": 0.275,
+        "value_per_cost": 2.5364
+      },
+      {
+        "id": "fresh-chemistry",
+        "title": "Acquire current Florida DEP chemistry or utility sampling results",
+        "reason": "The most recent bundled chemistry is old enough to dominate the uncertainty budget.",
+        "expected_verdict_flip_probability": 0.45,
+        "expected_confidence_gain": 0.35,
+        "severity": 0.7,
+        "effort": 0.35,
+        "source_type": "official",
+        "priority_score": 0.315,
+        "latency": 0.35,
+        "privacy_risk": 0.1,
+        "expected_flip_probability": 0.45,
+        "health_severity": 0.7,
+        "utility": 0.5225,
+        "cost": 0.275,
+        "value_per_cost": 1.9
+      }
+    ],
+    "bids": [
+      {
+        "id": "current-ccr",
+        "title": "Acquire the newest exact-PWS Consumer Confidence Report",
+        "reason": "The annual utility report is absent from the synchronized index.",
+        "expected_verdict_flip_probability": 0.25,
+        "expected_confidence_gain": 0.2,
+        "severity": 0.5,
+        "effort": 0.15,
+        "source_type": "official",
+        "priority_score": 0.1667,
+        "latency": 0.15,
+        "privacy_risk": 0.1,
+        "expected_flip_probability": 0.25,
+        "health_severity": 0.5,
+        "utility": 0.36,
+        "cost": 0.135,
+        "value_per_cost": 2.6667
+      },
+      {
+        "id": "utility-confirmation",
+        "title": "Obtain utility service confirmation for the parcel",
+        "reason": "Provider identity is unresolved or sensitive to coordinate perturbation.",
+        "expected_verdict_flip_probability": 0.75,
+        "expected_confidence_gain": 0.45,
+        "severity": 0.9,
+        "effort": 0.35,
+        "source_type": "official",
+        "priority_score": 0.8679,
+        "latency": 0.35,
+        "privacy_risk": 0.1,
+        "expected_flip_probability": 0.75,
+        "health_severity": 0.9,
+        "utility": 0.6975,
+        "cost": 0.275,
+        "value_per_cost": 2.5364
+      },
+      {
+        "id": "fresh-chemistry",
+        "title": "Acquire current Florida DEP chemistry or utility sampling results",
+        "reason": "The most recent bundled chemistry is old enough to dominate the uncertainty budget.",
+        "expected_verdict_flip_probability": 0.45,
+        "expected_confidence_gain": 0.35,
+        "severity": 0.7,
+        "effort": 0.35,
+        "source_type": "official",
+        "priority_score": 0.315,
+        "latency": 0.35,
+        "privacy_risk": 0.1,
+        "expected_flip_probability": 0.45,
+        "health_severity": 0.7,
+        "utility": 0.5225,
+        "cost": 0.275,
+        "value_per_cost": 1.9
+      },
+      {
+        "id": "contradiction-resolution",
+        "title": "Resolve the highest-impact contradiction",
+        "reason": "Conflicting or incomplete evidence currently limits the defensible confidence.",
+        "expected_verdict_flip_probability": 0.5,
+        "expected_confidence_gain": 0.3,
+        "severity": 0.8,
+        "effort": 0.4,
+        "source_type": "official",
+        "priority_score": 0.3,
+        "latency": 0.4,
+        "privacy_risk": 0.1,
+        "expected_flip_probability": 0.5,
+        "health_severity": 0.8,
+        "utility": 0.545,
+        "cost": 0.31,
+        "value_per_cost": 1.7581
+      },
+      {
+        "id": "coverage-gap",
+        "title": "Acquire missing contaminant classes and monitoring schedules",
+        "reason": "Sparse analyte or class coverage prevents a broad water-quality conclusion.",
+        "expected_verdict_flip_probability": 0.35,
+        "expected_confidence_gain": 0.3,
+        "severity": 0.65,
+        "effort": 0.5,
+        "source_type": "official",
+        "priority_score": 0.1365,
+        "latency": 0.5,
+        "privacy_risk": 0.1,
+        "expected_flip_probability": 0.35,
+        "health_severity": 0.65,
+        "utility": 0.4625,
+        "cost": 0.38,
+        "value_per_cost": 1.2171
+      },
+      {
+        "id": "household-sample",
+        "title": "Obtain an accredited first-draw and flushed household tap sample",
+        "reason": "No public record can establish this home’s tap concentration without a sample from the home.",
+        "expected_verdict_flip_probability": 0.65,
+        "expected_confidence_gain": 0.5,
+        "severity": 1,
+        "effort": 0.8,
+        "source_type": "laboratory",
+        "priority_score": 0.4063,
+        "latency": 0.8,
+        "privacy_risk": 0.6,
+        "expected_flip_probability": 0.65,
+        "health_severity": 1,
+        "utility": 0.66,
+        "cost": 0.74,
+        "value_per_cost": 0.8919
+      }
+    ],
+    "pareto_frontier": [
+      {
+        "id": "current-ccr",
+        "title": "Acquire the newest exact-PWS Consumer Confidence Report",
+        "reason": "The annual utility report is absent from the synchronized index.",
+        "expected_verdict_flip_probability": 0.25,
+        "expected_confidence_gain": 0.2,
+        "severity": 0.5,
+        "effort": 0.15,
+        "source_type": "official",
+        "priority_score": 0.1667,
+        "latency": 0.15,
+        "privacy_risk": 0.1,
+        "expected_flip_probability": 0.25,
+        "health_severity": 0.5,
+        "utility": 0.36,
+        "cost": 0.135,
+        "value_per_cost": 2.6667
+      },
+      {
+        "id": "utility-confirmation",
+        "title": "Obtain utility service confirmation for the parcel",
+        "reason": "Provider identity is unresolved or sensitive to coordinate perturbation.",
+        "expected_verdict_flip_probability": 0.75,
+        "expected_confidence_gain": 0.45,
+        "severity": 0.9,
+        "effort": 0.35,
+        "source_type": "official",
+        "priority_score": 0.8679,
+        "latency": 0.35,
+        "privacy_risk": 0.1,
+        "expected_flip_probability": 0.75,
+        "health_severity": 0.9,
+        "utility": 0.6975,
+        "cost": 0.275,
+        "value_per_cost": 2.5364
+      }
+    ],
+    "expected_combined_confidence_gain": 0.714,
+    "interpretation": "Evidence requests compete on expected error reduction, verdict-flip probability, health severity, acquisition effort, latency, and privacy. The coordinator allocates a bounded budget rather than requesting every possible dataset."
+  },
+  "adversarial_verdict_envelope": {
+    "method": "Adversarial Verdict Envelope v1.0",
+    "base_system_confidence": 0.2034,
+    "pessimistic_system_confidence": 0,
+    "optimistic_system_confidence": 0.2534,
+    "envelope_width": 0.2534,
+    "base_label": "insufficient",
+    "pessimistic_label": "insufficient",
+    "optimistic_label": "insufficient",
+    "stress_scenarios": [
+      {
+        "scenario": "remove-most-influential-origin",
+        "penalty": 0.08
+      },
+      {
+        "scenario": "missing-contaminant-groups",
+        "penalty": 0.15
+      },
+      {
+        "scenario": "household-scope-unobserved",
+        "penalty": 0.35,
+        "household_only": true
+      },
+      {
+        "scenario": "causal-system-path-incomplete",
+        "penalty": 0.2
+      },
+      {
+        "scenario": "negotiation-undecided-claims",
+        "penalty": 0.04
+      }
+    ],
+    "stable_under_stress": false,
+    "interpretation": "The platform computes a bounded confidence envelope after simultaneously applying plausible adverse evidence conditions. This is not a probabilistic confidence interval; it is a structured robustness stress test."
+  },
+  "research_accuracy_layers": {
+    "effective_independence": {
+      "raw_record_count": 0,
+      "unique_originating_samples": 0,
+      "publisher_replica_count": 0,
+      "effective_n": 0,
+      "replication_factor": null,
+      "confidence_multiplier": 0
+    },
+    "hydraulic_admissibility": {
+      "checked": 0,
+      "admissible": 0,
+      "checks": [],
+      "rule": "time-valid hydraulic reachability required"
+    },
+    "evidence_freshness": {
+      "method": "empirical half-life by analyte × aquifer/system stratum",
+      "fallback": "confidence capped when unavailable",
+      "example_weight": 0.8908987181403393
+    },
+    "strategic_sampling_index": {
+      "components": {
+        "mcl_bunching": 0,
+        "mdl_bunching": 0,
+        "censoring_drift": 0,
+        "peer_lab_divergence": 0,
+        "protocol_shift": 0
+      },
+      "weights": {
+        "mcl_bunching": 0.25,
+        "mdl_bunching": 0.15,
+        "censoring_drift": 0.2,
+        "peer_lab_divergence": 0.25,
+        "protocol_shift": 0.15
+      },
+      "composite_score": 0,
+      "tier": "low",
+      "review_required": false,
+      "interpretation": "Screening signal only; it does not establish intentional manipulation."
+    },
+    "bitemporal_ready": true,
+    "verdict_flip_acquisition_ready": true,
+    "hierarchical_partial_pooling": {
+      "status": "insufficient-data",
+      "groups": [],
+      "rule": "borrow strength only across configured comparable strata; never substitute for compliance samples"
+    },
+    "corrosion_chemistry": {
+      "csmr": null,
+      "langelier_saturation_index": null,
+      "ccpp_proxy_mgL_as_CaCO3": null,
+      "csmr_risk_tier": "unknown",
+      "interpretation": "Corrosion-potential inference only; not a predicted tap concentration.",
+      "inputs_complete": {
+        "csmr": false,
+        "langelier": false
+      }
+    },
+    "service_line_material_posterior": {
+      "posterior_probability_lead_or_galvanized": 0.65,
+      "posterior_corrosion_interaction_risk": 0.65,
+      "credible_band_heuristic": [
+        0.5,
+        0.8
+      ],
+      "status": "parcel-era-prior-only",
+      "disclaimer": "Material/risk posterior only; not proof of service-line material and not a predicted lead concentration."
+    },
+    "automatic_change_points": [],
+    "digit_preference_forensics": {
+      "n": 0,
+      "benford_chi_square": 1,
+      "terminal_digit_max_share": 0,
+      "flag": false,
+      "interpretation": "Screening signal only; rounding, reporting limits, and laboratory methods can create benign digit patterns."
+    },
+    "provider_prediction_set": {
+      "status": "no-candidates",
+      "prediction_set": [],
+      "coverage_target": 0.9,
+      "calibration_count": 0
+    },
+    "evidence_applicability_lattice": {
+      "method": "Monotone Evidence Applicability Lattice v1.0",
+      "scope_order": [
+        {
+          "scope": "nearby-environmental-station",
+          "rank": 0
+        },
+        {
+          "scope": "regional-context",
+          "rank": 1
+        },
+        {
+          "scope": "public-water-system-record",
+          "rank": 2
+        },
+        {
+          "scope": "source-well-record",
+          "rank": 3
+        },
+        {
+          "scope": "treatment-entry-record",
+          "rank": 4
+        },
+        {
+          "scope": "distribution-point-record",
+          "rank": 5
+        },
+        {
+          "scope": "tap-sampling-record",
+          "rank": 6
+        },
+        {
+          "scope": "exact-household-sample",
+          "rank": 7
+        }
+      ],
+      "by_claim_scope": {
+        "public-water-system-record": {
+          "eligible": 0,
+          "total": 0,
+          "mean_applicability": 0,
+          "vetoed": 0,
+          "top": []
+        },
+        "exact-household-sample": {
+          "eligible": 0,
+          "total": 0,
+          "mean_applicability": 0,
+          "vetoed": 0,
+          "top": []
+        }
+      },
+      "system_applicable_fraction": 0,
+      "household_applicable_fraction": 0,
+      "household_scope_blocked": true,
+      "evaluated_count": 0,
+      "interpretation": "Evidence may move to an equal or coarser claim scope, never to a finer scope. Spatial, temporal, hydraulic, provenance, laboratory, and regulatory dimensions are jointly required."
+    },
+    "origin_influence_audit": {
+      "method": "Leave-One-Origin-Out Negotiation Influence Audit v1.0",
+      "baseline": {
+        "protocol": "Auditable Dialectical Evidence Negotiation v1.0",
+        "accepted_claims": [],
+        "rejected_claims": [
+          {
+            "key": "provider-identity::A unique PWS serves the geocoded point",
+            "topic": "provider-identity",
+            "proposition": "A unique PWS serves the geocoded point",
+            "scope": "system",
+            "support_score": 0,
+            "opposition_score": 0.9405,
+            "confidence": 0,
+            "supporting_agents": [],
+            "opposing_agents": [
+              "Provider Identity Agent"
+            ],
+            "evidence_ids": [],
+            "independent_support_origins": 0,
+            "status": "rejected",
+            "reason": "hard epistemic veto by Provider Identity Agent: the provider crosswalk did not accept a unique PWS"
+          },
+          {
+            "key": "household-measurement::The report establishes contaminant concentrations at the submitted household tap",
+            "topic": "household-measurement",
+            "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+            "scope": "system",
+            "support_score": 0,
+            "opposition_score": 0.999,
+            "confidence": 0,
+            "supporting_agents": [],
+            "opposing_agents": [
+              "Evidence Scope Guardian"
+            ],
+            "evidence_ids": [],
+            "independent_support_origins": 0,
+            "status": "rejected",
+            "reason": "hard epistemic veto by Evidence Scope Guardian: no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+          }
+        ],
+        "undecided_claims": [
+          {
+            "key": "unqualified-high-confidence::The report can be presented without unresolved limitations",
+            "topic": "unqualified-high-confidence",
+            "proposition": "The report can be presented without unresolved limitations",
+            "scope": "system",
+            "support_score": 0,
+            "opposition_score": 0.57,
+            "confidence": 0,
+            "supporting_agents": [],
+            "opposing_agents": [
+              "Contradiction Agent"
+            ],
+            "evidence_ids": [],
+            "independent_support_origins": 0,
+            "status": "undecided",
+            "reason": "support and opposition did not separate enough for a defensible conclusion"
+          }
+        ],
+        "dissent": [
+          {
+            "topic": "provider-identity",
+            "proposition": "A unique PWS serves the geocoded point",
+            "agents": [
+              "Provider Identity Agent"
+            ],
+            "reasons": [
+              "the provider crosswalk did not accept a unique PWS"
+            ]
+          },
+          {
+            "topic": "household-measurement",
+            "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+            "agents": [
+              "Evidence Scope Guardian"
+            ],
+            "reasons": [
+              "no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+            ]
+          },
+          {
+            "topic": "unqualified-high-confidence",
+            "proposition": "The report can be presented without unresolved limitations",
+            "agents": [
+              "Contradiction Agent"
+            ],
+            "reasons": [
+              "Address falls in a mapped service-area gap."
+            ]
+          }
+        ],
+        "vetoes": [
+          {
+            "key": "provider-identity::A unique PWS serves the geocoded point",
+            "topic": "provider-identity",
+            "proposition": "A unique PWS serves the geocoded point",
+            "scope": "system",
+            "support_score": 0,
+            "opposition_score": 0.9405,
+            "confidence": 0,
+            "supporting_agents": [],
+            "opposing_agents": [
+              "Provider Identity Agent"
+            ],
+            "evidence_ids": [],
+            "independent_support_origins": 0,
+            "status": "rejected",
+            "reason": "hard epistemic veto by Provider Identity Agent: the provider crosswalk did not accept a unique PWS"
+          },
+          {
+            "key": "household-measurement::The report establishes contaminant concentrations at the submitted household tap",
+            "topic": "household-measurement",
+            "proposition": "The report establishes contaminant concentrations at the submitted household tap",
+            "scope": "system",
+            "support_score": 0,
+            "opposition_score": 0.999,
+            "confidence": 0,
+            "supporting_agents": [],
+            "opposing_agents": [
+              "Evidence Scope Guardian"
+            ],
+            "evidence_ids": [],
+            "independent_support_origins": 0,
+            "status": "rejected",
+            "reason": "hard epistemic veto by Evidence Scope Guardian: no exact-household sample is present; system, CCR, WQP, street, and neighborhood evidence cannot be promoted to a household concentration"
+          }
+        ],
+        "transcript": [
+          {
+            "round": 1,
+            "name": "proposal",
+            "message": "0 supporting and 3 opposing claims entered the council."
+          },
+          {
+            "round": 2,
+            "name": "challenge",
+            "message": "2 hard veto(es) and 3 dissent set(s) were recorded. Publisher replicas were collapsed by origin key."
+          },
+          {
+            "round": 3,
+            "name": "revision",
+            "message": "Claims violating household/system/environmental scope rules were rejected rather than softened into unsupported household conclusions."
+          },
+          {
+            "round": 4,
+            "name": "final",
+            "message": "Council finalized 0 accepted, 2 rejected, and 1 undecided claim(s)."
+          }
+        ],
+        "consensus_fraction": 0,
+        "policy": {
+          "one_origin_one_vote": true,
+          "hard_scope_vetoes": true,
+          "agent_reliability_weighted": true,
+          "undecided_is_allowed": true
+        }
+      },
+      "origin_count": 3,
+      "influences": [
+        {
+          "origin": "contradiction-0",
+          "claim_status_flips": 1,
+          "total_confidence_delta": 0,
+          "flips": [
+            {
+              "claim_key": "unqualified-high-confidence::The report can be presented without unresolved limitations",
+              "from": "undecided",
+              "to": "absent",
+              "confidence_delta": 0
+            }
+          ],
+          "remaining_claims": 2
+        },
+        {
+          "origin": "provider-oppose",
+          "claim_status_flips": 0,
+          "total_confidence_delta": 0,
+          "flips": [],
+          "remaining_claims": 3
+        },
+        {
+          "origin": "scope-veto",
+          "claim_status_flips": 0,
+          "total_confidence_delta": 0,
+          "flips": [],
+          "remaining_claims": 3
+        }
+      ],
+      "dominant_origins": [
+        {
+          "origin": "contradiction-0",
+          "claim_status_flips": 1,
+          "total_confidence_delta": 0,
+          "flips": [
+            {
+              "claim_key": "unqualified-high-confidence::The report can be presented without unresolved limitations",
+              "from": "undecided",
+              "to": "absent",
+              "confidence_delta": 0
+            }
+          ],
+          "remaining_claims": 2
+        }
+      ],
+      "single_origin_fragility": true,
+      "max_confidence_delta": 0,
+      "interpretation": "Each originating evidence unit is removed and the full negotiation is rerun. Publisher replicas sharing an origin are removed together, exposing conclusions dominated by one sample or source."
+    },
+    "contradiction_cutsets": {
+      "status": "no-explicit-claim-contradictions",
+      "groups": [],
+      "minimum_cut_size": 0,
+      "cutsets": []
+    },
+    "coverage_tensor": {
+      "method": "Scope × Time × Analyte × Source Coverage Tensor v1.0",
+      "cell_count": 0,
+      "cells": [],
+      "group_summary": {
+        "INOR": {
+          "measured": false,
+          "analyte_count": 0,
+          "cell_count": 0,
+          "recent_cell_count": 0,
+          "source_families": [],
+          "latest_quarter": null
+        },
+        "DBP": {
+          "measured": false,
+          "analyte_count": 0,
+          "cell_count": 0,
+          "recent_cell_count": 0,
+          "source_families": [],
+          "latest_quarter": null
+        },
+        "VOC": {
+          "measured": false,
+          "analyte_count": 0,
+          "cell_count": 0,
+          "recent_cell_count": 0,
+          "source_families": [],
+          "latest_quarter": null
+        },
+        "SOC": {
+          "measured": false,
+          "analyte_count": 0,
+          "cell_count": 0,
+          "recent_cell_count": 0,
+          "source_families": [],
+          "latest_quarter": null
+        },
+        "RAD": {
+          "measured": false,
+          "analyte_count": 0,
+          "cell_count": 0,
+          "recent_cell_count": 0,
+          "source_families": [],
+          "latest_quarter": null
+        },
+        "PFAS": {
+          "measured": false,
+          "analyte_count": 0,
+          "cell_count": 0,
+          "recent_cell_count": 0,
+          "source_families": [],
+          "latest_quarter": null
+        },
+        "MICRO": {
+          "measured": false,
+          "analyte_count": 0,
+          "cell_count": 0,
+          "recent_cell_count": 0,
+          "source_families": [],
+          "latest_quarter": null
+        },
+        "WQP": {
+          "measured": false,
+          "analyte_count": 0,
+          "cell_count": 0,
+          "recent_cell_count": 0,
+          "source_families": [],
+          "latest_quarter": null
+        }
+      },
+      "expected_groups": [
+        "INOR",
+        "DBP",
+        "VOC",
+        "SOC",
+        "RAD",
+        "PFAS",
+        "MICRO",
+        "WQP"
+      ],
+      "measured_group_count": 0,
+      "missing_groups": [
+        "INOR",
+        "DBP",
+        "VOC",
+        "SOC",
+        "RAD",
+        "PFAS",
+        "MICRO",
+        "WQP"
+      ],
+      "stale_groups": [],
+      "coverage_fraction": 0,
+      "negative_evidence_guard": {
+        "enabled": true,
+        "rule": "A missing cell means not observed in the loaded evidence, never zero and never not present.",
+        "missing_is_zero": false,
+        "non_detect_is_zero": false
+      },
+      "interpretation": "8 expected contaminant group(s) have no loaded system records; absence claims are prohibited for those groups."
+    },
+    "causal_pathway_graph": {
+      "method": "Causal Water-Pathway Proof Graph v1.0",
+      "nodes": [
+        {
+          "id": "source-water",
+          "type": "source-water",
+          "label": "source water not resolved",
+          "observed": false,
+          "confidence": 0.25,
+          "details": {
+            "primary_source": null
+          }
+        },
+        {
+          "id": "treatment",
+          "type": "treatment",
+          "label": "treatment/facility stage",
+          "observed": false,
+          "confidence": 0.45,
+          "details": {}
+        },
+        {
+          "id": "distribution",
+          "type": "distribution-system",
+          "label": "resolved public water system",
+          "observed": false,
+          "confidence": 0.1,
+          "details": {
+            "pwsid": null
+          }
+        },
+        {
+          "id": "service-area",
+          "type": "service-area",
+          "label": "official service-area polygon",
+          "observed": false,
+          "confidence": 0.1,
+          "details": {}
+        },
+        {
+          "id": "premise",
+          "type": "premise",
+          "label": "1101 E 1st St",
+          "observed": true,
+          "confidence": 0.98,
+          "details": {}
+        },
+        {
+          "id": "tap",
+          "type": "household-tap",
+          "label": "household tap",
+          "observed": false,
+          "confidence": 0.15,
+          "details": {
+            "exact_household_samples": 0
+          }
+        }
+      ],
+      "edges": [
+        {
+          "from": "source-water",
+          "to": "treatment",
+          "type": "source-to-treatment",
+          "observed": false,
+          "confidence": 0.35,
+          "basis": "source type plus treatment-entry evidence"
+        },
+        {
+          "from": "treatment",
+          "to": "distribution",
+          "type": "treated-water-entry",
+          "observed": false,
+          "confidence": 0.45,
+          "basis": "inferred from PWS membership; hydraulic graph unavailable"
+        },
+        {
+          "from": "distribution",
+          "to": "service-area",
+          "type": "system-serves-area",
+          "observed": false,
+          "confidence": 0.1,
+          "basis": "official service-area polygon and provider crosswalk"
+        },
+        {
+          "from": "service-area",
+          "to": "premise",
+          "type": "address-inside-service-area",
+          "observed": false,
+          "confidence": 0.1,
+          "basis": "point-in-polygon address resolution"
+        },
+        {
+          "from": "premise",
+          "to": "tap",
+          "type": "premise-to-tap",
+          "observed": false,
+          "confidence": 0.2,
+          "basis": "no address-linked tap sample"
+        }
+      ],
+      "system_path_complete": false,
+      "household_path_observed": false,
+      "bottleneck": {
+        "from": "distribution",
+        "to": "service-area",
+        "type": "system-serves-area",
+        "observed": false,
+        "confidence": 0.1,
+        "basis": "official service-area polygon and provider crosswalk"
+      },
+      "strongest_supported_scope": "regional-context",
+      "prohibited_inference": "The graph does not contain a fully observed path from a measured water sample to the submitted household tap; household concentration causality is therefore blocked.",
+      "interpretation": "The address-to-system path is supported, but one or more source, hydraulic, premise, or tap links are inferred or absent."
+    },
+    "evidence_acquisition_auction": {
+      "method": "Multi-Agent Evidence Acquisition Auction v1.0",
+      "budget": 1.4,
+      "spent": 0.685,
+      "remaining": 0.715,
+      "max_actions": 3,
+      "privacy_ceiling": 0.8,
+      "selected": [
+        {
+          "id": "current-ccr",
+          "title": "Acquire the newest exact-PWS Consumer Confidence Report",
+          "reason": "The annual utility report is absent from the synchronized index.",
+          "expected_verdict_flip_probability": 0.25,
+          "expected_confidence_gain": 0.2,
+          "severity": 0.5,
+          "effort": 0.15,
+          "source_type": "official",
+          "priority_score": 0.1667,
+          "latency": 0.15,
+          "privacy_risk": 0.1,
+          "expected_flip_probability": 0.25,
+          "health_severity": 0.5,
+          "utility": 0.36,
+          "cost": 0.135,
+          "value_per_cost": 2.6667
+        },
+        {
+          "id": "utility-confirmation",
+          "title": "Obtain utility service confirmation for the parcel",
+          "reason": "Provider identity is unresolved or sensitive to coordinate perturbation.",
+          "expected_verdict_flip_probability": 0.75,
+          "expected_confidence_gain": 0.45,
+          "severity": 0.9,
+          "effort": 0.35,
+          "source_type": "official",
+          "priority_score": 0.8679,
+          "latency": 0.35,
+          "privacy_risk": 0.1,
+          "expected_flip_probability": 0.75,
+          "health_severity": 0.9,
+          "utility": 0.6975,
+          "cost": 0.275,
+          "value_per_cost": 2.5364
+        },
+        {
+          "id": "fresh-chemistry",
+          "title": "Acquire current Florida DEP chemistry or utility sampling results",
+          "reason": "The most recent bundled chemistry is old enough to dominate the uncertainty budget.",
+          "expected_verdict_flip_probability": 0.45,
+          "expected_confidence_gain": 0.35,
+          "severity": 0.7,
+          "effort": 0.35,
+          "source_type": "official",
+          "priority_score": 0.315,
+          "latency": 0.35,
+          "privacy_risk": 0.1,
+          "expected_flip_probability": 0.45,
+          "health_severity": 0.7,
+          "utility": 0.5225,
+          "cost": 0.275,
+          "value_per_cost": 1.9
+        }
+      ],
+      "bids": [
+        {
+          "id": "current-ccr",
+          "title": "Acquire the newest exact-PWS Consumer Confidence Report",
+          "reason": "The annual utility report is absent from the synchronized index.",
+          "expected_verdict_flip_probability": 0.25,
+          "expected_confidence_gain": 0.2,
+          "severity": 0.5,
+          "effort": 0.15,
+          "source_type": "official",
+          "priority_score": 0.1667,
+          "latency": 0.15,
+          "privacy_risk": 0.1,
+          "expected_flip_probability": 0.25,
+          "health_severity": 0.5,
+          "utility": 0.36,
+          "cost": 0.135,
+          "value_per_cost": 2.6667
+        },
+        {
+          "id": "utility-confirmation",
+          "title": "Obtain utility service confirmation for the parcel",
+          "reason": "Provider identity is unresolved or sensitive to coordinate perturbation.",
+          "expected_verdict_flip_probability": 0.75,
+          "expected_confidence_gain": 0.45,
+          "severity": 0.9,
+          "effort": 0.35,
+          "source_type": "official",
+          "priority_score": 0.8679,
+          "latency": 0.35,
+          "privacy_risk": 0.1,
+          "expected_flip_probability": 0.75,
+          "health_severity": 0.9,
+          "utility": 0.6975,
+          "cost": 0.275,
+          "value_per_cost": 2.5364
+        },
+        {
+          "id": "fresh-chemistry",
+          "title": "Acquire current Florida DEP chemistry or utility sampling results",
+          "reason": "The most recent bundled chemistry is old enough to dominate the uncertainty budget.",
+          "expected_verdict_flip_probability": 0.45,
+          "expected_confidence_gain": 0.35,
+          "severity": 0.7,
+          "effort": 0.35,
+          "source_type": "official",
+          "priority_score": 0.315,
+          "latency": 0.35,
+          "privacy_risk": 0.1,
+          "expected_flip_probability": 0.45,
+          "health_severity": 0.7,
+          "utility": 0.5225,
+          "cost": 0.275,
+          "value_per_cost": 1.9
+        },
+        {
+          "id": "contradiction-resolution",
+          "title": "Resolve the highest-impact contradiction",
+          "reason": "Conflicting or incomplete evidence currently limits the defensible confidence.",
+          "expected_verdict_flip_probability": 0.5,
+          "expected_confidence_gain": 0.3,
+          "severity": 0.8,
+          "effort": 0.4,
+          "source_type": "official",
+          "priority_score": 0.3,
+          "latency": 0.4,
+          "privacy_risk": 0.1,
+          "expected_flip_probability": 0.5,
+          "health_severity": 0.8,
+          "utility": 0.545,
+          "cost": 0.31,
+          "value_per_cost": 1.7581
+        },
+        {
+          "id": "coverage-gap",
+          "title": "Acquire missing contaminant classes and monitoring schedules",
+          "reason": "Sparse analyte or class coverage prevents a broad water-quality conclusion.",
+          "expected_verdict_flip_probability": 0.35,
+          "expected_confidence_gain": 0.3,
+          "severity": 0.65,
+          "effort": 0.5,
+          "source_type": "official",
+          "priority_score": 0.1365,
+          "latency": 0.5,
+          "privacy_risk": 0.1,
+          "expected_flip_probability": 0.35,
+          "health_severity": 0.65,
+          "utility": 0.4625,
+          "cost": 0.38,
+          "value_per_cost": 1.2171
+        },
+        {
+          "id": "household-sample",
+          "title": "Obtain an accredited first-draw and flushed household tap sample",
+          "reason": "No public record can establish this home’s tap concentration without a sample from the home.",
+          "expected_verdict_flip_probability": 0.65,
+          "expected_confidence_gain": 0.5,
+          "severity": 1,
+          "effort": 0.8,
+          "source_type": "laboratory",
+          "priority_score": 0.4063,
+          "latency": 0.8,
+          "privacy_risk": 0.6,
+          "expected_flip_probability": 0.65,
+          "health_severity": 1,
+          "utility": 0.66,
+          "cost": 0.74,
+          "value_per_cost": 0.8919
+        }
+      ],
+      "pareto_frontier": [
+        {
+          "id": "current-ccr",
+          "title": "Acquire the newest exact-PWS Consumer Confidence Report",
+          "reason": "The annual utility report is absent from the synchronized index.",
+          "expected_verdict_flip_probability": 0.25,
+          "expected_confidence_gain": 0.2,
+          "severity": 0.5,
+          "effort": 0.15,
+          "source_type": "official",
+          "priority_score": 0.1667,
+          "latency": 0.15,
+          "privacy_risk": 0.1,
+          "expected_flip_probability": 0.25,
+          "health_severity": 0.5,
+          "utility": 0.36,
+          "cost": 0.135,
+          "value_per_cost": 2.6667
+        },
+        {
+          "id": "utility-confirmation",
+          "title": "Obtain utility service confirmation for the parcel",
+          "reason": "Provider identity is unresolved or sensitive to coordinate perturbation.",
+          "expected_verdict_flip_probability": 0.75,
+          "expected_confidence_gain": 0.45,
+          "severity": 0.9,
+          "effort": 0.35,
+          "source_type": "official",
+          "priority_score": 0.8679,
+          "latency": 0.35,
+          "privacy_risk": 0.1,
+          "expected_flip_probability": 0.75,
+          "health_severity": 0.9,
+          "utility": 0.6975,
+          "cost": 0.275,
+          "value_per_cost": 2.5364
+        }
+      ],
+      "expected_combined_confidence_gain": 0.714,
+      "interpretation": "Evidence requests compete on expected error reduction, verdict-flip probability, health severity, acquisition effort, latency, and privacy. The coordinator allocates a bounded budget rather than requesting every possible dataset."
+    },
+    "adversarial_verdict_envelope": {
+      "method": "Adversarial Verdict Envelope v1.0",
+      "base_system_confidence": 0.2034,
+      "pessimistic_system_confidence": 0,
+      "optimistic_system_confidence": 0.2534,
+      "envelope_width": 0.2534,
+      "base_label": "insufficient",
+      "pessimistic_label": "insufficient",
+      "optimistic_label": "insufficient",
+      "stress_scenarios": [
+        {
+          "scenario": "remove-most-influential-origin",
+          "penalty": 0.08
+        },
+        {
+          "scenario": "missing-contaminant-groups",
+          "penalty": 0.15
+        },
+        {
+          "scenario": "household-scope-unobserved",
+          "penalty": 0.35,
+          "household_only": true
+        },
+        {
+          "scenario": "causal-system-path-incomplete",
+          "penalty": 0.2
+        },
+        {
+          "scenario": "negotiation-undecided-claims",
+          "penalty": 0.04
+        }
+      ],
+      "stable_under_stress": false,
+      "interpretation": "The platform computes a bounded confidence envelope after simultaneously applying plausible adverse evidence conditions. This is not a probabilistic confidence interval; it is a structured robustness stress test."
+    },
+    "optional_layers": {
+      "interval_censored_ccr": true,
+      "hydraulic_topology_inference": true,
+      "extreme_value_tail": true,
+      "rainfall_lag_adjustment": true,
+      "private_well_surface_uncertainty": true
+    }
+  },
+  "reproducibility": {
+    "snapshot_id": "2d751a1a86e361f9254e3dad",
+    "data_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "source_hash": "32a539572277acef4bac60e429603a2091c6be271d049a843c141b1fa77dff95",
+    "config_hash": "eb4227bbb98b9ae68128f5d772c3a6a7bdd9a5e3bf97cb295128cc370a714ee6",
+    "code_version": "13.7.0",
+    "model_manifest": {
+      "validator": "deterministic-rules-7.0",
+      "negotiation_protocol": "Auditable Dialectical Evidence Negotiation v1.1",
+      "llm": "disabled-by-default"
+    },
+    "created_at": "2026-07-23T02:46:10.498Z",
+    "deterministic_inputs_pinned": true
+  },
+  "adversarial_review": {
+    "status": "challenged",
+    "challenges": [
+      "No direct household measurement supports a household concentration claim.",
+      "Unresolved contradiction: Address falls in a mapped service-area gap."
+    ],
+    "severity": "normal",
+    "human_review_required": false,
+    "decision": "The synthesis cannot be promoted above the reviewer findings."
+  },
+  "human_review_queue": {
+    "required": false,
+    "reasons": [
+      "No direct household measurement supports a household concentration claim.",
+      "Unresolved contradiction: Address falls in a mapped service-area gap."
+    ],
+    "status": "not-required"
+  },
+  "local_data": {
+    "emerging_contaminants": {
+      "synced": false,
+      "pwsid": "",
+      "benchmarks_rule": "EPA National Primary Drinking Water Regulation for PFAS (final rule published April 2024)",
+      "ucmr5_results": [],
+      "fdep_status": [],
+      "wqp_pfas_context": [],
+      "ewg_indicators": [],
+      "detection_count": 0,
+      "exceedance_count": 0,
+      "exceedances": [],
+      "hazard_index": null,
+      "disclaimer": "PFAS results are public-water-system occurrence/compliance records (UCMR 5, FDEP) or nearby environmental monitoring (Water Quality Portal). They are system or watershed level, never a laboratory test of the submitted home. UCMR 5 is occurrence monitoring, not a compliance finding."
+    },
+    "private_well_context": {
+      "synced": false,
+      "nearby_dioxane_well_samples": [],
+      "nearby_dioxane_detections": 0,
+      "nearby_well_points": 0,
+      "nearby_well_points_sample": [],
+      "fdoh_records": [],
+      "cup_areas": 0,
+      "disclaimer": "Private-well and septic records describe neighboring private infrastructure and contextual risk, not the submitted household. The 1,4-dioxane study rows are measurements of the sampled well only. Only an address-specific laboratory sample can characterize this home."
+    },
+    "local_telemetry": {
+      "synced": false,
+      "nearby_atlas_stations": [],
+      "nearby_surface_water_sites": [],
+      "nearby_weather_stations": [],
+      "gis_asset_count": 0,
+      "disclaimer": "Telemetry and watershed data are environmental-monitoring and infrastructure context maintained by Seminole County and USF. They describe watersheds, source water, and assets, not treated water at a household faucet."
+    },
+    "sources": {
+      "pfas": [
+        {
+          "id": "epa-ucmr5",
+          "name": "EPA UCMR 5 Occurrence Data (Data Finder)",
+          "authority": "U.S. Environmental Protection Agency",
+          "kind": "official_federal_occurrence_monitoring",
+          "url": "https://www.epa.gov/dwucmr/occurrence-data-unregulated-contaminant-monitoring-rule",
+          "data_finder_url": "https://www.epa.gov/dwucmr/data-finder-unregulated-contaminant-monitoring-rule",
+          "download_url": "https://www.epa.gov/system/files/other-files/2024-10/ucmr5-occurrence-data.zip",
+          "monitors": "29 PFAS compounds and lithium",
+          "reporting_threshold_note": "This tracker isolates public-water-system detections at or above the UCMR 5 minimum reporting levels; PFOA/PFOS have a 4 ppt reference line.",
+          "granularity": "public-water-system",
+          "trust": 0.98
+        },
+        {
+          "id": "fdep-pfas-program",
+          "name": "Florida DEP PFAS Program / Dynamic Plan",
+          "authority": "Florida Department of Environmental Protection",
+          "kind": "official_state_pfas_compliance",
+          "url": "https://floridadep.gov/pfas",
+          "dashboard_url": "https://fdep.maps.arcgis.com/apps/dashboards/",
+          "tracks": "Systems failing or meeting the EPA PFAS maximum contaminant levels across Florida counties",
+          "granularity": "public-water-system",
+          "trust": 0.97
+        },
+        {
+          "id": "epa-usgs-wqp-pfas",
+          "name": "EPA/USGS Water Quality Portal — PFAS characteristics (Seminole County)",
+          "authority": "U.S. EPA, USGS, and participating agencies",
+          "kind": "official_environmental_monitoring_context",
+          "url": "https://www.waterqualitydata.us/",
+          "result_endpoint": "https://www.waterqualitydata.us/data/Result/search",
+          "county_fips": "US:12:117",
+          "granularity": "environmental-monitoring-station",
+          "trust": 0.9,
+          "notes": "Nearby PFAS environmental monitoring. Not automatically a tap sample or a PWS compliance record."
+        },
+        {
+          "id": "ewg-pfas-map",
+          "name": "EWG PFAS Interactive Contamination Map",
+          "authority": "Environmental Working Group (non-governmental aggregator)",
+          "kind": "non_governmental_aggregator",
+          "url": "https://www.ewg.org/interactive-maps/pfas_contamination/map/",
+          "granularity": "aggregated-community-indicator",
+          "trust": 0.6,
+          "notes": "Cross-reference only. EWG aggregates community and public testing; indicators are leads/context and can never independently confirm a PWS compliance value."
+        }
+      ],
+      "private_wells": [
+        {
+          "id": "fava",
+          "role": "aquifer-vulnerability",
+          "authority": "FGS/FDEP Florida Aquifer Vulnerability Assessment"
+        },
+        {
+          "id": "fdoi-well-permits",
+          "role": "well-permit-history",
+          "authority": "SJRWMD / delegated county well construction permits"
+        },
+        {
+          "id": "fdep-contamination-sites",
+          "role": "site-proximity",
+          "authority": "Florida DEP"
+        },
+        {
+          "id": "septic-density",
+          "role": "nitrate-risk-context",
+          "authority": "FDOH / FDEP OSTDS inventory"
+        },
+        {
+          "id": "seminole-14-dioxane-study",
+          "name": "Seminole County 1,4-Dioxane Private Well Data Study",
+          "role": "measured-private-well-contaminant",
+          "authority": "Seminole County",
+          "kind": "official_county_field_study",
+          "url": "https://www.seminolecountyfl.gov/departments-services/environmental-services/water-quality/",
+          "maps": "Measured 1,4-dioxane concentrations inside actual private neighborhood wells",
+          "granularity": "private-well-sample",
+          "trust": 1,
+          "notes": "County-issued field data on private infrastructure. A measurement here applies to the sampled well, not automatically to any other address."
+        },
+        {
+          "id": "fdoh-seminole-dws",
+          "name": "FDOH in Seminole County - Drinking Water Services",
+          "role": "private-system-regulation-and-testing",
+          "authority": "Florida Department of Health in Seminole County",
+          "kind": "official_state_health_records",
+          "url": "https://seminole.floridahealth.gov/programs-and-services/environmental-health/drinking-water/index.html",
+          "monitors": "Limited-use commercial wells and private testing records; localized permitting metrics",
+          "granularity": "private-and-limited-use-well",
+          "trust": 1
+        },
+        {
+          "id": "sjrwmd-well-permits",
+          "name": "SJRWMD Water Well Construction Permit sites (District issued)",
+          "role": "well-location",
+          "authority": "St. Johns River Water Management District",
+          "kind": "official_well_location_geometry",
+          "url": "https://data-floridaswater.opendata.arcgis.com/items/1ae18f9ade2b4af293e8de9251f6336d",
+          "arcgis_host": "https://services.arcgis.com/s8wtJX9suxFen6TA",
+          "county_field": "COUNTY",
+          "county_value": "SEMINOLE",
+          "granularity": "well-point",
+          "trust": 0.95
+        },
+        {
+          "id": "sjrwmd-well-completion-delegated",
+          "name": "SJRWMD Well completion report sites (delegated counties)",
+          "role": "well-location",
+          "authority": "St. Johns River Water Management District",
+          "kind": "official_well_location_geometry",
+          "url": "https://data-floridaswater.opendata.arcgis.com/datasets/86b251b0729c4249b2b890b567a51af4_0",
+          "arcgis_host": "https://services.arcgis.com/s8wtJX9suxFen6TA",
+          "county_field": "COUNTY",
+          "county_value": "SEMINOLE",
+          "granularity": "well-point",
+          "trust": 0.9,
+          "notes": "Geocoded from drill reports; location quality varies and erroneous tabular values may exist."
+        },
+        {
+          "id": "sjrwmd-cup",
+          "name": "SJRWMD Consumptive Use Permits (public water supply areas)",
+          "role": "allocation-and-service-area",
+          "authority": "St. Johns River Water Management District",
+          "kind": "official_permit_geometry",
+          "url": "https://data-floridaswater.opendata.arcgis.com/datasets/f2f54ba2896e464a890ce827644f250d_0",
+          "arcgis_host": "https://services.arcgis.com/s8wtJX9suxFen6TA",
+          "granularity": "permit-area",
+          "trust": 0.95
+        }
+      ],
+      "telemetry": [
+        {
+          "id": "seminole-water-atlas",
+          "name": "Seminole County Water Atlas (County + USF)",
+          "authority": "Seminole County / University of South Florida",
+          "kind": "official_real_time_water_resource_hub",
+          "url": "https://seminole.wateratlas.usf.edu/",
+          "data_download_url": "https://seminole.wateratlas.usf.edu/datadownload",
+          "dashboard_url": "https://seminole.wateratlas.usf.edu/water-quality/",
+          "api_base": "https://seminole.wateratlas.usf.edu/api/",
+          "granularity": "environmental-monitoring-station",
+          "trust": 0.95,
+          "notes": "Most vital local source: real-time water resource mapping, water chemistry query, live water-quality indicators."
+        },
+        {
+          "id": "seminole-surface-water-program",
+          "name": "Seminole County Surface Water Quality Program",
+          "authority": "Seminole County Watershed Management Division",
+          "kind": "official_county_surface_water_monitoring",
+          "url": "https://www.seminolecountyfl.gov/departments-services/environmental-services/watershed-management/",
+          "records": "Hydrological metrics, biological macroinvertebrate health, and 15 automated meteorological and telemetry weather stations across major watersheds",
+          "weather_station_count": 15,
+          "granularity": "watershed-station",
+          "trust": 1
+        },
+        {
+          "id": "seminole-gis-library",
+          "name": "Seminole County GIS Data Library",
+          "authority": "Seminole County GIS / Public Works Engineering & Mapping",
+          "kind": "official_gis_assets",
+          "url": "https://www.seminolecountyfl.gov/departments-services/information-technology/gis-geographic-information-systems/gis-data",
+          "public_works_url": "https://www.seminolecountyfl.gov/departments-services/public-works/engineering-division/gis-mapping",
+          "assets": "Pipeline assets, spatial imagery, capital engineering metrics, storm drainage features",
+          "granularity": "infrastructure-asset",
+          "trust": 1
+        }
+      ]
+    },
+    "system_name": null
+  }
+}

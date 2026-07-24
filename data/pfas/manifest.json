@@ -1,0 +1,21 @@
+{
+  "family": "pfas-and-emerging-contaminants",
+  "status": "synced",
+  "downloaded_at": "2026-07-24T22:33:27Z",
+  "generated_at": "2026-07-24T22:33:27Z",
+  "county_fips": "US:12:117",
+  "sources": [
+    "epa-ucmr5",
+    "epa-usgs-wqp-pfas",
+    "fdep-pfas-program",
+    "ewg-pfas-map"
+  ],
+  "counts": {
+    "ucmr5_results": 1866,
+    "wqp_pfas_results": 12,
+    "fdep_pfas_status": 3,
+    "ewg_indicators": 0
+  },
+  "errors": [],
+  "note": "PFAS occurrence/compliance context. UCMR 5 is occurrence monitoring, not a compliance finding."
+}

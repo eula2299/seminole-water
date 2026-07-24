@@ -1,0 +1,56 @@
+{
+  "family": "pfas-and-emerging-contaminants",
+  "policy": "PFAS and lithium results are public-water-system or environmental-monitoring records unless a row is explicitly matched to a household sample. UCMR 5 is occurrence monitoring, not a compliance determination. Exceedances are computed only against the EPA final NPDWR maximum contaminant levels bundled in benchmarks and are labelled as system-level, never as a home-faucet test.",
+  "sources": [
+    {
+      "id": "epa-ucmr5",
+      "name": "EPA UCMR 5 Occurrence Data (Data Finder)",
+      "authority": "U.S. Environmental Protection Agency",
+      "kind": "official_federal_occurrence_monitoring",
+      "url": "https://www.epa.gov/dwucmr/occurrence-data-unregulated-contaminant-monitoring-rule",
+      "data_finder_url": "https://www.epa.gov/dwucmr/data-finder-unregulated-contaminant-monitoring-rule",
+      "download_url": "https://www.epa.gov/system/files/other-files/2024-10/ucmr5-occurrence-data.zip",
+      "monitors": "29 PFAS compounds and lithium",
+      "reporting_threshold_note": "This tracker isolates public-water-system detections at or above the UCMR 5 minimum reporting levels; PFOA/PFOS have a 4 ppt reference line.",
+      "granularity": "public-water-system",
+      "trust": 0.98
+    },
+    {
+      "id": "fdep-pfas-program",
+      "name": "Florida DEP PFAS Program / Dynamic Plan",
+      "authority": "Florida Department of Environmental Protection",
+      "kind": "official_state_pfas_compliance",
+      "url": "https://floridadep.gov/water/source-drinking-water/content/and-polyfluoroalkyl-substances-pfas",
+      "tracks": "Systems failing or meeting the EPA PFAS maximum contaminant levels across Florida counties",
+      "granularity": "public-water-system",
+      "trust": 0.97,
+      "drinking_water_database_url": "https://floridadep.gov/water/source-drinking-water/content/information-drinking-water-database",
+      "pfoa_pfos_public_wells_url": "https://floridadep.gov/waste/waste-cleanup/content/pfoa-and-pfos-sampling-efforts-associated-public-well-systems-florida",
+      "role_note": "Florida DEP manages PFAS monitoring records on EPA's behalf under the federal NPDWR; EPA conducts formal enforcement. DEP does not publish a single machine-readable PFAS compliance feed.",
+      "verified_on": "2026-07-22"
+    },
+    {
+      "id": "epa-usgs-wqp-pfas",
+      "name": "EPA/USGS Water Quality Portal \u2014 PFAS characteristics (Seminole County)",
+      "authority": "U.S. EPA, USGS, and participating agencies",
+      "kind": "official_environmental_monitoring_context",
+      "url": "https://www.waterqualitydata.us/",
+      "result_endpoint": "https://www.waterqualitydata.us/data/Result/search",
+      "county_fips": "US:12:117",
+      "granularity": "environmental-monitoring-station",
+      "trust": 0.9,
+      "notes": "Nearby PFAS environmental monitoring. Not automatically a tap sample or a PWS compliance record."
+    },
+    {
+      "id": "ewg-pfas-map",
+      "name": "EWG PFAS Interactive Contamination Map",
+      "authority": "Environmental Working Group (non-governmental aggregator)",
+      "kind": "non_governmental_aggregator",
+      "url": "https://www.ewg.org/interactive-maps/pfas_contamination/map/",
+      "granularity": "aggregated-community-indicator",
+      "trust": 0.6,
+      "notes": "Cross-reference only. EWG aggregates community and public testing; indicators are leads/context and can never independently confirm a PWS compliance value."
+    }
+  ],
+  "reporting_note": "Initial PFAS monitoring for all community and non-transient non-community systems is due by April 26, 2027."
+}

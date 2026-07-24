@@ -1,0 +1,5 @@
+[
+  {"id":"LCR-2020","rule":"LCR","valid_from":"2020-01-01","valid_to":"2024-10-16","recorded_from":"2020-01-01","recorded_to":null,"semantics":"90th-percentile action-level"},
+  {"id":"LCRI-2024","rule":"LCRI","valid_from":"2024-10-16","valid_to":null,"recorded_from":"2024-10-16","recorded_to":null,"semantics":"inventory-and-replacement-enhanced"},
+  {"id":"PFAS-MCL-2024","rule":"PFAS","valid_from":"2024-04-26","valid_to":null,"recorded_from":"2024-04-26","recorded_to":null,"semantics":"federal-pfas-mcl-framework"}
+]

@@ -1,0 +1,9 @@
+{
+  "name": "Seminole County Water Service Areas",
+  "arcgis_item_id": "41f6f18ec9cd48a5b89b94e946cf2143",
+  "item_url": "https://www.arcgis.com/home/item.html?id=41f6f18ec9cd48a5b89b94e946cf2143",
+  "metadata_url": "https://www.arcgis.com/sharing/rest/content/items/41f6f18ec9cd48a5b89b94e946cf2143?f=json",
+  "description": "Public Water Service Area polygons for Seminole County, Florida.",
+  "authoritative": true,
+  "fallback_layer_url": "https://utility.arcgis.com/usrsvcs/servers/9b9c9fd45bdc4c39a2bd518da39d1e1c/rest/services/InformationKiosk/MapServer/56"
+}

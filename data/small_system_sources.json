@@ -1,0 +1,9 @@
+{
+  "sources": [
+    {"id":"fdep-pws-inventory","authority":"Florida DEP","purpose":"Community, transient non-community, and non-transient non-community PWS facilities, addresses, populations, service connections, and system types","url":"https://floridadep.gov/water/source-drinking-water/content/information-drinking-water-database"},
+    {"id":"county-parcels","authority":"Seminole County GIS","purpose":"Parcel identity, property name, mobile-home park or subdivision context, and master-meter parcel matching"},
+    {"id":"master-meter-registry","authority":"Utility/County","purpose":"Map master-metered complexes to upstream and downstream PWS identifiers"}
+  ],
+  "resolution_precedence":["exact_pws_facility_address","exact_parcel_id","master_meter_registry","property_name_plus_system_type","service_area_polygon"],
+  "never_assume_city_utility_for":{"mobile_home_parks":true,"master_metered_complexes":true,"non_community_systems":true}
+}

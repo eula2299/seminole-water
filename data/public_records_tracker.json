@@ -1,0 +1,8 @@
+{
+  "requests":[],
+  "fields":["request_id","utility_pwsid","utility_name","agency","submitted_on","request_text","tracking_number","status","due_date","response_received_on","documents","litigation_or_consent_decree","notes"],
+  "official_request_channels":[
+    {"agency":"Florida DEP","url":"https://floridadep.gov/comm/ombudsman-public-services/content/public-record-request","email":"PublicRecordsRequests_Regulatory@FloridaDEP.gov"},
+    {"agency":"Seminole County","url":"https://www.seminolecountyfl.gov/departments-services/county-managers-office/public-records-request"}
+  ]
+}

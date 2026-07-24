@@ -1,0 +1,12 @@
+{
+  "versions": [
+    {
+      "id": "current-public-layer",
+      "valid_from": "2026-01-01",
+      "valid_to": null,
+      "file": "../water_service_areas.geojson",
+      "source_item_id": "41f6f18ec9cd48a5b89b94e946cf2143",
+      "status": "current"
+    }
+  ]
+}

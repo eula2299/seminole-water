@@ -1,0 +1,189 @@
+[
+  {
+    "agent_id": "antimony",
+    "metal": "ANTIMONY",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "arsenic",
+    "metal": "ARSENIC",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "barium",
+    "metal": "BARIUM",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "beryllium",
+    "metal": "BERYLLIUM",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "cadmium",
+    "metal": "CADMIUM",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "chromium",
+    "metal": "CHROMIUM",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "copper",
+    "metal": "COPPER",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "lead",
+    "metal": "LEAD",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "mercury",
+    "metal": "MERCURY",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "selenium",
+    "metal": "SELENIUM",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "thallium",
+    "metal": "THALLIUM",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "nickel",
+    "metal": "NICKEL",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "aluminum",
+    "metal": "ALUMINUM",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "iron",
+    "metal": "IRON",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "manganese",
+    "metal": "MANGANESE",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "silver",
+    "metal": "SILVER",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  },
+  {
+    "agent_id": "zinc",
+    "metal": "ZINC",
+    "authoritative_sources": [
+      "Florida DEP Chemical Data current workbook",
+      "Florida DEP historical CHEM directory",
+      "local utility Consumer Confidence Reports"
+    ],
+    "rule": "Collect only source-linked records; preserve nondetects, units, sample type, date, PWSID, MCL and qualifiers; never infer a home-level result from system data.",
+    "publish_policy": "human review required"
+  }
+]

@@ -1,0 +1,10 @@
+[
+ {"id":"metals","label":"Metals and metalloids","members":["LEAD","COPPER","ARSENIC","CADMIUM","CHROMIUM","MERCURY","ANTIMONY","BARIUM","BERYLLIUM","SELENIUM","THALLIUM","NICKEL","ALUMINUM","IRON","MANGANESE","SILVER","ZINC"]},
+ {"id":"pfas","label":"PFAS","members":["PFOA","PFOS","PFHXS","PFNA","HFPO-DA","PFBS"]},
+ {"id":"nutrients","label":"Nitrate and nitrite","members":["NITRATE","NITRITE","NITRATE+NITRITE"]},
+ {"id":"dbp","label":"Disinfection byproducts","members":["TTHM","HAA5","BROMATE","CHLORITE"]},
+ {"id":"radionuclides","label":"Radionuclides","members":["COMBINED RADIUM-226/228","GROSS ALPHA","URANIUM","BETA/PHOTON"]},
+ {"id":"microbial","label":"Microbial indicators","members":["TOTAL COLIFORM","E. COLI","ENTEROCOCCI"]},
+ {"id":"corrosion","label":"Corrosion chemistry","members":["PH","ALKALINITY","HARDNESS","CHLORIDE","SULFATE","ORTHOPHOSPHATE","DISSOLVED INORGANIC CARBON"]},
+ {"id":"voc-svoc","label":"VOCs and synthetic organics","members":["1,4-DIOXANE","BENZENE","TCE","PCE","VINYL CHLORIDE","ATRAZINE"]}
+]

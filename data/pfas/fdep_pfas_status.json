@@ -1,0 +1,29 @@
+[
+  {
+    "id": "fdep-pfas-program",
+    "title": "Florida DEP PFAS drinking-water program",
+    "url": "https://floridadep.gov/water/source-drinking-water/content/and-polyfluoroalkyl-substances-pfas",
+    "reachable": true,
+    "checked_at": "2026-07-24T22:33:26Z",
+    "granularity": "official-program-reference",
+    "source": "fdep-pfas-program"
+  },
+  {
+    "id": "fdep-drinking-water-database",
+    "title": "Florida DEP drinking-water database reports",
+    "url": "https://floridadep.gov/water/source-drinking-water/content/information-drinking-water-database",
+    "reachable": true,
+    "checked_at": "2026-07-24T22:33:26Z",
+    "granularity": "official-program-reference",
+    "source": "fdep-pfas-program"
+  },
+  {
+    "id": "fdep-pfoa-pfos-public-wells",
+    "title": "Florida DEP PFOA/PFOS public-well sampling efforts",
+    "url": "https://floridadep.gov/waste/waste-cleanup/content/pfoa-and-pfos-sampling-efforts-associated-public-well-systems-florida",
+    "reachable": true,
+    "checked_at": "2026-07-24T22:33:27Z",
+    "granularity": "official-program-reference",
+    "source": "fdep-pfas-program"
+  }
+]

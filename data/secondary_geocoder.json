@@ -1,0 +1,7 @@
+{
+  "name": "Florida Statewide Cadastral parcel cross-check",
+  "layer_url": "https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0",
+  "county_fips": "12117",
+  "method": "point-intersects-parcel",
+  "authoritative_note": "County-origin parcel geometry aggregated by Florida Department of Revenue"
+}

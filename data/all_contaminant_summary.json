@@ -1,0 +1,14 @@
+{
+  "records": 4338,
+  "groups": {
+    "DBP": 846,
+    "WQP": 652,
+    "INOR": 331,
+    "SEC": 201,
+    "VOC": 1919,
+    "RAD": 56,
+    "SOC": 333
+  },
+  "systems": 59,
+  "analytes": 91
+}

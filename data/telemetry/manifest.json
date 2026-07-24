@@ -1,0 +1,60 @@
+{
+  "family": "telemetry-and-environmental-water-health",
+  "status": "synced",
+  "downloaded_at": "2026-07-24T22:33:47Z",
+  "generated_at": "2026-07-24T22:33:47Z",
+  "county": "SEMINOLE",
+  "sources": [
+    "seminole-water-atlas",
+    "seminole-surface-water-program",
+    "seminole-gis-library"
+  ],
+  "counts": {
+    "atlas_stations": 2092,
+    "atlas_wq": 0,
+    "surface_water_sites": 0,
+    "weather_stations": 0,
+    "gis_assets": 0
+  },
+  "errors": [
+    {
+      "stage": "atlas-wq",
+      "error": "HTTP Error 400: Bad Request"
+    },
+    {
+      "stage": "atlas-rainfall",
+      "error": "no candidate endpoint returned data",
+      "attempted": [
+        {
+          "url": "https://api.wateratlas.usf.edu/rainfall/latest?s=seminole",
+          "result": "HTTP Error 400: Bad Request"
+        },
+        {
+          "url": "https://api.wateratlas.usf.edu/Rainfall/latest",
+          "result": "HTTP Error 404: Not Found"
+        },
+        {
+          "url": "https://api.wateratlas.usf.edu/rainfall",
+          "result": "HTTP Error 404: Not Found"
+        },
+        {
+          "url": "https://api.wateratlas.usf.edu/rainfall/latest",
+          "result": "HTTP Error 404: Not Found"
+        },
+        {
+          "url": "https://api.wateratlas.usf.edu/rainfall/latest?s=seminole",
+          "result": "HTTP Error 400: Bad Request"
+        },
+        {
+          "url": "https://api.wateratlas.usf.edu/rainfall/latest?siteID=seminole",
+          "result": "HTTP Error 404: Not Found"
+        },
+        {
+          "url": "https://api.wateratlas.usf.edu/Rainfall/Latest",
+          "result": "HTTP Error 404: Not Found"
+        }
+      ]
+    }
+  ],
+  "note": "Environmental and infrastructure monitoring context; not a household tap sample."
+}

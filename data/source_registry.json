@@ -1,0 +1,85 @@
+[
+  {
+    "id": "seminole-water-service-areas",
+    "name": "Seminole County Water Service Areas",
+    "authority": "Seminole County / ArcGIS Online",
+    "kind": "official_service_area_geometry",
+    "item_id": "41f6f18ec9cd48a5b89b94e946cf2143",
+    "url": "https://www.arcgis.com/home/item.html?id=41f6f18ec9cd48a5b89b94e946cf2143",
+    "metadata_url": "https://www.arcgis.com/sharing/rest/content/items/41f6f18ec9cd48a5b89b94e946cf2143?f=json",
+    "trust": 1.0,
+    "notes": "Public provider-boundary polygons. The layer itself notes uncertainty where roads form service boundaries."
+  },
+  {
+    "id": "fdep-chemical-current",
+    "name": "Florida DEP Current Chemical Data",
+    "authority": "Florida Department of Environmental Protection",
+    "kind": "official_regulatory_results",
+    "url": "https://floridadep.gov/water/source-drinking-water/content/chemical-data",
+    "trust": 1.0,
+    "notes": "Reported Safe Drinking Water Act chemical results, including inorganic contaminants."
+  },
+  {
+    "id": "fdep-chemical-historical",
+    "name": "Florida DEP Historical Chemical Data",
+    "authority": "Florida Department of Environmental Protection",
+    "kind": "official_historical_results",
+    "url": "https://publicfiles.dep.state.fl.us/DWRM/Drinking%20Water%20Data/CHEM/",
+    "trust": 1.0,
+    "notes": "Historical annual chemical files."
+  },
+  {
+    "id": "census-geocoder",
+    "name": "U.S. Census Geocoder",
+    "authority": "U.S. Census Bureau",
+    "kind": "official_address_geocoder",
+    "url": "https://geocoding.geo.census.gov/geocoder/",
+    "trust": 0.98,
+    "notes": "Used only to normalize an address and obtain coordinates."
+  },
+  {
+    "id": "seminole-address-points",
+    "name": "Seminole County Situs Address Points",
+    "authority": "Seminole County GIS",
+    "kind": "official_address_points",
+    "url": "https://www.seminolecountyfl.gov/departments-services/information-technology/gis-geographic-information-systems/gis-data",
+    "trust": 1.0,
+    "notes": "County states address points are updated weekly. Optional secondary verification source."
+  },
+  {
+    "id": "fdep-lead-service-line",
+    "name": "Florida DEP Lead Service Line Inventory",
+    "authority": "Florida Department of Environmental Protection",
+    "kind": "official_service_line_inventory",
+    "url": "https://floridadep.gov/water/source-drinking-water/content/lead-service-line-inventory",
+    "trust": 1.0,
+    "notes": "Address/building-specific service-line evidence where a utility publishes a matching inventory."
+  },
+  {
+    "id": "epa-sdwis-echo",
+    "name": "EPA ECHO / Safe Drinking Water Information System",
+    "authority": "U.S. Environmental Protection Agency",
+    "kind": "official_federal_system_compliance",
+    "url": "https://echo.epa.gov/tools/data-downloads/sdwa-download-summary",
+    "trust": 0.98,
+    "notes": "Federal system, facility, compliance, violation, lead-and-copper, site-visit, and enforcement context. EPA states that the downloadable SDWA data are refreshed quarterly."
+  },
+  {
+    "id": "epa-usgs-wqp",
+    "name": "EPA/USGS Water Quality Portal",
+    "authority": "U.S. EPA, USGS, and participating agencies",
+    "kind": "official_environmental_monitoring_context",
+    "url": "https://www.waterqualitydata.us/",
+    "trust": 0.9,
+    "notes": "Nearby lake, stream, groundwater, source-water, and other environmental monitoring records. These are not automatically tap-water or PWS compliance samples."
+  },
+  {
+    "id": "consumer-confidence-report",
+    "name": "Consumer Confidence Reports",
+    "authority": "Community water systems / U.S. EPA / Florida DEP",
+    "kind": "official_annual_system_report",
+    "url": "https://sdwis.epa.gov/ords/safewater/f?p=136:102::::::",
+    "trust": 0.96,
+    "notes": "Annual utility reports with source-water, detected-contaminant, and compliance information. System-level, not household-level."
+  }
+]

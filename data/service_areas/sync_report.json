@@ -1,0 +1,8 @@
+{
+  "status": "ready",
+  "started_at": "2026-07-23T04:06:58.787Z",
+  "completed_at": "2026-07-23T04:07:02.205Z",
+  "error": null,
+  "feature_count": 107,
+  "layer_url": "https://utility.arcgis.com/usrsvcs/servers/9b9c9fd45bdc4c39a2bd518da39d1e1c/rest/services/InformationKiosk/MapServer/56"
+}

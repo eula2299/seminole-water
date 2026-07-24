@@ -1,0 +1,69 @@
+{
+  "started_at": "2026-07-17T17:22:41.667394+00:00",
+  "sources": [
+    {
+      "id": "fdep-all-chemistry",
+      "priority": 1,
+      "status": "populated",
+      "records_file": "data/all_contaminant_records.json",
+      "official_url": "https://floridadep.gov/water/source-drinking-water/content/chemical-data",
+      "value_of_information": "highest",
+      "attempted": true,
+      "ok": true,
+      "content_hash": "d0ad1d8fab6f371fd32b4255a0395b1f1a7824a849ca6c8b7748ac34b0012e69",
+      "bytes": 3377192
+    },
+    {
+      "id": "fdep-lead-service-lines",
+      "priority": 1,
+      "status": "live-import-configured",
+      "official_url": "https://geodata.dep.state.fl.us/datasets/FDEP::pws-lead-service-line-inventories-lsli-2/",
+      "fallback_url": "https://sdwis.epa.gov/ords/sfdw_pub/r/sfdw/sdwis_fed_reports_public/service-line-inventory",
+      "value_of_information": "highest",
+      "attempted": false,
+      "ok": null,
+      "note": "Live connector configured; deployment scheduler fetches and snapshots this official source. Existing snapshots are retained on failure."
+    },
+    {
+      "id": "seminole-private-wells-gwis",
+      "priority": 2,
+      "status": "live-import-configured",
+      "official_url": "https://geodata.dep.state.fl.us/datasets/private-wells-from-generalized-well-information-system-gwis",
+      "value_of_information": "high",
+      "attempted": false,
+      "ok": null,
+      "note": "Live connector configured; deployment scheduler fetches and snapshots this official source. Existing snapshots are retained on failure."
+    },
+    {
+      "id": "usgs-nwis-groundwater",
+      "priority": 2,
+      "status": "live-import-configured",
+      "official_url": "https://waterservices.usgs.gov/",
+      "value_of_information": "high",
+      "attempted": false,
+      "ok": null,
+      "note": "Live connector configured; deployment scheduler fetches and snapshots this official source. Existing snapshots are retained on failure."
+    },
+    {
+      "id": "fdep-ambient-groundwater",
+      "priority": 2,
+      "status": "live-import-configured",
+      "official_url": "https://geodata.dep.state.fl.us/",
+      "value_of_information": "high",
+      "attempted": false,
+      "ok": null,
+      "note": "Live connector configured; deployment scheduler fetches and snapshots this official source. Existing snapshots are retained on failure."
+    },
+    {
+      "id": "epa-sdwis-compliance",
+      "priority": 1,
+      "status": "live-import-configured",
+      "official_url": "https://echo.epa.gov/tools/data-downloads/sdwa-download-summary",
+      "value_of_information": "highest",
+      "attempted": false,
+      "ok": null,
+      "note": "Live connector configured; deployment scheduler fetches and snapshots this official source. Existing snapshots are retained on failure."
+    }
+  ],
+  "finished_at": "2026-07-17T17:23:02.234980+00:00"
+}

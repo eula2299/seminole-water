@@ -1,0 +1,8 @@
+[
+ {"id":"fdep-all-chemistry","priority":1,"status":"populated","records_file":"data/all_contaminant_records.json","official_url":"https://floridadep.gov/water/source-drinking-water/content/chemical-data","value_of_information":"highest"},
+ {"id":"fdep-lead-service-lines","priority":1,"status":"live-import-configured","official_url":"https://geodata.dep.state.fl.us/datasets/FDEP::pws-lead-service-line-inventories-lsli-2/","fallback_url":"https://sdwis.epa.gov/ords/sfdw_pub/r/sfdw/sdwis_fed_reports_public/service-line-inventory","value_of_information":"highest"},
+ {"id":"seminole-private-wells-gwis","priority":2,"status":"live-import-configured","official_url":"https://geodata.dep.state.fl.us/datasets/private-wells-from-generalized-well-information-system-gwis","value_of_information":"high"},
+ {"id":"usgs-nwis-groundwater","priority":2,"status":"live-import-configured","official_url":"https://waterservices.usgs.gov/","value_of_information":"high"},
+ {"id":"fdep-ambient-groundwater","priority":2,"status":"live-import-configured","official_url":"https://geodata.dep.state.fl.us/","value_of_information":"high"},
+ {"id":"epa-sdwis-compliance","priority":1,"status":"live-import-configured","official_url":"https://echo.epa.gov/tools/data-downloads/sdwa-download-summary","value_of_information":"highest"}
+]

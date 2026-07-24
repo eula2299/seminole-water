@@ -1,0 +1,1 @@
+{"cases":[],"lexicon":[{"min":0,"max":0.39,"label":"unlikely"},{"min":0.4,"max":0.59,"label":"uncertain"},{"min":0.6,"max":0.79,"label":"likely"},{"min":0.8,"max":1,"label":"very likely"}]}

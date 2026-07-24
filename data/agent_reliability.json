@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "policy": "Values are transparent Bayesian priors, not claimed empirical accuracies. Run npm run calibrate:agents after adding human-adjudicated outcomes. Hard epistemic guards are policy constraints and are not learned away.",
+  "agents": {
+    "Provider Identity Agent": {"alpha": 19, "beta": 1, "basis": "high-confidence official polygon/PWS identity prior"},
+    "Boundary Robustness Agent": {"alpha": 19, "beta": 1, "basis": "deterministic coordinate perturbation test"},
+    "Evidence Scope Guardian": {"alpha": 999, "beta": 1, "basis": "hard epistemic rule: system/environmental evidence cannot become a household measurement"},
+    "SDWIS Compliance Agent": {"alpha": 39, "beta": 1, "basis": "exact-PWS federal cache match prior"},
+    "CCR Context Agent": {"alpha": 19, "beta": 1, "basis": "exact-PWS annual report match prior"},
+    "WQP Context Agent": {"alpha": 99, "beta": 1, "basis": "hard source-scope separation prior"},
+    "Originating-Sample Independence Agent": {"alpha": 49, "beta": 1, "basis": "deterministic origin-key deduplication"},
+    "Temporal Freshness Agent": {"alpha": 19, "beta": 1, "basis": "deterministic age/half-life calculation"},
+    "Contradiction Agent": {"alpha": 19, "beta": 1, "basis": "deterministic contradiction rules"},
+    "Direct Household Sample Agent": {"alpha": 999, "beta": 1, "basis": "exact address-hash match is a hard evidence condition"}
+  }
+}

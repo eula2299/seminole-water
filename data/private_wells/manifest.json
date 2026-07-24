@@ -1,0 +1,22 @@
+{
+  "family": "private-wells-and-septic",
+  "status": "synced",
+  "downloaded_at": "2026-07-24T22:33:44Z",
+  "generated_at": "2026-07-24T22:33:44Z",
+  "county": "SEMINOLE",
+  "sources": [
+    "seminole-14-dioxane-study",
+    "fdoh-seminole-dws",
+    "sjrwmd-well-permits",
+    "sjrwmd-well-completion-delegated",
+    "sjrwmd-cup"
+  ],
+  "counts": {
+    "dioxane_study": 3,
+    "fdoh_records": 0,
+    "sjrwmd_wells": 9994,
+    "sjrwmd_cup": 0
+  },
+  "errors": [],
+  "note": "Contextual private-infrastructure records for neighboring wells, not the submitted household."
+}

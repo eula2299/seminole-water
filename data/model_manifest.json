@@ -1,0 +1,77 @@
+{
+  "agents": {
+    "parser": {
+      "provider": "deterministic",
+      "version": "1.0.0"
+    },
+    "validator": {
+      "provider": "deterministic-rules",
+      "version": "7.0.0"
+    },
+    "llm_optional": {
+      "provider": "disabled-by-default",
+      "model": null,
+      "prompt_version": "godmode-v1",
+      "temperature": 0
+    },
+    "negotiation_council": {
+      "provider": "auditable-dialectical-argumentation",
+      "version": "1.1.0",
+      "one_origin_one_vote": true,
+      "hard_scope_vetoes": true,
+      "allows_undecided": true
+    },
+    "counterfactual_stability": {
+      "provider": "deterministic-coordinate-perturbation",
+      "version": "1.0.0",
+      "radii_m": [
+        5,
+        15,
+        30
+      ],
+      "bearings": 8
+    },
+    "uncertainty_budget": {
+      "provider": "dimension-separated-calibration",
+      "version": "1.0.0",
+      "household_no_sample_cap": 0.49
+    },
+    "provider_prediction_set": {
+      "provider": "split-conformal-ready-set-inference",
+      "version": "1.0.0",
+      "uncalibrated_outputs_claim_no_coverage": true
+    },
+    "evidence_applicability_lattice": {
+      "provider": "monotone-multidimensional-evidence-lattice",
+      "version": "1.0.0",
+      "scope_upcasting_forbidden": true
+    },
+    "origin_influence_audit": {
+      "provider": "leave-one-origin-out-negotiation-rerun",
+      "version": "1.0.0"
+    },
+    "contradiction_cutset": {
+      "provider": "origin-level-minimum-cut-search",
+      "version": "1.0.0"
+    },
+    "coverage_tensor": {
+      "provider": "scope-time-analyte-source-tensor",
+      "version": "1.0.0",
+      "missing_is_zero": false,
+      "non_detect_is_zero": false
+    },
+    "causal_pathway_graph": {
+      "provider": "source-to-tap-proof-graph",
+      "version": "1.0.0"
+    },
+    "evidence_auction": {
+      "provider": "budgeted-multiobjective-agent-auction",
+      "version": "1.0.0"
+    },
+    "adversarial_verdict_envelope": {
+      "provider": "structured-evidence-stress-envelope",
+      "version": "1.0.0"
+    }
+  },
+  "policy": "No LLM output may create a concentration, sample identity, compliance status, provider assignment, or negotiation vote. Agent negotiation is deterministic, provenance-aware, origin-deduplicated, set-valued under provider ambiguity, scope-monotone, and permits unresolved conclusions."
+}

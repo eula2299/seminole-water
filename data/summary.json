@@ -1,0 +1,26 @@
+{
+  "record_count": 246,
+  "system_count": 15,
+  "metals": [
+    "ALUMINUM",
+    "ANTIMONY",
+    "ARSENIC",
+    "BARIUM",
+    "BERYLLIUM",
+    "CADMIUM",
+    "CHROMIUM",
+    "COPPER",
+    "IRON",
+    "LEAD",
+    "MANGANESE",
+    "MERCURY",
+    "NICKEL",
+    "SELENIUM",
+    "SILVER",
+    "THALLIUM",
+    "ZINC"
+  ],
+  "source_years": [
+    2024
+  ]
+}

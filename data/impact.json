@@ -1,0 +1,18 @@
+{
+  "completed": 12,
+  "residents": 11,
+  "exactMatches": 9,
+  "directMatches": 0,
+  "unique_count": 8,
+  "unique": [
+    "e30cd872ed8e18b2d7bfbbd9",
+    "4585055c993373e8d103b014",
+    "2f6d4e6a268095053479a9a3",
+    "b50cc8312d4a7fa56598e72f",
+    "3a04ae79e84c6357996efec8",
+    "0290cd660a897f191c3ae656",
+    "915b16777d5673dcc5ad3986",
+    "5bf0f62ca9989bd3d7b32bba"
+  ],
+  "unique_tokens_truncated": false
+}

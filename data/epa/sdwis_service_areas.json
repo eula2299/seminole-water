@@ -1,0 +1,692 @@
+[
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590026",
+    "service_area_type_code": "MU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590039",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590069",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590111",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590159",
+    "service_area_type_code": "MU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590186",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590201",
+    "service_area_type_code": "MU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590202",
+    "service_area_type_code": "MU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590205",
+    "service_area_type_code": "MU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590338",
+    "service_area_type_code": "MH",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590443",
+    "service_area_type_code": "SC",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590473",
+    "service_area_type_code": "OA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "02/11/2011",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590497",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590571",
+    "service_area_type_code": "OA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590615",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590685",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590698",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590750",
+    "service_area_type_code": "RS",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590762",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590785",
+    "service_area_type_code": "OA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "02/11/2011",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590823",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590865",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590879",
+    "service_area_type_code": "MU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "02/28/2008",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590912",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590970",
+    "service_area_type_code": "MU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590988",
+    "service_area_type_code": "MH",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590993",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3591061",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3591121",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3591248",
+    "service_area_type_code": "MH",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3591395",
+    "service_area_type_code": "MH",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3591451",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594050",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594107",
+    "service_area_type_code": "OA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594125",
+    "service_area_type_code": "OA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "03/10/2006",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594138",
+    "service_area_type_code": "OT",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594141",
+    "service_area_type_code": "OT",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594148",
+    "service_area_type_code": "OT",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594156",
+    "service_area_type_code": "OT",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594166",
+    "service_area_type_code": "RS",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594168",
+    "service_area_type_code": "OT",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594180",
+    "service_area_type_code": "SC",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594186",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594189",
+    "service_area_type_code": "OA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "03/10/2006",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594196",
+    "service_area_type_code": "OT",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594214",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594216",
+    "service_area_type_code": "RA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594221",
+    "service_area_type_code": "RE",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594222",
+    "service_area_type_code": "OT",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594227",
+    "service_area_type_code": "OT",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594229",
+    "service_area_type_code": "PA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "08/11/2011",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594230",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "08/19/2009",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594232",
+    "service_area_type_code": "OT",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594233",
+    "service_area_type_code": "PA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "12/19/2005",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594234",
+    "service_area_type_code": "OA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "11/29/2007",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594237",
+    "service_area_type_code": "OA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "08/19/2009",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594239",
+    "service_area_type_code": "OT",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "05/18/2012",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594240",
+    "service_area_type_code": "RE",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "02/19/2013",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594241",
+    "service_area_type_code": "SU",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "05/18/2016",
+    "last_reported_date": "05/18/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:35Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590026",
+    "service_area_type_code": "SC",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "02/21/2013",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:37Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590111",
+    "service_area_type_code": "PA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "01/22/2000",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:37Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590201",
+    "service_area_type_code": "OT",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "01/22/2000",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:37Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590202",
+    "service_area_type_code": "HM",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "05/15/2009",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:37Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3590205",
+    "service_area_type_code": "HM",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "01/22/2000",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:37Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3591121",
+    "service_area_type_code": "OA",
+    "is_primary_service_area_code": "",
+    "first_reported_date": "",
+    "last_reported_date": "07/24/1995",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:37Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594107",
+    "service_area_type_code": "IA",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "01/06/2001",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:37Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594214",
+    "service_area_type_code": "OA",
+    "is_primary_service_area_code": "",
+    "first_reported_date": "",
+    "last_reported_date": "07/24/1995",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:37Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594229",
+    "service_area_type_code": "SK",
+    "is_primary_service_area_code": "Y",
+    "first_reported_date": "",
+    "last_reported_date": "06/16/2026",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:37Z"
+  },
+  {
+    "submissionyearquarter": "2026Q2",
+    "pwsid": "3594232",
+    "service_area_type_code": "RS",
+    "is_primary_service_area_code": "",
+    "first_reported_date": "",
+    "last_reported_date": "07/24/1995",
+    "source_file": "SDWA_SERVICE_AREAS.csv",
+    "retrieved_at": "2026-07-23T04:10:37Z"
+  }
+]

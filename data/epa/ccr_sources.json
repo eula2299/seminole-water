@@ -1,0 +1,95 @@
+[
+  {
+    "id": "seminole-county-2023",
+    "publisher": "Seminole County Utilities",
+    "report_year": 2023,
+    "title": "2024 Water Quality Report for 2023",
+    "url": "https://www.seminolecountyfl.gov/docs/default-source/pdf/2024-water-quality-report-for-2023-ada.pdf?sfvrsn=2a95d04c_1",
+    "pwsids": [
+      "3590473",
+      "3590571",
+      "3590785",
+      "3594107"
+    ],
+    "source_water": "Groundwater/source details are reported separately for Seminole County utility service areas in the official report.",
+    "compliance_summary": "Read the linked official report for the utility's full compliance statement and detected-contaminant tables."
+  },
+  {
+    "id": "oviedo-2024",
+    "publisher": "City of Oviedo",
+    "report_year": 2024,
+    "title": "2024 Water Quality Drinking Report",
+    "url": "https://www.cityofoviedo.net/DocumentCenter/View/9020/2024-Water-Quality-Drinking-Report",
+    "pwsids": [
+      "3590970"
+    ]
+  },
+  {
+    "id": "sanford-water-quality",
+    "publisher": "City of Sanford",
+    "report_year": null,
+    "title": "City of Sanford Water and Sewer Utilities / water quality reports",
+    "url": "https://sanfordfl.gov/government/public-works-utilities/water_and_sewer/",
+    "pwsids": [
+      "3590205"
+    ]
+  },
+  {
+    "id": "lake-mary-water-quality",
+    "publisher": "City of Lake Mary",
+    "report_year": null,
+    "title": "City of Lake Mary Water Quality",
+    "url": "https://www.lakemaryfl.com/341/Water-Quality",
+    "pwsids": [
+      "3590201"
+    ]
+  },
+  {
+    "id": "winter-springs-water-reports",
+    "publisher": "City of Winter Springs",
+    "report_year": null,
+    "title": "Annual Drinking Water Reports",
+    "url": "https://www.winterspringsfl.org/475/Annual-Drinking-Water-Reports",
+    "pwsids": [
+      "3590879"
+    ]
+  },
+  {
+    "id": "altamonte-drinking-water",
+    "publisher": "City of Altamonte Springs",
+    "report_year": null,
+    "title": "Drinking Water and Water Quality Reports",
+    "url": "https://www.altamonte.org/464/Drinking-Water",
+    "pwsids": [
+      "3590026"
+    ]
+  },
+  {
+    "id": "casselberry-water-wastewater",
+    "publisher": "City of Casselberry",
+    "report_year": null,
+    "title": "City of Casselberry Utilities and Consumer Confidence Report",
+    "url": "https://www.casselberry.org/176/Utilities",
+    "pwsids": [
+      "3590159"
+    ]
+  },
+  {
+    "id": "longwood-water",
+    "publisher": "City of Longwood",
+    "report_year": null,
+    "title": "City of Longwood Utility and Water Quality Information",
+    "url": "https://www.longwoodfl.org/",
+    "pwsids": [
+      "3590202"
+    ]
+  },
+  {
+    "id": "epa-ccr-finder",
+    "publisher": "U.S. EPA",
+    "report_year": null,
+    "title": "EPA Find Your Local Consumer Confidence Report",
+    "url": "https://sdwis.epa.gov/ords/safewater/f?p=136:102::::::",
+    "pwsids": []
+  }
+]

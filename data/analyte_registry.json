@@ -1,0 +1,10 @@
+[
+ {"name":"LEAD","cas":"7439-92-1","class":"metals","methods":["200.8","200.9"],"physical_min":0,"physical_max":100000,"sample_protocols":["first-draw","fifth-liter","flushed"]},
+ {"name":"COPPER","cas":"7440-50-8","class":"metals","methods":["200.8","200.7"],"physical_min":0,"physical_max":100000},
+ {"name":"TOTAL THMS","cas":"TTHM-SUM","class":"dbp","methods":["524.2","551.1"],"sum_components":["CHLOROFORM","BROMODICHLOROMETHANE","DIBROMOCHLOROMETHANE","BROMOFORM"],"physical_min":0,"physical_max":1000},
+ {"name":"TOTAL HALOACETIC ACIDS (HAA5)","cas":"HAA5-SUM","class":"dbp","methods":["552.2","552.3"],"physical_min":0,"physical_max":1000},
+ {"name":"NITRATE","cas":"14797-55-8","class":"inorganic","methods":["300.0","353.2"],"physical_min":0,"physical_max":100000},
+ {"name":"COMBINED RADIUM 226/228","cas":"RA226+228","class":"radionuclide","methods":["903.0","904.0"],"physical_min":0,"physical_max":1000},
+ {"name":"PFOA","cas":"335-67-1","class":"pfas","methods":["537.1","533"],"physical_min":0,"physical_max":100000},
+ {"name":"PFOS","cas":"1763-23-1","class":"pfas","methods":["537.1","533"],"physical_min":0,"physical_max":100000}
+]

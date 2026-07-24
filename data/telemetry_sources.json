@@ -1,0 +1,56 @@
+{
+  "family": "telemetry-and-environmental-water-health",
+  "policy": "Real-time telemetry, watershed chemistry, macroinvertebrate health, and weather-station streams are environmental-monitoring context maintained by Seminole County and partners. They describe watersheds, source water, and infrastructure - not the treated water at a household faucet.",
+  "sources": [
+    {
+      "id": "seminole-water-atlas",
+      "name": "Seminole County Water Atlas (County + USF)",
+      "authority": "Seminole County / University of South Florida",
+      "kind": "official_real_time_water_resource_hub",
+      "url": "https://seminole.wateratlas.usf.edu/",
+      "data_download_url": "https://seminole.wateratlas.usf.edu/data-download/",
+      "dashboard_url": "https://seminole.wateratlas.usf.edu/water-quality-dashboard/",
+      "api_base": "https://api.wateratlas.usf.edu",
+      "granularity": "environmental-monitoring-station",
+      "trust": 0.95,
+      "notes": "Most vital local source: real-time water resource mapping, water chemistry query, live water-quality indicators.",
+      "api_docs": "https://api.wateratlas.usf.edu/docs",
+      "real_time_mapper_url": "https://seminole.wateratlas.usf.edu/data-mapper/",
+      "endpoints": {
+        "continuous_monitoring_stations": "/DataMapper/Stations/All",
+        "station_latest_data": "/DataMapper/Agency/{datasource}/Station/{stationId}/LatestData",
+        "water_quality_trend_stations": "/WQTrends/Stations?siteID=seminole",
+        "real_time_rainfall": "/rainfall/latest?s=seminole",
+        "closest_waterbodies": "/waterbodies/closest?lat={lat}&lng={lng}&s=seminole",
+        "stream_condition_index": "/biological-assessments/sci/{id}",
+        "lake_vegetation_index": "/biological-assessments/lvi/{id}"
+      },
+      "biological_health_note": "Stream Condition Index (SCI) is the macroinvertebrate-based biological health metric; Lake Vegetation Index (LVI) covers lake flora.",
+      "verified_on": "2026-07-22",
+      "data_caveat": "Near-real-time data have not passed the quality-control procedures applied to the Atlas's other datasets."
+    },
+    {
+      "id": "seminole-surface-water-program",
+      "name": "Seminole County Surface Water Quality Program",
+      "authority": "Seminole County Watershed Management Division",
+      "kind": "official_county_surface_water_monitoring",
+      "url": "https://www.seminolecountyfl.gov/departments-services/environmental-services/watershed-management/",
+      "records": "Hydrological metrics, biological macroinvertebrate health, and 15 automated meteorological and telemetry weather stations across major watersheds",
+      "weather_station_count": 15,
+      "granularity": "watershed-station",
+      "trust": 1.0
+    },
+    {
+      "id": "seminole-gis-library",
+      "name": "Seminole County GIS Data Library",
+      "authority": "Seminole County GIS / Public Works Engineering & Mapping",
+      "kind": "official_gis_assets",
+      "url": "https://www.seminolecountyfl.gov/departments-services/information-technology/gis-geographic-information-systems/gis-data",
+      "public_works_url": "https://www.seminolecountyfl.gov/departments-services/public-works/engineering-division/gis-mapping",
+      "assets": "Pipeline assets, spatial imagery, capital engineering metrics, storm drainage features",
+      "granularity": "infrastructure-asset",
+      "trust": 1.0
+    }
+  ],
+  "disclaimer": "Environmental and infrastructure monitoring context only; these streams are not household tap-water samples and not automatically a public water system compliance result."
+}
