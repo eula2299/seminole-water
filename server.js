@@ -41,7 +41,25 @@ const serviceFile=path.join(root,'data/service_areas',serviceAreaFile),serviceSy
 let officialLayerUrl=null;
 let syncState={status:fs.existsSync(serviceFile)?'cached':'not-cached',started_at:null,completed_at:null,error:null,feature_count:0,layer_url:null};
 
-function secure(res){res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Content-Security-Policy',"default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; form-action 'self'; base-uri 'self'; frame-ancestors 'none'");res.setHeader('Permissions-Policy','geolocation=(), camera=(), microphone=()');if(process.env.HSTS==='true')res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');return res;}
+function secure(res){
+  res.setHeader('X-Content-Type-Options','nosniff');
+  res.setHeader('X-Frame-Options','DENY');
+  res.setHeader('Referrer-Policy','no-referrer');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://stats.g.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com; form-action 'self'; base-uri 'self'; frame-ancestors 'none'"
+  );
+  res.setHeader('Permissions-Policy','geolocation=(), camera=(), microphone=()');
+
+  if(process.env.HSTS==='true'){
+    res.setHeader(
+      'Strict-Transport-Security',
+      'max-age=31536000; includeSubDomains'
+    );
+  }
+
+  return res;
+}
 function json(res,status,obj,headers={}){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Access-Control-Allow-Origin':'*','Cache-Control':'no-store',...headers});res.end(JSON.stringify(obj));}
 function staticFile(res,p){let f=path.join(root,'public',p==='/'?'index.html':p);if(!f.startsWith(path.join(root,'public')))return json(res,403,{error:'forbidden'});if(!fs.existsSync(f))return json(res,404,{error:'not found'});let ext=path.extname(f),ct={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8'}[ext]||'application/octet-stream';res.writeHead(200,{'Content-Type':ct});fs.createReadStream(f).pipe(res);}
 function pointInRing(pt,ring){let x=pt[0],y=pt[1],inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){let xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];let intersects=((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi+1e-15)+xi);if(intersects)inside=!inside;}return inside;}
