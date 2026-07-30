@@ -4,7 +4,7 @@ dns.setDefaultResultOrder('ipv4first');
 const {buildInvestigation,saveInvestigation,consensusProvider}=require('./lib/investigator');
 const {RateLimiter,clientKey,ImpactCounter,retentionPolicy,pruneInvestigations,GeocodeCache}=require('./lib/runtime_hardening');
 const geocodeCache=new GeocodeCache();
-const {scrapeConfiguredSources,scrapeAddressSources,searchExactAddress}=require('./lib/live_layer');
+const {scrapeConfiguredSources,scrapeAddressSources,searchExactAddress}=require('./lib/live_layer'); 
 const {extractNeighborhoodCandidates}=require('./lib/address_evidence');
 const {assessSpatialAmbiguity,selectServiceAreaVersion}=require('./lib/accuracy');
 const crosswalk=require('./lib/crosswalk');
