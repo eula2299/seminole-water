@@ -11,7 +11,7 @@ const crosswalk=require('./lib/crosswalk');
 const {adaptAll,deriveSystems,deriveProviderAliases}=require('./lib/record_adapter');
 const {loadEpaData,buildFederalContext,federalSummary,summarizeSdwis}=require('./lib/epa_data');
 const {loadLocalData,buildLocalContext,localSummary}=require('./lib/local_data');
-const {assessProviderStability}=require('./lib/counterfactual_stability');
+const {assessProviderStability}=require('./lib/counterfactual_stability'); 
 
 const PORT=Number(process.env.PORT||3000),root=__dirname;
 const load=p=>JSON.parse(fs.readFileSync(path.join(root,p),'utf8'));
