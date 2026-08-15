@@ -1,3 +1,4 @@
+.plain-language-note,.dioxane-note,.results-section>.section-note{display:none!important}
 .resident-hero{padding-bottom:22px}
 .hero-promises{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 12px}
 .hero-promises span,.free-badge,.resident-action-badge{display:inline-flex;align-items:center;border-radius:999px;padding:7px 11px;font-size:.78rem;font-weight:800}
