@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/resident-actions.css">
   <link rel="stylesheet" href="/roadmap.css">
+  <link rel="stylesheet" href="/community.css">
   <script src="/analytics.js"></script>
 </head>
 <body>
@@ -24,9 +25,9 @@
     </header>
 
     <section class="search-card resident-search" aria-labelledby="search-title">
-      <div class="search-card-heading"><div><p class="section-kicker">START HERE</p><h2 id="search-title">Check your address</h2></div><span class="free-badge">Free · No account</span></div>
+      <div class="search-card-heading"><div><p class="section-kicker">START HERE</p><h2 id="search-title">Check your address</h2></div><span class="free-badge">Free · No account required</span></div>
       <form id="form">
-        <label class="field field-wide"><span>Street address</span><input id="address" required autocomplete="street-address" placeholder="4301 Foggy Oak Ln"></label>
+        <label class="field field-wide"><span>Street address</span><input id="address" required autocomplete="off"></label>
         <label class="field"><span>City</span><input id="city" required autocomplete="address-level2" placeholder="Sanford"></label>
         <button class="primary-button" type="submit">Check water</button>
         <select id="pws" hidden aria-hidden="true"><option value="AUTO">Automatic</option></select>
@@ -54,6 +55,7 @@
   <script src="/roadmap-data.js"></script>
   <script src="/resident-actions.js"></script>
   <script src="/roadmap.js"></script>
+  <script src="/community.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>
