@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Contact IsMyWaterOK about Seminole County water information, media, partnerships, corrections, or questions.">
+  <title>Contact Us | IsMyWaterOK</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/roadmap.css">
+  <link rel="stylesheet" href="/community.css">
+  <script src="/analytics.js"></script>
+</head>
+<body>
+  <nav class="community-topbar" aria-label="Main navigation">
+    <a href="/">IsMyWaterOK</a>
+    <div class="community-topbar-links">
+      <a href="/">Water check</a>
+      <a href="/city.html">Cities</a>
+      <a href="/issue.html">Health guides</a>
+      <a href="/impact.html">Impact</a>
+    </div>
+  </nav>
+  <main class="community-page wide" id="main-content">
+    <header class="community-page-header">
+      <p class="section-kicker">CONTACT US</p>
+      <h1>Send us a message.</h1>
+      <p>Questions, corrections, community partnerships, media requests, or feedback about the water tool are welcome.</p>
+    </header>
+    <div class="contact-layout">
+      <section class="community-card">
+        <form id="contact-form" class="community-form">
+          <label><span>Name</span><input id="contact-name" autocomplete="name" maxlength="100" required></label>
+          <label><span>Email</span><input id="contact-email" type="email" autocomplete="email" required></label>
+          <label><span>What is this about?</span><select id="contact-subject"><option>General question</option><option>Water data or correction</option><option>Community partnership</option><option>School or research</option><option>Media request</option><option>Website feedback</option></select></label>
+          <label><span>Message</span><textarea id="contact-message" rows="7" maxlength="5000" required placeholder="How can we help?"></textarea></label>
+          <label class="honeypot" aria-hidden="true"><span>Website</span><input id="contact-website" tabindex="-1" autocomplete="off"></label>
+          <div class="newsletter-options">
+            <label class="checkbox-line"><input id="contact-newsletter" type="checkbox"><span>Also send me Seminole County water-quality reports, alerts, or useful updates.</span></label>
+            <div id="contact-newsletter-options" class="preferences-grid" hidden>
+              <label><span>How often?</span><select id="contact-frequency"><option value="monthly">Monthly</option><option value="weekly">Weekly</option></select></label>
+              <label><span>Send me</span><select id="contact-content"><option value="both">Reports + alerts & updates</option><option value="water-report">Water-quality reports</option><option value="alerts-media">Alerts & community updates</option></select></label>
+              <label><span>Community (optional)</span><input id="contact-city" autocomplete="address-level2"></label>
+            </div>
+          </div>
+          <button class="primary-button" type="submit">Send message</button>
+          <p id="contact-status" class="form-status" aria-live="polite"></p>
+        </form>
+      </section>
+      <aside class="contact-aside">
+        <h2>What happens after you send it?</h2>
+        <p>Your message is delivered privately to the IsMyWaterOK team. The receiving email address is not displayed on this page.</p>
+        <ul>
+          <li>Your email is used so we can reply.</li>
+          <li>You only join water-update emails if you check the opt-in box.</li>
+          <li>You can unsubscribe from update emails at any time.</li>
+        </ul>
+        <p>For an urgent water outage, boil-water notice, or utility emergency, use your official local utility instead of this form.</p>
+      </aside>
+    </div>
+  </main>
+  <script src="/community.js"></script>
+  <script src="/page-tracking.js"></script>
+</body>
+</html>
