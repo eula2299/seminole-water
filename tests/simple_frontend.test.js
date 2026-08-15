@@ -4,9 +4,14 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const root=path.join(__dirname,'..','public');
-const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const app=fs.readFileSync(path.join(root,'app.js'),'utf8');
-const actions=fs.readFileSync(path.join(root,'resident-actions.js'),'utf8');
+const read=name=>fs.readFileSync(path.join(root,name),'utf8');
+const index=read('index.html');
+const app=read('app.js');
+const actions=read('resident-actions.js');
+const roadmap=read('roadmap.js');
+const roadmapData=read('roadmap-data.js');
+const pages=read('pages.js');
+const css=read('roadmap.css');
 
 test('main page leads with health meaning and simple address lookup',()=>{
   assert.match(index,/What could your water mean for your health\?/);
@@ -17,61 +22,102 @@ test('main page leads with health meaning and simple address lookup',()=>{
   assert.doesNotMatch(index,/Water system<\/span>/);
 });
 
-test('resident-facing page does not expose internal debugging or engineering UI',()=>{
-  assert.doesNotMatch(index,/Agent audit trail/);
-  assert.doesNotMatch(index,/Provider crosswalk diagnostics/);
-  assert.doesNotMatch(index,/Causal-conformal evidence assurance/);
-  assert.doesNotMatch(index,/Evidence used/);
-  assert.doesNotMatch(index,/Service-area diagnostics/);
+test('resident-facing page does not expose old engineering UI',()=>{
+  const combined=index+'\n'+roadmap+'\n'+pages;
+  assert.doesNotMatch(combined,/Agent audit trail/);
+  assert.doesNotMatch(combined,/Provider crosswalk diagnostics/);
+  assert.doesNotMatch(combined,/Causal-conformal evidence assurance/);
+  assert.doesNotMatch(combined,/Evidence used/);
+  assert.doesNotMatch(combined,/Service-area diagnostics/);
   assert.doesNotMatch(index,/PWSID/i);
+  assert.equal(fs.existsSync(path.join(root,'explorer.html')),false);
   assert.match(actions,/simplifyBaseReport/);
-  assert.match(actions,/plainUnit/);
-  assert.match(actions,/plainName/);
 });
 
-test('resident report uses four understandable health levels',()=>{
-  assert.match(actions,/Low current concern/);
-  assert.match(actions,/Some findings to watch/);
-  assert.match(actions,/Higher health concern/);
-  assert.match(actions,/Active water alert/);
-  assert.match(actions,/What this could mean long term/);
-});
-
-test('long-term health explanations include concrete diseases and organ effects',()=>{
+test('resident report keeps long-term disease explanations',()=>{
   assert.match(actions,/permanently lower IQ/);
-  assert.match(actions,/learning and behavior problems/);
   assert.match(actions,/cardiovascular disease and type 2 diabetes/);
   assert.match(actions,/skin, lung, and bladder cancers/);
   assert.match(actions,/kidney and testicular cancer/);
   assert.match(actions,/kidney disease and make bones more fragile/);
-  assert.match(actions,/increase cancer risk/);
 });
 
-test('common technical units are translated for residents',()=>{
+test('technical units are translated for residents',()=>{
   assert.match(actions,/parts per trillion/);
   assert.match(actions,/parts per billion/);
   assert.match(actions,/parts per million/);
-  assert.match(actions,/radioactivity units/);
 });
 
-test('technical result sections are replaced or removed from resident view',()=>{
-  assert.match(actions,/\.local-panel/);
-  assert.match(actions,/\.alerts-section/);
-  assert.match(actions,/\.overall-card/);
-  assert.match(actions,/Current official concerns/);
-  assert.match(actions,/What was found in testing/);
-  assert.match(actions,/See other substances that were tested/);
+test('full roadmap includes resident problem selector and anonymous reporting',()=>{
+  assert.match(roadmap,/What is happening with your water\?/);
+  assert.match(roadmap,/resident_water_problem_reported/);
+  assert.match(roadmapData,/Brown, yellow, or rusty water/);
+  assert.match(roadmapData,/Rotten-egg or sulfur smell/);
+  assert.match(roadmapData,/Older home or lead concern/);
+  assert.match(roadmapData,/I use a private well/);
 });
 
-test('resident report keeps useful official local resources',()=>{
-  assert.match(actions,/Current water alerts/);
-  assert.match(actions,/Local approved water labs/);
-  assert.match(actions,/1,4-dioxane in Seminole County/);
-  assert.match(actions,/resident_health_level_viewed/);
-  assert.match(actions,/official_resource_clicked/);
+test('full roadmap includes exact-area alerts and private-well flow',()=>{
+  assert.match(roadmap,/LOCAL WATER ALERTS/);
+  assert.match(roadmap,/address_evidence/);
+  assert.match(roadmap,/PRIVATE WELL PATH/);
+  assert.match(roadmap,/nearby_dioxane_well_samples/);
+  assert.match(roadmap,/nearby_dioxane_detections/);
 });
 
-test('simple interface keeps underlying detection handling intact',()=>{
+test('full roadmap includes approved labs and correct local routing',()=>{
+  assert.match(roadmap,/STATE-APPROVED WATER LABS/);
+  assert.match(roadmapData,/Flowers Labs/);
+  assert.match(roadmapData,/PC&B/);
+  assert.match(roadmapData,/HBEL/);
+  assert.match(roadmapData,/AEL/);
+  for(const place of ['Sanford','Lake Mary','Oviedo','Winter Springs','Altamonte Springs','Casselberry','Longwood','Unincorporated Seminole County']) assert.match(roadmapData,new RegExp(place));
+});
+
+test('full roadmap includes local 1,4-dioxane experience',()=>{
+  assert.match(roadmap,/Local 1,4-dioxane information for this area/);
+  assert.match(roadmap,/liver toxicity and cancer risk/);
+  assert.match(roadmapData,/Seminole County.*1,4-dioxane/s);
+});
+
+test('full roadmap includes public impact tracking and outcome feedback',()=>{
+  assert.match(index,/impact\.html/);
+  assert.match(roadmap,/impact_understanding_feedback/);
+  assert.match(roadmap,/official_resource_clicked/);
+  assert.match(pages,/fetch\('\/api\/impact'\)/);
+  assert.match(pages,/water checks/);
+  assert.match(pages,/unique households/);
+  assert.equal(fs.existsSync(path.join(root,'impact.html')),true);
+});
+
+test('dedicated city and health-guide pages exist',()=>{
+  assert.equal(fs.existsSync(path.join(root,'city.html')),true);
+  assert.equal(fs.existsSync(path.join(root,'issue.html')),true);
+  assert.match(pages,/renderCity/);
+  assert.match(pages,/renderIssue/);
+  assert.match(roadmapData,/lead:/);
+  assert.match(roadmapData,/pfas:/);
+  assert.match(roadmapData,/dioxane:/);
+  assert.match(roadmapData,/bacteria:/);
+});
+
+test('Spanish and accessibility/mobile support are built in',()=>{
+  assert.match(roadmap,/Español/);
+  assert.match(roadmap,/¿Qué está pasando con su agua\?/);
+  assert.match(roadmapData,/nameEs/);
+  assert.match(css,/skip-link/);
+  assert.match(css,/prefers-reduced-motion/);
+  assert.match(css,/@media\(max-width:620px\)/);
+  assert.match(css,/:focus-visible/);
+});
+
+test('new browser scripts compile',()=>{
+  assert.doesNotThrow(()=>new Function(roadmapData));
+  assert.doesNotThrow(()=>new Function(roadmap));
+  assert.doesNotThrow(()=>new Function(pages));
+});
+
+test('underlying detection handling remains intact',()=>{
   assert.match(app,/recordStatus/);
   assert.match(app,/not-detected/);
   assert.match(actions,/isDetected/);

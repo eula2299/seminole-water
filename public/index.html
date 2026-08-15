@@ -3,30 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Check what recent Seminole County water results could mean for your health in plain language.">
+  <meta name="description" content="Check Seminole County water results, understand possible health effects, find local alerts, private-well resources, approved labs, and the right city utility.">
   <title>Seminole Water Check | IsMyWaterOK</title>
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/resident-actions.css">
-
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XC8X65GPJJ"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-XC8X65GPJJ', { send_page_view: true });
-
-    document.addEventListener('DOMContentLoaded', function () {
-      const form = document.getElementById('form');
-      if (form) {
-        form.addEventListener('submit', function () {
-          gtag('event', 'water_check_submitted', {
-            event_category: 'engagement',
-            event_label: 'Check water form'
-          });
-        });
-      }
-    });
-  </script>
+  <link rel="stylesheet" href="/roadmap.css">
+  <script src="/analytics.js"></script>
 </head>
 <body>
   <main class="shell">
@@ -35,41 +17,18 @@
       <div>
         <p class="eyebrow">SEMINOLE COUNTY WATER CHECK</p>
         <h1>What could your water mean for your health?</h1>
-        <p class="hero-copy">
-          Enter your address to see what has been found in recent local water testing,
-          what those substances can do to the body over time, and whether there is a current health concern.
-        </p>
-        <div class="hero-promises" aria-label="What this tool does">
-          <span>Find your water provider</span>
-          <span>Explain what was found</span>
-          <span>Show possible long-term effects</span>
-        </div>
+        <p class="hero-copy">Enter your address to see what has been found in recent local water testing, what those substances can do to the body over time, whether a local water alert matches your area, and what to do next.</p>
+        <div class="hero-promises" aria-label="What this tool does"><span>Find your water provider</span><span>Explain what was found</span><span>Show possible long-term effects</span><span>Check local alerts</span></div>
         <p id="summary" class="data-status" hidden aria-hidden="true"></p>
       </div>
     </header>
 
     <section class="search-card resident-search" aria-labelledby="search-title">
-      <div class="search-card-heading">
-        <div>
-          <p class="section-kicker">START HERE</p>
-          <h2 id="search-title">Check your address</h2>
-        </div>
-        <span class="free-badge">Free · No account</span>
-      </div>
-
+      <div class="search-card-heading"><div><p class="section-kicker">START HERE</p><h2 id="search-title">Check your address</h2></div><span class="free-badge">Free · No account</span></div>
       <form id="form">
-        <label class="field field-wide">
-          <span>Street address</span>
-          <input id="address" required autocomplete="street-address" placeholder="4301 Foggy Oak Ln">
-        </label>
-
-        <label class="field">
-          <span>City</span>
-          <input id="city" required autocomplete="address-level2" placeholder="Sanford">
-        </label>
-
+        <label class="field field-wide"><span>Street address</span><input id="address" required autocomplete="street-address" placeholder="4301 Foggy Oak Ln"></label>
+        <label class="field"><span>City</span><input id="city" required autocomplete="address-level2" placeholder="Sanford"></label>
         <button class="primary-button" type="submit">Check water</button>
-
         <select id="pws" hidden aria-hidden="true"><option value="AUTO">Automatic</option></select>
         <input id="hh" type="hidden" value="1">
         <input id="online" type="checkbox" checked hidden aria-hidden="true">
@@ -77,45 +36,24 @@
     </section>
 
     <section class="how-it-helps" aria-labelledby="how-title">
-      <div class="section-heading public-section-heading">
-        <div>
-          <p class="section-kicker">PLAIN LANGUAGE</p>
-          <h2 id="how-title">No codes, acronyms, or chemistry jargon.</h2>
-        </div>
-      </div>
+      <div class="section-heading public-section-heading"><div><p class="section-kicker">PLAIN LANGUAGE</p><h2 id="how-title">No codes, acronyms, or chemistry jargon.</h2></div></div>
       <div class="help-grid">
-        <article>
-          <span class="help-number">01</span>
-          <h3>What was found?</h3>
-          <p>Results are translated into familiar names and understandable amounts.</p>
-        </article>
-        <article>
-          <span class="help-number">02</span>
-          <h3>Why does it matter?</h3>
-          <p>Each substance explains the organs, diseases, or developmental effects linked with too much exposure.</p>
-        </article>
-        <article>
-          <span class="help-number">03</span>
-          <h3>What about years of exposure?</h3>
-          <p>Long-term effects are separated from short-term concerns so families can understand what repeated exposure could mean.</p>
-        </article>
+        <article><span class="help-number">01</span><h3>What was found?</h3><p>Results are translated into familiar names and understandable amounts.</p></article>
+        <article><span class="help-number">02</span><h3>Why does it matter?</h3><p>Each substance explains the organs, diseases, or developmental effects linked with too much exposure.</p></article>
+        <article><span class="help-number">03</span><h3>What should I do?</h3><p>See local alerts, your correct utility contact, approved labs, private-well information, and a practical next step.</p></article>
       </div>
     </section>
 
     <section id="out" aria-live="polite"></section>
 
-    <section class="public-service-note">
-      <p class="section-kicker">BUILT FOR SEMINOLE COUNTY</p>
-      <h2>Water information people can actually understand.</h2>
-      <p>IsMyWaterOK turns public water records into a simple resident health summary and connects people with official local information.</p>
-    </section>
+    <section class="public-service-note"><p class="section-kicker">BUILT FOR SEMINOLE COUNTY</p><h2>Water information people can actually use.</h2><p>IsMyWaterOK turns public water records into a resident health summary and connects people with the right local action.</p><p><a href="/impact.html" style="color:#fff;font-weight:800">See the public impact dashboard →</a></p></section>
 
-    <footer class="site-footer">
-      <span class="footer-note">Independent public-interest tool · information from public water and health agencies</span>
-    </footer>
+    <footer class="site-footer"><span class="footer-note">Independent public-interest tool · information from public water and health agencies</span></footer>
   </main>
 
+  <script src="/roadmap-data.js"></script>
   <script src="/resident-actions.js"></script>
+  <script src="/roadmap.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

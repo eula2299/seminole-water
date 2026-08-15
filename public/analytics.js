@@ -1,0 +1,1 @@
+(function(){window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments);};window.gtag('js',new Date());window.gtag('config','G-XC8X65GPJJ',{send_page_view:true});const s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-XC8X65GPJJ';document.head.appendChild(s);})();
