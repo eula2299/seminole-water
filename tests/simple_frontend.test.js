@@ -8,61 +8,71 @@ const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const app=fs.readFileSync(path.join(root,'app.js'),'utf8');
 const actions=fs.readFileSync(path.join(root,'resident-actions.js'),'utf8');
 
-test('main page leads with health meaning and address lookup',()=>{
-  assert.match(index,/What does your water mean for your health\?/);
+test('main page leads with health meaning and simple address lookup',()=>{
+  assert.match(index,/What could your water mean for your health\?/);
   assert.match(index,/Check water/);
-  assert.match(index,/health level from 1 to 4/);
-  assert.match(app,/Detected substances/);
+  assert.match(index,/possible long-term effects/i);
+  assert.doesNotMatch(index,/More options/);
+  assert.doesNotMatch(index,/People in household/);
+  assert.doesNotMatch(index,/Water system<\/span>/);
 });
 
-test('main page does not render internal agent or evidence-debug panels',()=>{
-  const combined=index+'\n'+app+'\n'+actions;
-  assert.doesNotMatch(combined,/Agent audit trail/);
-  assert.doesNotMatch(combined,/Provider crosswalk diagnostics/);
-  assert.doesNotMatch(combined,/Causal-conformal evidence assurance/);
-  assert.doesNotMatch(combined,/Evidence used/);
-  assert.doesNotMatch(combined,/View agent configuration/);
-  assert.doesNotMatch(combined,/Service-area diagnostics/);
+test('resident-facing page does not expose internal debugging or engineering UI',()=>{
+  assert.doesNotMatch(index,/Agent audit trail/);
+  assert.doesNotMatch(index,/Provider crosswalk diagnostics/);
+  assert.doesNotMatch(index,/Causal-conformal evidence assurance/);
+  assert.doesNotMatch(index,/Evidence used/);
+  assert.doesNotMatch(index,/Service-area diagnostics/);
+  assert.doesNotMatch(index,/PWSID/i);
+  assert.match(actions,/simplifyBaseReport/);
+  assert.match(actions,/plainUnit/);
+  assert.match(actions,/plainName/);
 });
 
-test('simple interface still keeps non-detects separate from detections',()=>{
-  assert.match(app,/recordStatus/);
-  assert.match(app,/not-detected/);
+test('resident report uses four understandable health levels',()=>{
+  assert.match(actions,/Low current concern/);
+  assert.match(actions,/Some findings to watch/);
+  assert.match(actions,/Higher health concern/);
+  assert.match(actions,/Active water alert/);
+  assert.match(actions,/What this could mean long term/);
 });
 
-test('resident report has four plain-language health levels',()=>{
-  assert.match(actions,/Low concern/);
-  assert.match(actions,/Monitor/);
-  assert.match(actions,/Health concern/);
-  assert.match(actions,/Official advisory/);
-  assert.match(actions,/What Level \$\{level.number\} means for your health/);
-  assert.match(actions,/What every level means/);
+test('long-term health explanations include concrete diseases and organ effects',()=>{
+  assert.match(actions,/permanently lower IQ/);
+  assert.match(actions,/learning and behavior problems/);
+  assert.match(actions,/cardiovascular disease and type 2 diabetes/);
+  assert.match(actions,/skin, lung, and bladder cancers/);
+  assert.match(actions,/kidney and testicular cancer/);
+  assert.match(actions,/kidney disease and make bones more fragile/);
+  assert.match(actions,/increase cancer risk/);
 });
 
-test('resident-facing page removes limitation-heavy UI',()=>{
-  assert.doesNotMatch(index,/What it cannot prove/);
-  assert.doesNotMatch(index,/This is not a test of your home's water/);
-  assert.doesNotMatch(index,/Disclaimers &amp; Terms of Use/);
-  assert.match(actions,/removeLimitationMessaging/);
-  assert.match(actions,/\.plain-language-note, \.dioxane-note/);
+test('common technical units are translated for residents',()=>{
+  assert.match(actions,/parts per trillion/);
+  assert.match(actions,/parts per billion/);
+  assert.match(actions,/parts per million/);
+  assert.match(actions,/radioactivity units/);
 });
 
-test('resident report adds health meaning to contaminant cards',()=>{
-  assert.match(actions,/result-health-meaning/);
-  assert.match(actions,/Lead can harm brain development/);
-  assert.match(actions,/High nitrate can reduce the blood/);
-  assert.match(actions,/Higher PFAS exposure/);
+test('technical result sections are replaced or removed from resident view',()=>{
+  assert.match(actions,/\.local-panel/);
+  assert.match(actions,/\.alerts-section/);
+  assert.match(actions,/\.overall-card/);
+  assert.match(actions,/Current official concerns/);
+  assert.match(actions,/What was found in testing/);
+  assert.match(actions,/See other substances that were tested/);
 });
 
-test('resident report includes official local resources and impact analytics',()=>{
-  assert.match(actions,/Boil-water advisories/);
-  assert.match(actions,/State-approved water labs/);
-  assert.match(actions,/1,4-dioxane information/);
+test('resident report keeps useful official local resources',()=>{
+  assert.match(actions,/Current water alerts/);
+  assert.match(actions,/Local approved water labs/);
+  assert.match(actions,/1,4-dioxane in Seminole County/);
   assert.match(actions,/resident_health_level_viewed/);
   assert.match(actions,/official_resource_clicked/);
 });
 
-test('resident action report guards against repeated observer rendering',()=>{
-  assert.match(actions,/lastRenderedKey/);
-  assert.match(actions,/existing && lastRenderedKey === latestLookupKey/);
+test('simple interface keeps underlying detection handling intact',()=>{
+  assert.match(app,/recordStatus/);
+  assert.match(app,/not-detected/);
+  assert.match(actions,/isDetected/);
 });

@@ -1,4 +1,4 @@
-.plain-language-note,.dioxane-note,.results-section>.section-note{display:none!important}
+.data-status,.plain-language-note,.dioxane-note,.local-panel,.annual-report-note,.results-section>.section-note{display:none!important}
 .resident-hero{padding-bottom:22px}
 .hero-promises{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 12px}
 .hero-promises span,.free-badge,.resident-action-badge{display:inline-flex;align-items:center;border-radius:999px;padding:7px 11px;font-size:.78rem;font-weight:800}
@@ -33,13 +33,13 @@
 .fact-label{display:block;color:var(--muted);font-size:.72rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
 .resident-facts strong{display:block;font-size:1.1rem;line-height:1.35}
 .fact-detail{display:block;color:var(--muted);font-size:.8rem;line-height:1.45;margin-top:5px}
-.health-meaning-box{margin-top:14px;border-radius:16px;padding:19px 20px;border:1px solid var(--border)}
-.health-meaning-box h3{margin:0;font-size:1.25rem}
-.health-meaning-box p{margin:6px 0 0;line-height:1.55}
-.health-meaning-box.level-low{background:#e9f7f3;border-color:#b9e4d8}
-.health-meaning-box.level-monitor{background:#fff7dc;border-color:#ead49a}
-.health-meaning-box.level-concern{background:#fff0df;border-color:#efc08c}
-.health-meaning-box.level-advisory{background:#fff0ef;border-color:#efb9b5}
+.health-meaning-box,.long-term-summary{margin-top:14px;border-radius:16px;padding:19px 20px;border:1px solid var(--border)}
+.health-meaning-box h3{margin:0;font-size:1.08rem;line-height:1.5}
+.health-meaning-box.level-low,.long-term-summary.level-low{background:#e9f7f3;border-color:#b9e4d8}
+.health-meaning-box.level-monitor,.long-term-summary.level-monitor{background:#fff7dc;border-color:#ead49a}
+.health-meaning-box.level-concern,.long-term-summary.level-concern{background:#fff0df;border-color:#efc08c}
+.health-meaning-box.level-advisory,.long-term-summary.level-advisory{background:#fff0ef;border-color:#efb9b5}
+.long-term-summary p{margin:4px 0 0;line-height:1.6;font-size:.96rem}
 .resident-next-step{display:flex;gap:14px;margin-top:12px;padding:17px;border-radius:16px;border:1px solid var(--border)}
 .resident-next-step.level-low{background:#f4fbf8;border-color:#c9e8df}
 .resident-next-step.level-monitor{background:#fffaf0;border-color:#ecd9aa}
@@ -49,7 +49,7 @@
 .resident-next-step p{margin:2px 0 0;color:#38534d;font-size:.92rem}
 .health-guide-wrap{margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
 .health-level-guide{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
-.health-level-card{position:relative;border:1px solid var(--border);border-radius:15px;padding:15px;background:#fff;min-height:165px}
+.health-level-card{position:relative;border:1px solid var(--border);border-radius:15px;padding:15px;background:#fff;min-height:150px}
 .health-level-card.current{box-shadow:0 0 0 3px rgba(16,35,31,.1);transform:translateY(-2px)}
 .health-level-card.level-low{border-top:5px solid #16846f}
 .health-level-card.level-monitor{border-top:5px solid #c89217}
@@ -60,14 +60,22 @@
 .health-level-top strong{display:block;font-size:.9rem}
 .current-level-tag{display:inline-block;margin-top:4px;border-radius:999px;padding:2px 7px;background:#10231f;color:#fff;font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
 .health-level-card p{margin:11px 0 0;color:var(--muted);font-size:.78rem;line-height:1.45}
-.result-health-meaning{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
-.result-health-meaning>span{display:block;color:var(--green-dark);font-size:.68rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
-.result-health-meaning p{margin:4px 0 0;color:#405852;font-size:.8rem;line-height:1.45}
+.result-health-meaning{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:grid;gap:12px}
+.result-health-meaning>div{padding:11px 12px;border-radius:12px;background:#f8fbfa}
+.result-health-meaning span{display:block;color:var(--green-dark);font-size:.68rem;font-weight:900;letter-spacing:.07em;text-transform:uppercase}
+.result-health-meaning p{margin:4px 0 0;color:#405852;font-size:.82rem;line-height:1.5}
+.local-health-highlights{margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
+.local-health-highlights h3{margin:0 0 12px;font-size:1.1rem}
+.local-health-highlights>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.local-health-card{border:1px solid var(--border);border-radius:14px;padding:15px;background:#f8fbfa}
+.local-health-card.attention{background:#fff5eb;border-color:#efc89d}
+.local-health-card strong{display:block;margin:2px 0 7px;line-height:1.35}
+.local-health-card p{margin:0;color:#405852;font-size:.84rem;line-height:1.5}
 .official-resources-wrap{margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
 .official-resources-heading h3{margin:0 0 4px;font-size:1.1rem}
 .official-resources-heading p{margin:0;color:var(--muted);font-size:.88rem;max-width:760px}
 .official-resources-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
-.official-resource{position:relative;display:flex;flex-direction:column;gap:5px;min-height:150px;padding:16px 42px 16px 16px;border:1px solid var(--border);border-radius:15px;background:#fff;color:var(--ink);text-decoration:none;transition:transform .15s,border-color .15s,box-shadow .15s}
+.official-resource{position:relative;display:flex;flex-direction:column;gap:5px;min-height:145px;padding:16px 42px 16px 16px;border:1px solid var(--border);border-radius:15px;background:#fff;color:var(--ink);text-decoration:none;transition:transform .15s,border-color .15s,box-shadow .15s}
 .official-resource:hover{transform:translateY(-2px);border-color:#9fcfc3;box-shadow:0 9px 24px rgba(15,62,54,.08)}
 .official-resource-label{color:var(--green-dark);font-size:.67rem;font-weight:900;letter-spacing:.1em}
 .official-resource strong{font-size:.98rem}
