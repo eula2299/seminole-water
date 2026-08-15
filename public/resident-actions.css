@@ -1,0 +1,50 @@
+.resident-hero{padding-bottom:22px}
+.hero-promises{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 12px}
+.hero-promises span,.free-badge,.resident-action-badge{display:inline-flex;align-items:center;border-radius:999px;padding:7px 11px;font-size:.78rem;font-weight:800}
+.hero-promises span{background:#fff;border:1px solid var(--border);color:var(--green-dark)}
+.search-card-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
+.search-card-heading h2{margin:0}
+.free-badge{background:var(--green-soft);color:var(--green-dark);white-space:nowrap}
+.search-privacy{margin:14px 0 0;color:var(--muted);font-size:.82rem}
+.how-it-helps{margin:30px 0 6px;padding:4px 0}
+.public-section-heading{margin-bottom:14px}
+.public-section-heading h2{margin:0;font-size:clamp(1.55rem,3vw,2.2rem)}
+.help-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.help-grid article{background:#fff;border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+.help-number{display:inline-block;color:var(--green);font-size:.76rem;font-weight:900;letter-spacing:.12em;margin-bottom:16px}
+.help-grid h3{margin:0 0 8px;font-size:1.05rem}
+.help-grid p{margin:0;color:var(--muted);font-size:.9rem}
+.resident-action-report{background:#fff;border:1px solid var(--border);border-radius:22px;padding:24px;margin:16px 0;box-shadow:var(--shadow)}
+.resident-action-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}
+.resident-action-head h2{margin:0;font-size:1.55rem}
+.resident-action-badge{background:var(--green-soft);color:var(--green-dark);white-space:nowrap}
+.resident-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.resident-facts article{padding:16px;border:1px solid var(--border);border-radius:15px;background:#f8fbfa}
+.fact-label{display:block;color:var(--muted);font-size:.72rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.resident-facts strong{display:block;font-size:1rem;line-height:1.35}
+.fact-detail{display:block;color:var(--muted);font-size:.8rem;line-height:1.45;margin-top:5px}
+.resident-next-step{display:flex;gap:14px;margin-top:14px;padding:17px;border-radius:16px;border:1px solid var(--border)}
+.resident-next-step.good{background:var(--green-soft);border-color:#b9e4d8}
+.resident-next-step.attention{background:var(--red-soft);border-color:#f1c4bf}
+.next-step-icon{display:grid;place-items:center;flex:0 0 36px;height:36px;border-radius:50%;background:#fff;font-weight:900}
+.resident-next-step h3{margin:0;font-size:1.08rem}
+.resident-next-step p{margin:4px 0 0;color:#38534d;font-size:.9rem}
+.official-resources-wrap{margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.official-resources-heading h3{margin:0 0 4px;font-size:1.1rem}
+.official-resources-heading p{margin:0;color:var(--muted);font-size:.88rem;max-width:760px}
+.official-resources-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.official-resource{position:relative;display:flex;flex-direction:column;gap:5px;min-height:150px;padding:16px 42px 16px 16px;border:1px solid var(--border);border-radius:15px;background:#fff;color:var(--ink);text-decoration:none;transition:transform .15s,border-color .15s,box-shadow .15s}
+.official-resource:hover{transform:translateY(-2px);border-color:#9fcfc3;box-shadow:0 9px 24px rgba(15,62,54,.08)}
+.official-resource-label{color:var(--green-dark);font-size:.67rem;font-weight:900;letter-spacing:.1em}
+.official-resource strong{font-size:.98rem}
+.official-resource>span:not(.official-resource-label):not(.resource-arrow){color:var(--muted);font-size:.8rem;line-height:1.45}
+.resource-arrow{position:absolute;right:16px;top:15px;color:var(--green);font-weight:900}
+.public-service-note{background:#10231f;color:#fff;border-radius:22px;padding:28px;margin:30px 0 8px}
+.public-service-note .section-kicker{color:#8fd6c6}
+.public-service-note h2{margin:0;font-size:1.7rem}
+.public-service-note p:last-child{margin:8px 0 0;color:#c8d7d3;max-width:760px}
+@media(max-width:760px){
+  .search-card-heading,.resident-action-head{flex-direction:column}
+  .help-grid,.resident-facts,.official-resources-grid{grid-template-columns:1fr}
+  .resident-action-report{padding:18px}
+}
