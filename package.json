@@ -1,9 +1,10 @@
 {
   "name": "seminole-water-godmode-v13-probabilistic",
-  "version": "13.9.7",
+  "version": "14.0.0",
   "private": true,
   "scripts": {
-    "start": "node server.js",
+    "start": "node platform.js",
+    "start:core": "node server.js",
     "test": "node --test tests.js",
     "sync": "python3 scripts/sync_fdep.py",
     "sync:service-areas": "python3 scripts/sync_service_areas.py",
@@ -16,8 +17,9 @@
     "test:probabilistic": "node --test tests.js",
     "test:integration": "node --test tests/integration.test.js",
     "audit:crosswalk": "node tools/audit_crosswalk.js",
-    "test:all": "node --test tests.js tests/integration.test.js tests/address_evidence.test.js tests/epa_data.test.js tests/negotiation_accuracy.test.js tests/causal_conformal.test.js tests/simple_frontend.test.js tests/local_data.test.js tests/hardening.test.js && python3 -m unittest tests.test_sync_epa",
+    "test:all": "node --test tests.js tests/integration.test.js tests/address_evidence.test.js tests/epa_data.test.js tests/negotiation_accuracy.test.js tests/causal_conformal.test.js tests/simple_frontend.test.js tests/local_data.test.js tests/hardening.test.js tests/community.test.js && python3 -m unittest tests.test_sync_epa",
     "test:address": "node --test tests/address_evidence.test.js",
+    "test:community": "node --test tests/community.test.js",
     "sync:epa": "python3 scripts/sync_epa_seminole.py --bulk-sdwis",
     "sync:epa:sdwis": "python3 scripts/sync_epa_seminole.py --source sdwis --bulk-sdwis",
     "sync:epa:sdwis:bulk": "python3 scripts/sync_epa_seminole.py --source sdwis --bulk-sdwis",
@@ -38,6 +40,13 @@
     "prune:investigations": "node -e \"const{pruneInvestigations,retentionPolicy}=require('./lib/runtime_hardening');console.log(pruneInvestigations(process.cwd(),{days:retentionPolicy().days}))\"",
     "verify:ccr": "node scripts/verify_against_ccr.js",
     "loadtest": "node scripts/loadtest.js",
-    "sync:epa:force": "SDWA_FORCE_DOWNLOAD=1 python3 scripts/sync_epa_seminole.py --bulk-sdwis"
+    "sync:epa:force": "SDWA_FORCE_DOWNLOAD=1 python3 scripts/sync_epa_seminole.py --bulk-sdwis",
+    "mail:weekly": "node scripts/send_digest.js weekly",
+    "mail:monthly": "node scripts/send_digest.js monthly"
+  },
+  "dependencies": {
+    "google-auth-library": "^10.3.0",
+    "nodemailer": "^7.0.5",
+    "pg": "^8.16.3"
   }
 }
