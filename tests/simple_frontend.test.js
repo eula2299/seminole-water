@@ -8,11 +8,11 @@ const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const app=fs.readFileSync(path.join(root,'app.js'),'utf8');
 const actions=fs.readFileSync(path.join(root,'resident-actions.js'),'utf8');
 
-test('main page uses plain-language water-check interface',()=>{
-  assert.match(index,/What is in your water system\?/);
+test('main page leads with health meaning and address lookup',()=>{
+  assert.match(index,/What does your water mean for your health\?/);
   assert.match(index,/Check water/);
+  assert.match(index,/health level from 1 to 4/);
   assert.match(app,/Detected substances/);
-  assert.match(app,/Only a sample collected from the home/);
 });
 
 test('main page does not render internal agent or evidence-debug panels',()=>{
@@ -28,24 +28,37 @@ test('main page does not render internal agent or evidence-debug panels',()=>{
 test('simple interface still keeps non-detects separate from detections',()=>{
   assert.match(app,/recordStatus/);
   assert.match(app,/not-detected/);
-  assert.match(app,/A detection does not automatically mean/);
 });
 
-test('resident report explains provider, limitations, and next steps',()=>{
-  assert.match(index,/Find your provider/);
-  assert.match(index,/Explain the results/);
-  assert.match(index,/Show your next step/);
-  assert.match(actions,/YOUR SEMINOLE WATER ACTION REPORT/);
-  assert.match(actions,/Your water provider/);
-  assert.match(actions,/What it cannot prove/);
-  assert.match(actions,/Your next step/);
+test('resident report has four plain-language health levels',()=>{
+  assert.match(actions,/Low concern/);
+  assert.match(actions,/Monitor/);
+  assert.match(actions,/Health concern/);
+  assert.match(actions,/Official advisory/);
+  assert.match(actions,/What Level \$\{level.number\} means for your health/);
+  assert.match(actions,/What every level means/);
+});
+
+test('resident-facing page removes limitation-heavy UI',()=>{
+  assert.doesNotMatch(index,/What it cannot prove/);
+  assert.doesNotMatch(index,/This is not a test of your home's water/);
+  assert.doesNotMatch(index,/Disclaimers &amp; Terms of Use/);
+  assert.match(actions,/removeLimitationMessaging/);
+  assert.match(actions,/\.plain-language-note, \.dioxane-note/);
+});
+
+test('resident report adds health meaning to contaminant cards',()=>{
+  assert.match(actions,/result-health-meaning/);
+  assert.match(actions,/Lead can harm brain development/);
+  assert.match(actions,/High nitrate can reduce the blood/);
+  assert.match(actions,/Higher PFAS exposure/);
 });
 
 test('resident report includes official local resources and impact analytics',()=>{
   assert.match(actions,/Boil-water advisories/);
   assert.match(actions,/State-approved water labs/);
   assert.match(actions,/1,4-dioxane information/);
-  assert.match(actions,/resident_action_report_viewed/);
+  assert.match(actions,/resident_health_level_viewed/);
   assert.match(actions,/official_resource_clicked/);
 });
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Check the public water system serving a Seminole County address, understand recent monitoring results, and find official local next steps.">
+  <meta name="description" content="Check the public water system serving a Seminole County address, understand recent monitoring results, and see a plain-language health level.">
   <title>Seminole Water Check | IsMyWaterOK</title>
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/resident-actions.css">
@@ -35,15 +35,15 @@
       <div class="brand-mark" aria-hidden="true">💧</div>
       <div>
         <p class="eyebrow">FREE SEMINOLE COUNTY WATER CHECK</p>
-        <h1>What is in your water system?</h1>
+        <h1>What does your water mean for your health?</h1>
         <p class="hero-copy">
           Enter a Seminole County address. We identify the public water system,
-          translate the latest available monitoring data, and show what you can do next.
+          translate recent monitoring data, and give it a simple health level from 1 to 4.
         </p>
         <div class="hero-promises" aria-label="What this tool does">
           <span>Find your provider</span>
-          <span>Explain the results</span>
-          <span>Show your next step</span>
+          <span>Explain contaminants</span>
+          <span>Show your health level</span>
         </div>
         <p id="summary" class="data-status">Loading official water data…</p>
       </div>
@@ -93,8 +93,6 @@
           </div>
         </details>
       </form>
-
-      <p class="search-privacy">Your address is used to match the relevant water system and local public information. This tool does not claim to test the water at your faucet.</p>
     </section>
 
     <section class="how-it-helps" aria-labelledby="how-title">
@@ -112,13 +110,13 @@
         </article>
         <article>
           <span class="help-number">02</span>
-          <h3>Translate the data</h3>
-          <p>Detections, non-detects, compliance items, PFAS context, and available local information are organized in plain language.</p>
+          <h3>Explain the health meaning</h3>
+          <p>Detected contaminants, health-based flags, PFAS results, and local advisories are translated into plain language.</p>
         </article>
         <article>
           <span class="help-number">03</span>
-          <h3>Give you somewhere to go</h3>
-          <p>Each completed lookup links residents to official Seminole County or Florida resources when verification or follow-up makes sense.</p>
+          <h3>Give you a clear level</h3>
+          <p>Every completed lookup is summarized as Level 1, 2, 3, or 4 so residents can quickly understand how concerned they should be.</p>
         </article>
       </div>
     </section>
@@ -127,43 +125,13 @@
 
     <section class="public-service-note">
       <p class="section-kicker">BUILT FOR SEMINOLE COUNTY</p>
-      <h2>Public information, made usable.</h2>
-      <p>IsMyWaterOK is an independent public-interest tool. It does not sell water tests, filters, treatment products, or resident data.</p>
+      <h2>Public water data, made understandable.</h2>
+      <p>IsMyWaterOK organizes public drinking-water records so residents can understand health significance and find official local information quickly.</p>
     </section>
 
     <footer class="site-footer">
-      <button type="button" id="disclaimer-btn" class="disclaimer-btn" aria-haspopup="dialog">Disclaimers</button>
-      <span class="footer-note">Independent tool · based on public EPA &amp; Florida DEP data · not affiliated with any utility or government agency</span>
+      <span class="footer-note">Independent public-interest tool · based on public EPA &amp; Florida DEP data</span>
     </footer>
-
-    <div id="disclaimer-modal" class="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="disclaimer-title" hidden>
-      <div class="disclaimer-backdrop" data-close="1"></div>
-      <div class="disclaimer-panel" role="document">
-        <div class="disclaimer-panel-head">
-          <h2 id="disclaimer-title">Disclaimers &amp; Terms of Use</h2>
-          <button type="button" class="disclaimer-close" data-close="1" aria-label="Close">&times;</button>
-        </div>
-        <div class="disclaimer-body">
-          <h3>This is not a test of your home's water</h3>
-          <p>This tool summarizes monitoring records for the public water system serving an area. Water can change inside a building because of plumbing, fixtures, filters, or service lines. Only a sample collected from your own tap and analyzed by a certified laboratory can tell you what is in the water at your faucet.</p>
-
-          <h3>This information is not complete</h3>
-          <p>The tool summarizes available public records and does not include everything that could be present in water. The absence of a result is not proof that a substance is absent.</p>
-
-          <h3>This is not medical, legal, or professional advice</h3>
-          <p>Nothing in this tool should be relied upon to make health, medical, legal, financial, or property decisions. For health concerns, consult an appropriate health professional or public-health agency.</p>
-
-          <h3>Accuracy and currency of data</h3>
-          <p>Results are drawn from public sources including U.S. EPA and Florida environmental records. Public datasets can contain errors, omissions, or delays, and monitoring results reflect conditions when samples were collected.</p>
-
-          <h3>Independence</h3>
-          <p>This tool is independent and is not affiliated with, endorsed by, sponsored by, or operated by any utility or government agency.</p>
-
-          <h3>For official information</h3>
-          <p>Confirm important findings with the serving water utility, its Consumer Confidence Report, or the relevant government agency.</p>
-        </div>
-      </div>
-    </div>
   </main>
 
   <script src="/resident-actions.js"></script>

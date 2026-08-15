@@ -1,3 +1,4 @@
+.plain-language-note,.dioxane-note,.results-section>.section-note{display:none!important}
 .resident-hero{padding-bottom:22px}
 .hero-promises{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 12px}
 .hero-promises span,.free-badge,.resident-action-badge{display:inline-flex;align-items:center;border-radius:999px;padding:7px 11px;font-size:.78rem;font-weight:800}
@@ -5,7 +6,6 @@
 .search-card-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}
 .search-card-heading h2{margin:0}
 .free-badge{background:var(--green-soft);color:var(--green-dark);white-space:nowrap}
-.search-privacy{margin:14px 0 0;color:var(--muted);font-size:.82rem}
 .how-it-helps{margin:30px 0 6px;padding:4px 0}
 .public-section-heading{margin-bottom:14px}
 .public-section-heading h2{margin:0;font-size:clamp(1.55rem,3vw,2.2rem)}
@@ -15,20 +15,54 @@
 .help-grid h3{margin:0 0 8px;font-size:1.05rem}
 .help-grid p{margin:0;color:var(--muted);font-size:.9rem}
 .resident-action-report{background:#fff;border:1px solid var(--border);border-radius:22px;padding:24px;margin:16px 0;box-shadow:var(--shadow)}
+.resident-action-report.level-low{border-top:5px solid #16846f}
+.resident-action-report.level-monitor{border-top:5px solid #c89217}
+.resident-action-report.level-concern{border-top:5px solid #d86c21}
+.resident-action-report.level-advisory{border-top:5px solid #c53e38}
 .resident-action-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}
-.resident-action-head h2{margin:0;font-size:1.55rem}
-.resident-action-badge{background:var(--green-soft);color:var(--green-dark);white-space:nowrap}
+.resident-action-head h2{margin:0;font-size:clamp(1.65rem,4vw,2.35rem)}
+.health-level-short{margin:5px 0 0;color:var(--muted);font-weight:700}
+.resident-action-badge{white-space:nowrap;color:#fff;font-size:.84rem;padding:8px 13px}
+.resident-action-badge.level-low{background:#16846f}
+.resident-action-badge.level-monitor{background:#a97300}
+.resident-action-badge.level-concern{background:#c85a0f}
+.resident-action-badge.level-advisory{background:#b72f2a}
 .resident-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.resident-facts-health{grid-template-columns:repeat(4,1fr)}
 .resident-facts article{padding:16px;border:1px solid var(--border);border-radius:15px;background:#f8fbfa}
 .fact-label{display:block;color:var(--muted);font-size:.72rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
-.resident-facts strong{display:block;font-size:1rem;line-height:1.35}
+.resident-facts strong{display:block;font-size:1.1rem;line-height:1.35}
 .fact-detail{display:block;color:var(--muted);font-size:.8rem;line-height:1.45;margin-top:5px}
-.resident-next-step{display:flex;gap:14px;margin-top:14px;padding:17px;border-radius:16px;border:1px solid var(--border)}
-.resident-next-step.good{background:var(--green-soft);border-color:#b9e4d8}
-.resident-next-step.attention{background:var(--red-soft);border-color:#f1c4bf}
+.health-meaning-box{margin-top:14px;border-radius:16px;padding:19px 20px;border:1px solid var(--border)}
+.health-meaning-box h3{margin:0;font-size:1.25rem}
+.health-meaning-box p{margin:6px 0 0;line-height:1.55}
+.health-meaning-box.level-low{background:#e9f7f3;border-color:#b9e4d8}
+.health-meaning-box.level-monitor{background:#fff7dc;border-color:#ead49a}
+.health-meaning-box.level-concern{background:#fff0df;border-color:#efc08c}
+.health-meaning-box.level-advisory{background:#fff0ef;border-color:#efb9b5}
+.resident-next-step{display:flex;gap:14px;margin-top:12px;padding:17px;border-radius:16px;border:1px solid var(--border)}
+.resident-next-step.level-low{background:#f4fbf8;border-color:#c9e8df}
+.resident-next-step.level-monitor{background:#fffaf0;border-color:#ecd9aa}
+.resident-next-step.level-concern{background:#fff5eb;border-color:#efc89d}
+.resident-next-step.level-advisory{background:#fff5f4;border-color:#efc4c0}
 .next-step-icon{display:grid;place-items:center;flex:0 0 36px;height:36px;border-radius:50%;background:#fff;font-weight:900}
-.resident-next-step h3{margin:0;font-size:1.08rem}
-.resident-next-step p{margin:4px 0 0;color:#38534d;font-size:.9rem}
+.resident-next-step p{margin:2px 0 0;color:#38534d;font-size:.92rem}
+.health-guide-wrap{margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.health-level-guide{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.health-level-card{position:relative;border:1px solid var(--border);border-radius:15px;padding:15px;background:#fff;min-height:165px}
+.health-level-card.current{box-shadow:0 0 0 3px rgba(16,35,31,.1);transform:translateY(-2px)}
+.health-level-card.level-low{border-top:5px solid #16846f}
+.health-level-card.level-monitor{border-top:5px solid #c89217}
+.health-level-card.level-concern{border-top:5px solid #d86c21}
+.health-level-card.level-advisory{border-top:5px solid #c53e38}
+.health-level-top{display:flex;align-items:flex-start;gap:9px}
+.health-level-number{display:grid;place-items:center;flex:0 0 30px;height:30px;border-radius:50%;background:#eef3f1;font-weight:900}
+.health-level-top strong{display:block;font-size:.9rem}
+.current-level-tag{display:inline-block;margin-top:4px;border-radius:999px;padding:2px 7px;background:#10231f;color:#fff;font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+.health-level-card p{margin:11px 0 0;color:var(--muted);font-size:.78rem;line-height:1.45}
+.result-health-meaning{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.result-health-meaning>span{display:block;color:var(--green-dark);font-size:.68rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.result-health-meaning p{margin:4px 0 0;color:#405852;font-size:.8rem;line-height:1.45}
 .official-resources-wrap{margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
 .official-resources-heading h3{margin:0 0 4px;font-size:1.1rem}
 .official-resources-heading p{margin:0;color:var(--muted);font-size:.88rem;max-width:760px}
@@ -43,8 +77,12 @@
 .public-service-note .section-kicker{color:#8fd6c6}
 .public-service-note h2{margin:0;font-size:1.7rem}
 .public-service-note p:last-child{margin:8px 0 0;color:#c8d7d3;max-width:760px}
+@media(max-width:900px){
+  .resident-facts-health,.health-level-guide{grid-template-columns:repeat(2,1fr)}
+}
 @media(max-width:760px){
   .search-card-heading,.resident-action-head{flex-direction:column}
-  .help-grid,.resident-facts,.official-resources-grid{grid-template-columns:1fr}
+  .help-grid,.resident-facts,.resident-facts-health,.health-level-guide,.official-resources-grid{grid-template-columns:1fr}
   .resident-action-report{padding:18px}
+  .health-level-card{min-height:0}
 }
