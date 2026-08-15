@@ -45,8 +45,8 @@
     "mail:monthly": "node scripts/send_digest.js monthly"
   },
   "dependencies": {
-    "google-auth-library": "^10.3.0",
-    "nodemailer": "^7.0.5",
-    "pg": "^8.16.3"
+    "google-auth-library": "^10.9.1",
+    "nodemailer": "^9.0.3",
+    "pg": "^8.22.0"
   }
 }
