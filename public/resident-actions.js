@@ -10,6 +10,7 @@
 
   let latestLookup = null;
   let latestLookupKey = '';
+  let lastRenderedKey = '';
   const originalFetch = window.fetch.bind(window);
 
   function esc(value) {
@@ -89,7 +90,7 @@
     const pwsid = data?.provider?.system?.pwsid || data?.provider?.system?.PWSID || '';
     const action = actionSummary(data);
 
-    return `<section id="resident-action-report" class="resident-action-report" aria-labelledby="resident-action-title">
+    return `<section id="resident-action-report" class="resident-action-report" data-lookup-key="${esc(latestLookupKey)}" aria-labelledby="resident-action-title">
       <div class="resident-action-head">
         <div>
           <p class="section-kicker">YOUR SEMINOLE WATER ACTION REPORT</p>
@@ -141,13 +142,15 @@
 
   function decorate() {
     const out = document.querySelector('#out');
-    if (!out || !latestLookup || !out.querySelector('.report-header')) return;
+    if (!out || !latestLookup || !latestLookupKey || !out.querySelector('.report-header')) return;
 
     const existing = out.querySelector('#resident-action-report');
+    if (existing && lastRenderedKey === latestLookupKey) return;
     if (existing) existing.remove();
 
     const reportHeader = out.querySelector('.report-header');
     reportHeader.insertAdjacentHTML('afterend', buildPanel(latestLookup));
+    lastRenderedKey = latestLookupKey;
 
     if (typeof window.gtag === 'function') {
       window.gtag('event', 'resident_action_report_viewed', {
@@ -171,6 +174,7 @@
           data?.provider?.system?.pwsid || '',
           data?.geocode?.primary?.matchedAddress || data?.geocode?.secondary?.matchedAddress || ''
         ]);
+        lastRenderedKey = '';
         window.setTimeout(decorate, 0);
       }).catch(() => {});
     }
