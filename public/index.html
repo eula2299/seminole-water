@@ -3,12 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Check the public water system serving a Seminole County address, understand recent monitoring results, and see a plain-language health level.">
+  <meta name="description" content="Check what recent Seminole County water results could mean for your health in plain language.">
   <title>Seminole Water Check | IsMyWaterOK</title>
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/resident-actions.css">
 
-  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XC8X65GPJJ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -34,18 +33,17 @@
     <header class="hero resident-hero">
       <div class="brand-mark" aria-hidden="true">💧</div>
       <div>
-        <p class="eyebrow">FREE SEMINOLE COUNTY WATER CHECK</p>
-        <h1>What does your water mean for your health?</h1>
+        <p class="eyebrow">SEMINOLE COUNTY WATER CHECK</p>
+        <h1>What could your water mean for your health?</h1>
         <p class="hero-copy">
-          Enter a Seminole County address. We identify the public water system,
-          translate recent monitoring data, and give it a simple health level from 1 to 4.
+          Enter your address to see what has been found in recent local water testing,
+          what those substances can do to the body over time, and whether there is a current health concern.
         </p>
         <div class="hero-promises" aria-label="What this tool does">
-          <span>Find your provider</span>
-          <span>Explain contaminants</span>
-          <span>Show your health level</span>
+          <span>Find your water provider</span>
+          <span>Explain what was found</span>
+          <span>Show possible long-term effects</span>
         </div>
-        <p id="summary" class="data-status">Loading official water data…</p>
       </div>
     </header>
 
@@ -71,52 +69,34 @@
 
         <button class="primary-button" type="submit">Check water</button>
 
-        <details class="more-options">
-          <summary>More options</summary>
-          <div class="options-grid">
-            <label class="field">
-              <span>Water system</span>
-              <select id="pws">
-                <option value="AUTO">Find automatically</option>
-              </select>
-            </label>
-
-            <label class="field">
-              <span>People in household</span>
-              <input id="hh" type="number" min="1" max="30" value="1">
-            </label>
-
-            <label class="check-row">
-              <input id="online" type="checkbox" checked>
-              <span>Check public notices for this street or neighborhood</span>
-            </label>
-          </div>
-        </details>
+        <select id="pws" hidden aria-hidden="true"><option value="AUTO">Automatic</option></select>
+        <input id="hh" type="hidden" value="1">
+        <input id="online" type="checkbox" checked hidden aria-hidden="true">
       </form>
     </section>
 
     <section class="how-it-helps" aria-labelledby="how-title">
       <div class="section-heading public-section-heading">
         <div>
-          <p class="section-kicker">WHY THIS EXISTS</p>
-          <h2 id="how-title">Water reports should not require a chemistry degree</h2>
+          <p class="section-kicker">PLAIN LANGUAGE</p>
+          <h2 id="how-title">No codes, acronyms, or chemistry jargon.</h2>
         </div>
       </div>
       <div class="help-grid">
         <article>
           <span class="help-number">01</span>
-          <h3>Find the right system</h3>
-          <p>We match the address to the public water provider serving that area instead of making you hunt through utility websites.</p>
+          <h3>What was found?</h3>
+          <p>Results are translated into familiar names and understandable amounts.</p>
         </article>
         <article>
           <span class="help-number">02</span>
-          <h3>Explain the health meaning</h3>
-          <p>Detected contaminants, health-based flags, PFAS results, and local advisories are translated into plain language.</p>
+          <h3>Why does it matter?</h3>
+          <p>Each substance explains the organs, diseases, or developmental effects linked with too much exposure.</p>
         </article>
         <article>
           <span class="help-number">03</span>
-          <h3>Give you a clear level</h3>
-          <p>Every completed lookup is summarized as Level 1, 2, 3, or 4 so residents can quickly understand how concerned they should be.</p>
+          <h3>What about years of exposure?</h3>
+          <p>Long-term effects are separated from short-term concerns so families can understand what repeated exposure could mean.</p>
         </article>
       </div>
     </section>
@@ -125,12 +105,12 @@
 
     <section class="public-service-note">
       <p class="section-kicker">BUILT FOR SEMINOLE COUNTY</p>
-      <h2>Public water data, made understandable.</h2>
-      <p>IsMyWaterOK organizes public drinking-water records so residents can understand health significance and find official local information quickly.</p>
+      <h2>Water information people can actually understand.</h2>
+      <p>IsMyWaterOK turns public water records into a simple resident health summary and connects people with official local information.</p>
     </section>
 
     <footer class="site-footer">
-      <span class="footer-note">Independent public-interest tool · based on public EPA &amp; Florida DEP data</span>
+      <span class="footer-note">Independent public-interest tool · information from public water and health agencies</span>
     </footer>
   </main>
 
