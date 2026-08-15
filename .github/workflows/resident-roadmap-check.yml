@@ -1,7 +1,7 @@
 name: Resident roadmap check
 on:
   push:
-    branches: [main, feature/full-roadmap]
+    branches: [main, feature/full-roadmap-complete]
   pull_request:
     branches: [main]
 jobs:
@@ -12,13 +12,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Compile resident JavaScript
+      - name: Compile resident and community JavaScript
         run: |
           node --check public/roadmap-data.js
           node --check public/roadmap.js
           node --check public/pages.js
           node --check public/page-tracking.js
           node --check public/resident-actions.js
+          node --check public/community.js
           node --check public/app.js
-      - name: Run resident frontend regression tests
-        run: node --test tests/simple_frontend.test.js
+          node --check platform.js
+          node --check lib/community_store.js
+          node --check lib/community_mailer.js
+          node --check scripts/send_digest.js
+      - name: Run resident roadmap regression tests
+        run: node --test tests/simple_frontend.test.js tests/community.test.js
