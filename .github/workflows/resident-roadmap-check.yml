@@ -12,6 +12,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install production dependencies
+        run: npm install --ignore-scripts
+      - name: Load production community dependencies
+        run: node -e "require('pg'); require('nodemailer'); require('google-auth-library'); console.log('community dependencies loaded')"
       - name: Compile resident and community JavaScript
         run: |
           node --check public/roadmap-data.js
