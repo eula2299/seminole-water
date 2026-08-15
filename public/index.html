@@ -3,87 +3,76 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Seminole Water Check</title>
+  <meta name="description" content="Check the public water system serving a Seminole County address, understand recent monitoring results, and find official local next steps.">
+  <title>Seminole Water Check | IsMyWaterOK</title>
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/resident-actions.css">
 
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XC8X65GPJJ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-XC8X65GPJJ', { send_page_view: true });
 
-    function gtag() {
-      dataLayer.push(arguments);
-    }
-
-    gtag("js", new Date());
-
-    gtag("config", "G-XC8X65GPJJ", {
-      send_page_view: true
-    });
-
-    document.addEventListener("DOMContentLoaded", function () {
-      const form = document.getElementById("form");
-
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.getElementById('form');
       if (form) {
-        form.addEventListener("submit", function () {
-          gtag("event", "water_check_submitted", {
-            event_category: "engagement",
-            event_label: "Check water form"
+        form.addEventListener('submit', function () {
+          gtag('event', 'water_check_submitted', {
+            event_category: 'engagement',
+            event_label: 'Check water form'
           });
         });
       }
     });
   </script>
 </head>
-
 <body>
   <main class="shell">
-    <header class="hero">
+    <header class="hero resident-hero">
       <div class="brand-mark" aria-hidden="true">💧</div>
       <div>
-        <p class="eyebrow">SEMINOLE COUNTY WATER CHECK</p>
+        <p class="eyebrow">FREE SEMINOLE COUNTY WATER CHECK</p>
         <h1>What is in your water system?</h1>
         <p class="hero-copy">
-          Enter an address to see the latest available contaminant results for
-          the public water system serving that location.
+          Enter a Seminole County address. We identify the public water system,
+          translate the latest available monitoring data, and show what you can do next.
         </p>
-        <p id="summary" class="data-status">
-          Loading official water data… 
-        </p>
+        <div class="hero-promises" aria-label="What this tool does">
+          <span>Find your provider</span>
+          <span>Explain the results</span>
+          <span>Show your next step</span>
+        </div>
+        <p id="summary" class="data-status">Loading official water data…</p>
       </div>
     </header>
 
-    <section class="search-card" aria-labelledby="search-title">
-      <h2 id="search-title">Check an address</h2>
+    <section class="search-card resident-search" aria-labelledby="search-title">
+      <div class="search-card-heading">
+        <div>
+          <p class="section-kicker">START HERE</p>
+          <h2 id="search-title">Check your address</h2>
+        </div>
+        <span class="free-badge">Free · No account</span>
+      </div>
 
       <form id="form">
         <label class="field field-wide">
           <span>Street address</span>
-          <input
-            id="address"
-            required
-            autocomplete="street-address"
-            placeholder="4301 Foggy Oak Ln"
-          >
+          <input id="address" required autocomplete="street-address" placeholder="4301 Foggy Oak Ln">
         </label>
 
         <label class="field">
           <span>City</span>
-          <input
-            id="city"
-            required
-            autocomplete="address-level2"
-            placeholder="Sanford"
-          >
+          <input id="city" required autocomplete="address-level2" placeholder="Sanford">
         </label>
 
-        <button class="primary-button" type="submit">
-          Check water
-        </button>
+        <button class="primary-button" type="submit">Check water</button>
 
         <details class="more-options">
           <summary>More options</summary>
-
           <div class="options-grid">
             <label class="field">
               <span>Water system</span>
@@ -99,137 +88,85 @@
 
             <label class="check-row">
               <input id="online" type="checkbox" checked>
-              <span>
-                Check public notices for this street or neighborhood
-              </span>
+              <span>Check public notices for this street or neighborhood</span>
             </label>
           </div>
         </details>
       </form>
+
+      <p class="search-privacy">Your address is used to match the relevant water system and local public information. This tool does not claim to test the water at your faucet.</p>
+    </section>
+
+    <section class="how-it-helps" aria-labelledby="how-title">
+      <div class="section-heading public-section-heading">
+        <div>
+          <p class="section-kicker">WHY THIS EXISTS</p>
+          <h2 id="how-title">Water reports should not require a chemistry degree</h2>
+        </div>
+      </div>
+      <div class="help-grid">
+        <article>
+          <span class="help-number">01</span>
+          <h3>Find the right system</h3>
+          <p>We match the address to the public water provider serving that area instead of making you hunt through utility websites.</p>
+        </article>
+        <article>
+          <span class="help-number">02</span>
+          <h3>Translate the data</h3>
+          <p>Detections, non-detects, compliance items, PFAS context, and available local information are organized in plain language.</p>
+        </article>
+        <article>
+          <span class="help-number">03</span>
+          <h3>Give you somewhere to go</h3>
+          <p>Each completed lookup links residents to official Seminole County or Florida resources when verification or follow-up makes sense.</p>
+        </article>
+      </div>
     </section>
 
     <section id="out" aria-live="polite"></section>
 
-    <footer class="site-footer">
-      <button
-        type="button"
-        id="disclaimer-btn"
-        class="disclaimer-btn"
-        aria-haspopup="dialog"
-      >
-        Disclaimers
-      </button>
+    <section class="public-service-note">
+      <p class="section-kicker">BUILT FOR SEMINOLE COUNTY</p>
+      <h2>Public information, made usable.</h2>
+      <p>IsMyWaterOK is an independent public-interest tool. It does not sell water tests, filters, treatment products, or resident data.</p>
+    </section>
 
-      <span class="footer-note">
-        Independent tool · based on public EPA &amp; Florida DEP data · not
-        affiliated with any utility or government agency
-      </span>
+    <footer class="site-footer">
+      <button type="button" id="disclaimer-btn" class="disclaimer-btn" aria-haspopup="dialog">Disclaimers</button>
+      <span class="footer-note">Independent tool · based on public EPA &amp; Florida DEP data · not affiliated with any utility or government agency</span>
     </footer>
 
-    <div
-      id="disclaimer-modal"
-      class="disclaimer-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="disclaimer-title"
-      hidden
-    >
+    <div id="disclaimer-modal" class="disclaimer-modal" role="dialog" aria-modal="true" aria-labelledby="disclaimer-title" hidden>
       <div class="disclaimer-backdrop" data-close="1"></div>
-
       <div class="disclaimer-panel" role="document">
         <div class="disclaimer-panel-head">
-          <h2 id="disclaimer-title">
-            Disclaimers &amp; Terms of Use
-          </h2>
-
-          <button
-            type="button"
-            class="disclaimer-close"
-            data-close="1"
-            aria-label="Close"
-          >
-            &times;
-          </button>
+          <h2 id="disclaimer-title">Disclaimers &amp; Terms of Use</h2>
+          <button type="button" class="disclaimer-close" data-close="1" aria-label="Close">&times;</button>
         </div>
-
         <div class="disclaimer-body">
           <h3>This is not a test of your home's water</h3>
-          <p>
-            This tool summarizes monitoring records for the public water
-            system serving an area. Water can change inside a building because
-            of plumbing, fixtures, filters, or service lines. Only a sample
-            collected from your own tap and analyzed by a certified laboratory
-            can tell you what is in the water at your faucet.
-          </p>
+          <p>This tool summarizes monitoring records for the public water system serving an area. Water can change inside a building because of plumbing, fixtures, filters, or service lines. Only a sample collected from your own tap and analyzed by a certified laboratory can tell you what is in the water at your faucet.</p>
 
           <h3>This information is not complete</h3>
-          <p>
-            The tool shows contaminants that public water systems are federally
-            required to monitor and report. It does not include everything that
-            could be present in water — notably 1,4-dioxane, an industrial
-            chemical that has no federal drinking-water standard and is a known
-            concern in parts of Seminole County. The absence of a result here is
-            not proof that a substance is absent from the water.
-          </p>
+          <p>The tool summarizes available public records and does not include everything that could be present in water. The absence of a result is not proof that a substance is absent.</p>
 
           <h3>This is not medical, legal, or professional advice</h3>
-          <p>
-            Nothing in this tool should be relied upon to make health, medical,
-            legal, financial, or property decisions. If you have health concerns
-            about your water, consult a physician or your local health
-            department. If you need to understand your legal rights, consult a
-            qualified attorney.
-          </p>
+          <p>Nothing in this tool should be relied upon to make health, medical, legal, financial, or property decisions. For health concerns, consult an appropriate health professional or public-health agency.</p>
 
           <h3>Accuracy and currency of data</h3>
-          <p>
-            All results are drawn from public sources — the U.S. Environmental
-            Protection Agency, including SDWIS, UCMR 5, and ECHO databases, and
-            the Florida Department of Environmental Protection. The information
-            is only as accurate and up to date as those sources, which may
-            contain errors, omissions, or delays. Monitoring data reflects the
-            date it was collected and may not represent current conditions.
-          </p>
-
-          <h3>No warranty and limitation of liability</h3>
-          <p>
-            This tool is provided "as is" and "as available," without warranty
-            of any kind, express or implied, including but not limited to
-            warranties of accuracy, completeness, merchantability, or fitness
-            for a particular purpose. To the fullest extent permitted by law,
-            the operators of this tool shall not be liable for any direct,
-            indirect, incidental, consequential, or other damages arising from
-            its use or from reliance on any information it provides.
-          </p>
+          <p>Results are drawn from public sources including U.S. EPA and Florida environmental records. Public datasets can contain errors, omissions, or delays, and monitoring results reflect conditions when samples were collected.</p>
 
           <h3>Independence</h3>
-          <p>
-            This tool is independent. It is not affiliated with, endorsed by,
-            sponsored by, or operated by any water utility, the City of Sanford,
-            the City of Lake Mary, Seminole County, the State of Florida, the
-            U.S. EPA, or any other government agency. All utility and agency
-            names, where used, refer only to the public entities whose published
-            data is summarized.
-          </p>
+          <p>This tool is independent and is not affiliated with, endorsed by, sponsored by, or operated by any utility or government agency.</p>
 
           <h3>For official information</h3>
-          <p>
-            For authoritative information about your drinking water, contact
-            your water utility directly or consult its annual Consumer
-            Confidence Report. You may also reach the U.S. EPA Safe Drinking
-            Water Hotline at 1-800-426-4791.
-          </p>
-
-          <h3>Use of this tool constitutes acceptance</h3>
-          <p>
-            By using this tool, you acknowledge that you have read, understood,
-            and agree to these disclaimers and terms.
-          </p>
+          <p>Confirm important findings with the serving water utility, its Consumer Confidence Report, or the relevant government agency.</p>
         </div>
       </div>
     </div>
   </main>
 
+  <script src="/resident-actions.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>
