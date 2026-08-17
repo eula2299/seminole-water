@@ -10,7 +10,11 @@ const publicDir = path.join(root, 'public');
 const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const index = read('public/index.html');
 const account = read('public/account.html');
+const accountJs = read('public/account.js');
 const contact = read('public/contact.html');
+const feedback = read('public/feedback.html');
+const feedbackJs = read('public/feedback.js');
+const feedbackEntry = read('public/feedback-entry.js');
 const community = read('public/community.js');
 const platform = read('platform.js');
 const store = read('lib/community_store.js');
@@ -42,17 +46,29 @@ test('home address starts blank and provides accessible autocomplete', () => {
   assert.match(community, /Escape/);
 });
 
-test('accounts support email, Google and server-side sessions', () => {
-  assert.match(account, /Create or manage your free IsMyWaterOK account/i);
-  assert.match(community, /google\.accounts\.id\.initialize/);
+test('Google account sign-in uses one Google Identity Services initialization', () => {
+  assert.match(account, /Sign in with Google or email/);
+  assert.match(account, /\/account\.js/);
+  assert.doesNotMatch(account, /\/community\.js/);
+  assert.match(accountJs, /accounts\.id\.initialize/);
+  assert.match(accountJs, /accounts\.id\.renderButton/);
+  assert.equal((accountJs.match(/accounts\.id\.initialize/g) || []).length, 1);
+  assert.match(accountJs, /credential: response\.credential/);
+  assert.match(accountJs, /\/api\/auth\/google/);
   assert.match(platform, /verifyIdToken/);
   assert.match(platform, /payload\.sub/);
+  assert.match(platform, /audience: googleClientId/);
   assert.match(platform, /HttpOnly/);
   assert.match(platform, /SameSite=Lax/);
+});
+
+test('email accounts retain secure password and verification flows', () => {
   assert.match(store, /crypto\.scrypt/);
   assert.match(store, /email_verified/);
   assert.match(platform, /\/api\/auth\/forgot-password/);
   assert.match(platform, /\/api\/auth\/reset-password/);
+  assert.match(accountJs, /\/api\/auth\/signup/);
+  assert.match(accountJs, /\/api\/auth\/login/);
 });
 
 test('contact recipient is never exposed to browser files', () => {
@@ -62,6 +78,19 @@ test('contact recipient is never exposed to browser files', () => {
   assert.match(contact, /contact-form/);
   assert.match(platform, /\/api\/contact/);
   assert.match(mailer, /replyTo: email/);
+});
+
+test('proper detailed feedback channel is visible and privately delivered', () => {
+  assert.match(feedback, /Tell us what worked—or what did not/);
+  assert.match(feedback, /feedback-type/);
+  assert.match(feedback, /name="rating"/);
+  assert.match(feedback, /feedback-message/);
+  assert.match(feedbackJs, /\/api\/contact/);
+  assert.match(feedbackJs, /Website feedback/);
+  assert.match(feedbackJs, /\/api\/feedback/);
+  assert.match(feedbackEntry, /Tell us more/);
+  assert.match(feedbackEntry, /from=water-result/);
+  assert.match(index, /feedback-entry\.js/);
 });
 
 test('mailing list is explicit and supports weekly or monthly updates', () => {
