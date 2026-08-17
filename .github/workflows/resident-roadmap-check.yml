@@ -1,7 +1,7 @@
 name: Resident roadmap check
 on:
   push:
-    branches: [main, feature/full-roadmap-complete, fix/result-priority, feature/google-feedback]
+    branches: [main, feature/full-roadmap-complete, fix/result-priority, feature/google-feedback, fix/google-login-diagnostics]
   pull_request:
     branches: [main]
 jobs:
@@ -25,6 +25,7 @@ jobs:
           node --check public/resident-actions.js
           node --check public/community.js
           node --check public/account.js
+          node --check public/google-diagnostics.js
           node --check public/feedback.js
           node --check public/feedback-entry.js
           node --check public/app.js
