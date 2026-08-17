@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Send feedback about IsMyWaterOK, a water result, data issue, accessibility problem, or feature idea.">
+  <title>Feedback | IsMyWaterOK</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/roadmap.css">
+  <link rel="stylesheet" href="/community.css">
+  <link rel="stylesheet" href="/feedback.css">
+  <script src="/analytics.js"></script>
+</head>
+<body>
+  <nav class="community-topbar" aria-label="Main navigation">
+    <a href="/">IsMyWaterOK</a>
+    <div class="community-topbar-links">
+      <a href="/">Water check</a>
+      <a href="/account.html">Account</a>
+      <a href="/contact.html">Contact</a>
+      <a href="/impact.html">Impact</a>
+    </div>
+  </nav>
+  <main class="community-page wide" id="main-content">
+    <header class="community-page-header">
+      <p class="section-kicker">FEEDBACK</p>
+      <h1>Tell us what worked—or what did not.</h1>
+      <p>Use this for a confusing water result, incorrect data, a bug, accessibility problem, or an idea that would make the tool more useful.</p>
+    </header>
+    <div class="feedback-layout">
+      <section class="community-card">
+        <form id="feedback-form" class="community-form">
+          <label><span>What is your feedback about?</span><select id="feedback-type" required><option value="">Choose one</option><option value="water-result">My water result</option><option value="data-correction">Incorrect or outdated data</option><option value="bug">Something is not working</option><option value="account">Account or Google sign-in</option><option value="accessibility">Accessibility or mobile experience</option><option value="feature">Feature idea</option><option value="other">Other</option></select></label>
+          <fieldset class="rating-fieldset"><legend>How would you rate your experience?</legend><div class="rating-options" role="radiogroup" aria-label="Experience rating"><label><input type="radio" name="rating" value="1" required><span>1</span><small>Poor</small></label><label><input type="radio" name="rating" value="2"><span>2</span></label><label><input type="radio" name="rating" value="3"><span>3</span><small>Okay</small></label><label><input type="radio" name="rating" value="4"><span>4</span></label><label><input type="radio" name="rating" value="5"><span>5</span><small>Great</small></label></div></fieldset>
+          <label><span>What happened or what should we improve?</span><textarea id="feedback-message" rows="8" maxlength="5000" required placeholder="Be as specific as you can. If this is about a water result, tell us what was confusing or looked wrong."></textarea></label>
+          <div class="preferences-grid">
+            <label><span>Your name (optional)</span><input id="feedback-name" autocomplete="name" maxlength="100"></label>
+            <label><span>Email</span><input id="feedback-email" type="email" autocomplete="email" required></label>
+          </div>
+          <label class="checkbox-line"><input id="feedback-reply" type="checkbox" checked><span>You can email me back about this feedback.</span></label>
+          <label class="honeypot" aria-hidden="true"><span>Company</span><input id="feedback-company" tabindex="-1" autocomplete="off"></label>
+          <button class="primary-button" type="submit">Send feedback</button>
+          <p id="feedback-status" class="form-status" aria-live="polite"></p>
+        </form>
+      </section>
+      <aside class="feedback-aside">
+        <h2>What happens to your feedback?</h2>
+        <p>Detailed feedback is sent privately to the IsMyWaterOK team and stored with the same private contact system used by the Contact Us page.</p>
+        <ul>
+          <li>Your written feedback is never shown on the public impact dashboard.</li>
+          <li>Your rating can contribute to aggregate “helpfulness” metrics.</li>
+          <li>If you allow a reply, your email is included so the team can follow up.</li>
+        </ul>
+        <p>If your concern is an urgent water outage or boil-water notice, use your official utility instead of this feedback form.</p>
+      </aside>
+    </div>
+  </main>
+  <script src="/feedback.js"></script>
+  <script src="/page-tracking.js"></script>
+</body>
+</html>
