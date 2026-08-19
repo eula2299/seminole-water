@@ -1,0 +1,27 @@
+.result-priority-zone{scroll-margin-top:76px;margin-top:18px}
+.primary-findings{margin-top:0!important;background:#fff;border:1px solid var(--border);border-radius:20px;padding:22px;box-shadow:var(--shadow)}
+.primary-findings .section-heading{margin-bottom:6px}
+.primary-findings .section-kicker{font-size:.74rem;letter-spacing:.12em}
+.clean-result-location{margin:0 0 18px;color:var(--muted);font-size:.86rem}
+.clean-hidden-context{display:none!important}
+.clean-health-summary{margin-top:14px!important;padding:20px!important;border-radius:20px!important}
+.clean-health-summary .resident-action-head{margin-bottom:12px}
+.clean-health-summary .resident-action-head h2{font-size:clamp(1.35rem,3vw,1.8rem)!important;margin-bottom:3px}
+.clean-health-summary .health-level-short{margin:0}
+.clean-health-summary .resident-facts{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;margin:12px 0!important}
+.clean-health-summary .resident-facts article{padding:12px!important;border-radius:12px!important}
+.clean-health-summary .health-meaning-box,.clean-health-summary .resident-next-step{margin-top:10px!important;padding:14px!important;border-radius:14px!important}
+.clean-health-summary .health-meaning-box h3{font-size:1rem!important;line-height:1.45!important;margin:4px 0 0!important}
+.clean-health-summary .resident-next-step p{margin:3px 0 0!important}
+.clean-long-term-details,.clean-local-details,.clean-card-details{margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.clean-long-term-details summary,.clean-local-details summary,.clean-card-details summary{cursor:pointer;font-weight:800;color:var(--green-dark);font-size:.84rem}
+.clean-long-term-body{padding:10px 0 0;color:var(--muted)}
+.clean-result-health>div:first-child{margin-bottom:8px}
+.clean-result-health .clean-card-details>div{margin-top:10px}
+.clean-secondary-heading{margin:38px 0 14px;padding-top:24px;border-top:1px solid var(--border)}
+.clean-secondary-heading p{margin:0 0 4px;color:var(--green-dark);font-size:.72rem;font-weight:900;letter-spacing:.11em}
+.clean-secondary-heading h2{margin:0 0 5px;font-size:1.45rem}
+.clean-secondary-heading span{color:var(--muted);font-size:.9rem}
+#roadmap-home{margin-top:0!important}
+.lookup-feedback,.account-cta{display:none!important}
+@media(max-width:720px){.primary-findings{padding:16px;border-radius:16px}.clean-health-summary{padding:16px!important}.clean-health-summary .resident-facts{grid-template-columns:1fr!important}.clean-result-location{font-size:.8rem}.clean-secondary-heading{margin-top:28px}}
