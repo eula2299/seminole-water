@@ -27,9 +27,7 @@
     const title = report.querySelector('#resident-action-title');
     if (title) title.textContent = title.textContent.replace(/^Level\s+\d+\s*:\s*/i, '');
 
-    const badge = report.querySelector('.resident-action-badge');
-    if (badge) badge.remove();
-
+    report.querySelector('.resident-action-badge')?.remove();
     removeDuplicateFact(report, 'Substances found');
 
     const meaningLabel = report.querySelector('.health-meaning-box .fact-label');
@@ -51,7 +49,7 @@
       longTerm.replaceWith(detail);
     }
 
-    // These are useful elsewhere in the roadmap, but duplicate the core answer here.
+    // These remain available in the roadmap below, so do not duplicate them inside the core result.
     report.querySelector('.health-guide-wrap')?.remove();
     report.querySelector('.official-resources-wrap')?.remove();
 
@@ -64,24 +62,6 @@
       local.replaceWith(detail);
       detail.append(summary, local);
     }
-  }
-
-  function compactResultCards() {
-    out.querySelectorAll('.result-card').forEach(card => {
-      const health = card.querySelector('.result-health-meaning');
-      if (!health || health.classList.contains('clean-result-health')) return;
-      const blocks = Array.from(health.children);
-      if (blocks.length < 2) return;
-
-      health.classList.add('clean-result-health');
-      const details = document.createElement('details');
-      details.className = 'clean-card-details';
-      const summary = document.createElement('summary');
-      summary.textContent = 'Health details';
-      details.appendChild(summary);
-      blocks.slice(1).forEach(block => details.appendChild(block));
-      health.appendChild(details);
-    });
   }
 
   function addLocationLine(section, header, report) {
@@ -130,7 +110,7 @@
 
       addLocationLine(resultSection, header, report);
 
-      // The findings are the first visible content after the address form.
+      // The findings are always the first visible content after the address form.
       if (out.firstElementChild !== resultSection) out.prepend(resultSection);
 
       compactHealthSummary(report);
@@ -141,8 +121,6 @@
 
       if (header) header.classList.add('clean-hidden-context');
       out.querySelectorAll('.overall-card, .notice-banner, .alerts-section, .plain-language-note, .dioxane-note, .local-panel').forEach(node => node.remove());
-
-      compactResultCards();
 
       // The old binary prompt and signup advertisement distract from the result.
       out.querySelector('.lookup-feedback')?.remove();
