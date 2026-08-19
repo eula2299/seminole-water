@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/roadmap.css">
   <link rel="stylesheet" href="/community.css">
   <link rel="stylesheet" href="/feedback.css">
+  <link rel="stylesheet" href="/clean-result-flow.css">
   <script src="/analytics.js"></script>
 </head>
 <body>
@@ -19,8 +20,7 @@
       <div>
         <p class="eyebrow">SEMINOLE COUNTY WATER CHECK</p>
         <h1>What could your water mean for your health?</h1>
-        <p class="hero-copy">Enter your address to see what has been found in recent local water testing, what those substances can do to the body over time, whether a local water alert matches your area, and what to do next.</p>
-        <div class="hero-promises" aria-label="What this tool does"><span>Find your water provider</span><span>Explain what was found</span><span>Show possible long-term effects</span><span>Check local alerts</span></div>
+        <p class="hero-copy">Enter your address. We’ll show what was found first, explain what it means, and give you the next step.</p>
         <p id="summary" class="data-status" hidden aria-hidden="true"></p>
       </div>
     </header>
@@ -39,17 +39,6 @@
 
     <section id="out" class="result-priority-zone" aria-live="polite"></section>
 
-    <section class="how-it-helps" aria-labelledby="how-title">
-      <div class="section-heading public-section-heading"><div><p class="section-kicker">PLAIN LANGUAGE</p><h2 id="how-title">No codes, acronyms, or chemistry jargon.</h2></div></div>
-      <div class="help-grid">
-        <article><span class="help-number">01</span><h3>What was found?</h3><p>Results are translated into familiar names and understandable amounts.</p></article>
-        <article><span class="help-number">02</span><h3>Why does it matter?</h3><p>Each substance explains the organs, diseases, or developmental effects linked with too much exposure.</p></article>
-        <article><span class="help-number">03</span><h3>What should I do?</h3><p>See local alerts, your correct utility contact, approved labs, private-well information, and a practical next step.</p></article>
-      </div>
-    </section>
-
-    <section class="public-service-note"><p class="section-kicker">BUILT FOR SEMINOLE COUNTY</p><h2>Water information people can actually use.</h2><p>IsMyWaterOK turns public water records into a resident health summary and connects people with the right local action.</p><p><a href="/impact.html" style="color:#fff;font-weight:800">See the public impact dashboard →</a></p></section>
-
     <footer class="site-footer"><span class="footer-note">Independent public-interest tool · information from public water and health agencies</span></footer>
   </main>
 
@@ -60,5 +49,6 @@
   <script src="/feedback-entry.js"></script>
   <script src="/app.js"></script>
   <script src="/result-priority.js"></script>
+  <script src="/clean-result-flow.js"></script>
 </body>
 </html>
