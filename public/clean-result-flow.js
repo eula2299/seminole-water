@@ -80,12 +80,12 @@
 
   function ensureSecondaryHeading() {
     const roadmap = document.getElementById('roadmap-home');
-    if (!roadmap || document.getElementById('more-water-tools-heading')) return;
+    if (!roadmap || roadmap.querySelector('#more-water-tools-heading')) return;
     const heading = document.createElement('div');
     heading.id = 'more-water-tools-heading';
     heading.className = 'clean-secondary-heading';
     heading.innerHTML = '<p>MORE WATER TOOLS</p><h2>Need something beyond your result?</h2><span>Local alerts, private-well help, city information, labs, and issue guides are below.</span>';
-    roadmap.before(heading);
+    roadmap.prepend(heading);
   }
 
   function cleanReport() {
