@@ -224,6 +224,7 @@ function coreImpact() {
 const server = http.createServer(async (req, res) => {
   const target = new URL(req.url, 'http://localhost');
   const pathname = target.pathname;
+  if ((pathname === '/api/impact' || pathname === '/api/community/impact') && req.method === 'GET') return json(res, 404, { error: 'Not found.' });
 
   if (pathname === '/api/community/config' && req.method === 'GET') {
     await store.ready;
