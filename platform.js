@@ -127,7 +127,7 @@ function readJson(req, maxBytes = 65536) {
     });
     req.on('end', () => {
       try { resolve(body ? JSON.parse(body) : {}); }
-      catch { reject(Object.assign(new Error('Invalid request.'), { statusCode: 400 })); }
+      catch { reject(Object.assign(new Error('Invalid request.'), { statusCode: 400 }));
     });
     req.on('error', reject);
   });
@@ -225,6 +225,11 @@ const server = http.createServer(async (req, res) => {
   const target = new URL(req.url, 'http://localhost');
   const pathname = target.pathname;
 
+  if (pathname === '/impact.html') return redirect(res, '/');
+  if ((pathname === '/api/impact' || pathname === '/api/community/impact') && req.method === 'GET') {
+    return json(res, 404, { error: 'Not found.' });
+  }
+
   if (pathname === '/api/community/config' && req.method === 'GET') {
     await store.ready;
     return json(res, 200, {
@@ -268,7 +273,7 @@ const server = http.createServer(async (req, res) => {
       if (mailer.configured) await mailer.sendVerification({ email: user.email, token: verification.token }).catch(error => console.error('Verification email failed:', error.message));
       if (['weekly','monthly'].includes(body.newsletter_frequency)) {
         const subscription = await store.upsertSubscription({ email: user.email, userId: user.id, frequency: body.newsletter_frequency, contentType: body.content_type, city: cleanCity(body.city) });
-        if (mailer.configured) await mailer.sendWelcome({ email: user.email, frequency: subscription.frequency, contentType: subscription.content_type, city: subscription.city, unsubscribeToken: subscription.unsubscribe_token }).catch(() => {});
+        if (mailer.configured) await mailer.sendWelcome({ email: user.email, frequency: subscription.frequency, contentType: subscription.content_type, city: cleanCity(body.city), unsubscribeToken: subscription.unsubscribe_token }).catch(() => {});
       }
       return createUserSession(req, res, user);
     } catch (error) { return json(res, error.statusCode || 500, { error: error.message || 'Could not create account.' }); }
@@ -276,7 +281,7 @@ const server = http.createServer(async (req, res) => {
 
   if (pathname === '/api/auth/login' && req.method === 'POST') {
     if (!sameOrigin(req)) return json(res, 403, { error: 'Request blocked.' });
-    if (!rateAllowed(req, 'login', 25, 10 * 60000)) return json(res, 429, { error: 'Too many login attempts. Try again later.' });
+    if (!rateAllowed(req, 'login', 25, 10 * 60000)) return json(res, 429, { error: 'Too many sign-in attempts. Try again later.' });
     try {
       const body = await readJson(req);
       const user = await store.loginPassword(body);
