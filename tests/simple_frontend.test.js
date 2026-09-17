@@ -80,14 +80,14 @@ test('full roadmap includes local 1,4-dioxane experience',()=>{
   assert.match(roadmapData,/Seminole County.*1,4-dioxane/s);
 });
 
-test('full roadmap includes public impact tracking and outcome feedback',()=>{
-  assert.match(index,/impact\.html/);
+test('removed impact links remain absent while outcome feedback remains',()=>{
+  // Production removed public impact reporting on August 25; do not restore it.
+  assert.doesNotMatch(index,/href=["']\/impact\.html/);
   assert.match(roadmap,/impact_understanding_feedback/);
   assert.match(roadmap,/official_resource_clicked/);
-  assert.match(pages,/fetch\('\/api\/impact'\)/);
-  assert.match(pages,/water checks/);
-  assert.match(pages,/unique households/);
-  assert.equal(fs.existsSync(path.join(root,'impact.html')),true);
+  const gateway=fs.readFileSync(path.join(root,'..','platform.js'),'utf8');
+  assert.match(gateway,/pathname === '\/api\/impact'/);
+  assert.match(gateway,/return json\(res, 404, \{ error: 'Not found\.'/);
 });
 
 test('dedicated city and health-guide pages exist',()=>{

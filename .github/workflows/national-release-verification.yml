@@ -3,7 +3,7 @@ on:
   pull_request:
     paths:
       - 'national/**'
-      - 'tests/national*'
+      - 'tests/**'
       - 'platform.js'
       - 'public/**'
       - 'package.json'
@@ -38,7 +38,7 @@ jobs:
       - name: National regression suite
         if: always()
         run: node --test tests/national_*.test.js
-  catalogue-contract:
+  warehouse-contract:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -46,6 +46,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: pip install -r national/warehouse-requirements.txt
+      - run: python -m unittest discover -s tests -p 'test_national_warehouse.py' -v
       - run: python national/catalog.py
       - uses: actions/upload-artifact@v4
         if: always()
