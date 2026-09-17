@@ -1,0 +1,58 @@
+name: National evidence checks
+on:
+  pull_request:
+    paths:
+      - 'national/**'
+      - 'tests/national_*.test.js'
+      - 'tests/test_national_ingest.py'
+      - '.github/workflows/national-evidence.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deterministic-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r national/requirements.txt
+      - run: node --test tests/national_*.test.js
+      - run: python -m unittest discover -s tests -p 'test_national_ingest.py' -v
+  public-source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check public source interoperability, not national accuracy
+        run: |
+          node <<'JS'
+          const fs = require('node:fs');
+          const {createEngine} = require('./national/service');
+          (async () => {
+            const result = await createEngine().lookup({street:'4600 Silver Hill Rd',city:'Suitland',state:'MD',zip:'20746'});
+            const checks = {
+              address: result.address.status === 'matched',
+              boundary: result.provider.status === 'candidates-found',
+              federal: result.systems.some(x => x.status === 'records-returned'),
+              no_household_certification: result.household_safety.status === 'not-determined'
+            };
+            fs.writeFileSync('national-source-contract.json', JSON.stringify({checks,result,coverage_certified:false},null,2));
+            console.log(JSON.stringify(checks));
+            if (Object.values(checks).some(x => !x)) process.exitCode = 1;
+          })().catch(error => { console.error(error.code || error.name); process.exitCode = 1; });
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: national-source-contract
+          path: national-source-contract.json
+          retention-days: 7
