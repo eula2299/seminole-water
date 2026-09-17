@@ -36,17 +36,24 @@ jobs:
         run: |
           node <<'JS'
           const fs = require('node:fs');
-          const {createEngine} = require('./national/service');
+          const {createEngine,transport} = require('./national/service');
           (async () => {
-            const result = await createEngine().lookup({street:'4600 Silver Hill Rd',city:'Suitland',state:'MD',zip:'20746'});
+            const snapshots = [], fetchSource = transport();
+            const request = async (url, options) => {
+              const response = await fetchSource(url, options);
+              if (new URL(url).hostname === 'echodata.epa.gov') snapshots.push({url,response});
+              return response;
+            };
+            const result = await createEngine({request}).lookup({street:'4600 Silver Hill Rd',city:'Suitland',state:'MD',zip:'20746'});
             const checks = {
               address: result.address.status === 'matched',
               boundary: result.provider.status === 'candidates-found',
               federal: result.systems.some(x => x.status === 'records-returned'),
               no_household_certification: result.household_safety.status === 'not-determined'
             };
-            fs.writeFileSync('national-source-contract.json', JSON.stringify({checks,result,coverage_certified:false},null,2));
+            fs.writeFileSync('national-source-contract.json', JSON.stringify({checks,result,snapshots,coverage_certified:false},null,2));
             console.log(JSON.stringify(checks));
+            console.log(JSON.stringify({federal_response_shapes:snapshots.map(x=>({url:x.url,top_keys:Object.keys(x.response),result_keys:Object.keys(x.response.Results||{})}))}));
             if (Object.values(checks).some(x => !x)) process.exitCode = 1;
           })().catch(error => { console.error(error.code || error.name); process.exitCode = 1; });
           JS
