@@ -26,7 +26,7 @@ function transport({fetchImpl=globalThis.fetch,timeoutMs=6500,maxBytes=2000000}=
   try{while(true){const {done,value:chunk}=await reader.read();if(done)break;count+=chunk.byteLength;if(count>maxBytes)throw new EvidenceError('SOURCE_TOO_LARGE','Source exceeded bounded-response limit.',502);chunks.push(Buffer.from(chunk));}}
   catch(e){await reader.cancel().catch(()=>{});throw e;}finally{reader.releaseLock();}
   let data;try{data=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{throw new EvidenceError('SOURCE_JSON','Source did not return valid JSON.',502);}
-  if(data?.error||data?.Error)throw new EvidenceError('SOURCE_ERROR','Source returned an error payload.',502);
+  if(data?.error||data?.Error||data?.Results?.Error||data?.Results?.error)throw new EvidenceError('SOURCE_ERROR','Source returned an error payload; this is not a zero-result finding.',502);
   return data;
  };
 }
@@ -49,7 +49,7 @@ function createEngine({request=transport(),now=()=>new Date(),deadlineMs=20000}=
   if(input.supply_type!=='private-well'&&selected.length<=4){
    // Two concurrent source jobs; never launch a national fan-out per address.
    for(let i=0;i<selected.length;i+=2)await Promise.all(selected.slice(i,i+2).map(async pwsid=>{
-    const records=await stage(`public-system:${pwsid}`,async()=>{let data=await get(query(ENDPOINTS.systems,{output:'JSON',p_pwsid:pwsid}));const qid=queryId(data);if(qid)data=await get(query(ENDPOINTS.query,{output:'JSON',qid,pageno:1}));return echoRows(data,pwsid);});
+    const records=await stage(`public-system:${pwsid}`,async()=>{let data=await get(query(ENDPOINTS.systems,{output:'JSON',p_pid:pwsid,queryset:10,responseset:10}));const qid=queryId(data);if(qid)data=await get(query(ENDPOINTS.query,{output:'JSON',qid,pageno:1}));return echoRows(data,pwsid);});
     systems.push({pwsid,status:records===null?'unavailable':records.length?'records-returned':'no-matching-records',scope:'public-system-not-household',records:(records||[]).map(data=>({data,sha256:fingerprint(data)})),source:SOURCE_DOCS.systems});
    }));
   }
