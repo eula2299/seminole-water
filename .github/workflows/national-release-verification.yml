@@ -32,9 +32,24 @@ jobs:
           name: national-source
           path: /tmp/national-source.zip
           retention-days: 3
-      - run: npm ci --ignore-scripts
+      - run: npm install --ignore-scripts
       - name: Full original regression suite
         run: npm run test:all
       - name: National regression suite
         if: always()
         run: node --test tests/national_*.test.js
+  catalogue-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python national/catalog.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: national-catalog-probe
+          path: national-catalog-probe.json
+          retention-days: 3
