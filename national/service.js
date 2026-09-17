@@ -38,12 +38,12 @@ function createEngine({request=transport(),now=()=>new Date(),deadlineMs=20000}=
   const get=url=>request(url,{signal});
   const hasAddress=input.street&&(input.city||input.zip);
   const address=hasAddress?await stage('address-resolution',async()=>censusMatch(await get(query(ENDPOINTS.census,{street:input.street,city:input.city,state:input.state,zip:input.zip,benchmark:'Public_AR_Current',vintage:'Current_Current',format:'json'})),input)):{status:'not-requested'};
-  let candidates=[],boundaryStatus='not-requested',nearby=[];
+  let candidates=[],boundaryStatus='not-requested',nearby=[],nearbyStatus='not-requested';
   if(address?.status==='matched'&&input.supply_type!=='private-well'){
    const params={f:'json',geometryType:'esriGeometryPoint',geometry:`${address.longitude},${address.latitude}`,inSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'*',returnGeometry:'false'};
    const found=await stage('provider-candidates',async()=>boundaryCandidates(await get(query(ENDPOINTS.boundaries,params))));
    candidates=found||[];boundaryStatus=found===null?'unavailable':found.length?'candidates-found':'unresolved';
-   if(found&&found.length){const dy=30/111320,dx=dy/Math.max(.01,Math.cos(address.latitude*Math.PI/180));const probe=await stage('boundary-ambiguity-screen',async()=>boundaryCandidates(await get(query(ENDPOINTS.boundaries,{...params,geometryType:'esriGeometryEnvelope',geometry:`${address.longitude-dx},${address.latitude-dy},${address.longitude+dx},${address.latitude+dy}`}))));nearby=probe===null?null:probe;}
+   if(found&&found.length){const dy=30/111320,dx=dy/Math.max(.01,Math.cos(address.latitude*Math.PI/180));const probe=await stage('boundary-ambiguity-screen',async()=>boundaryCandidates(await get(query(ENDPOINTS.boundaries,{...params,geometryType:'esriGeometryEnvelope',geometry:`${address.longitude-dx},${address.latitude-dy},${address.longitude+dx},${address.latitude+dy}`}))));nearby=probe===null?null:probe;nearbyStatus=probe===null?'unavailable':'completed';}
   }
   const ids=[...new Set(candidates.map(x=>x.pwsid))],selected=input.pwsid?[input.pwsid]:ids,systems=[];
   if(input.supply_type!=='private-well'&&selected.length<=4){
@@ -61,7 +61,7 @@ function createEngine({request=transport(),now=()=>new Date(),deadlineMs=20000}=
   if(selected.length>4)gaps.push('More than four candidate providers: confirm a full PWSID before retrieving federal records.');
   const conflict=!!input.pwsid&&ids.length>0&&!ids.includes(input.pwsid);if(conflict)gaps.push('The supplied PWSID conflicts with the mapped candidate set.');
   if(input.pwsid)gaps.push('The PWSID is user-selected, not independently verified as connected to this household.');
-  return {schema_version:'national-evidence/1',generated_at:now().toISOString(),release_state:'incomplete-national-coverage',address:address||{status:'unavailable'},supply:{type:input.supply_type,evidence:'user-reported'},provider:{status:boundaryStatus,candidates,user_selected_pwsid:input.pwsid||null,conflict,household_connection_verified:false,nearby_screen:{method:'30m-envelope-not-a-calibrated-geocode-error-bound',status:nearby===null?'unavailable':'completed',candidates:nearby||[]}},systems,household_safety:{status:'not-determined',measured_concentrations:[]},gaps,audit,models:{nationally_validated_models:0,predictive_inference_enabled:false},coverage:status(),sources:SOURCE_DOCS};
+  return {schema_version:'national-evidence/1',generated_at:now().toISOString(),release_state:'incomplete-national-coverage',address:address||{status:'unavailable'},supply:{type:input.supply_type,evidence:'user-reported'},provider:{status:boundaryStatus,candidates,user_selected_pwsid:input.pwsid||null,conflict,household_connection_verified:false,nearby_screen:{method:'30m-envelope-not-a-calibrated-geocode-error-bound',status:nearbyStatus,candidates:nearby||[]}},systems,household_safety:{status:'not-determined',measured_concentrations:[]},gaps,audit,models:{nationally_validated_models:0,predictive_inference_enabled:false},coverage:status(),sources:SOURCE_DOCS};
  }
  function status(){return {supported_input_regions:REGION_CODES,coverage_verified:false,national_unique_observations_ingested:'0',count_scope:'new national layer only; not the existing county dataset or publisher catalogs',household_laboratory_data:'not-connected',occurrence_database:'not-connected',advisories:'not-connected',lead_line_inventories:'not-connected',well_registries:'not-connected',ucmr:'not-connected-to-serving',wqp:'not-connected-to-serving',usgs:'not-connected-to-serving',billion_row_load_test:'not-run',deployment:'requires-integration-and-acceptance'};}
  return {lookup,status};
