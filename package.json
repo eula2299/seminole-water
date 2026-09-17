@@ -42,11 +42,17 @@
     "loadtest": "node scripts/loadtest.js",
     "sync:epa:force": "SDWA_FORCE_DOWNLOAD=1 python3 scripts/sync_epa_seminole.py --bulk-sdwis",
     "mail:weekly": "node scripts/send_digest.js weekly",
-    "mail:monthly": "node scripts/send_digest.js monthly"
+    "mail:monthly": "node scripts/send_digest.js monthly",
+    "test:national": "node --test tests/national_*.test.js",
+    "sync:national": "node national/sync.js --source all",
+    "start:national": "node national/server.js"
   },
   "dependencies": {
     "google-auth-library": "^10.9.1",
     "nodemailer": "^9.0.3",
     "pg": "^8.22.0"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

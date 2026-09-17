@@ -6,6 +6,9 @@ const path = require('node:path');
 const { fork } = require('node:child_process');
 const { CommunityStore, normalizeEmail, validEmail } = require('./lib/community_store');
 const { CommunityMailer } = require('./lib/community_mailer');
+const {createNationalRuntime}=require('./national/runtime');
+const httpSafety=require('./national/http_safety');
+const national=createNationalRuntime();
 
 let OAuth2Client;
 try { ({ OAuth2Client } = require('google-auth-library')); } catch { OAuth2Client = null; }
@@ -67,13 +70,7 @@ function redirect(res, location) {
 }
 
 function parseCookies(req) {
-  const cookies = {};
-  for (const part of String(req.headers.cookie || '').split(';')) {
-    const index = part.indexOf('=');
-    if (index < 0) continue;
-    cookies[part.slice(0, index).trim()] = decodeURIComponent(part.slice(index + 1).trim());
-  }
-  return cookies;
+  return httpSafety.parseCookies(req);
 }
 
 function isSecureRequest(req) {
@@ -91,13 +88,16 @@ function clearSessionCookie(req) {
 }
 
 function requestIp(req) {
-  const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-  return forwarded || req.socket.remoteAddress || 'unknown';
+  return httpSafety.clientKey(req, !!process.env.RAILWAY_ENVIRONMENT_ID);
 }
 
 function rateAllowed(req, bucket, limit, windowMs) {
   const key = `${bucket}:${requestIp(req)}`;
   const now = Date.now();
+  if (rateBuckets.size >= 10000) {
+    for (const [k, value] of rateBuckets) if (now >= value.reset) rateBuckets.delete(k);
+    if (rateBuckets.size >= 10000 && !rateBuckets.has(key)) return false;
+  }
   let entry = rateBuckets.get(key);
   if (!entry || now >= entry.reset) entry = { count: 0, reset: now + windowMs };
   entry.count += 1;
@@ -112,25 +112,13 @@ function sameOrigin(req) {
   const origin = req.headers.origin;
   if (!origin) return true;
   try {
-    const expectedHost = String(req.headers['x-forwarded-host'] || req.headers.host || '').toLowerCase();
+    const expectedHost = String(req.headers.host || '').toLowerCase();
     return new URL(origin).host.toLowerCase() === expectedHost;
   } catch { return false; }
 }
 
 function readJson(req, maxBytes = 65536) {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.setEncoding('utf8');
-    req.on('data', chunk => {
-      body += chunk;
-      if (body.length > maxBytes) reject(Object.assign(new Error('Request is too large.'), { statusCode: 413 }));
-    });
-    req.on('end', () => {
-      try { resolve(body ? JSON.parse(body) : {}); }
-      catch { reject(Object.assign(new Error('Invalid request.'), { statusCode: 400 })); }
-    });
-    req.on('error', reject);
-  });
+  return httpSafety.readJson(req,maxBytes);
 }
 
 async function currentUser(req) {
@@ -203,7 +191,14 @@ function proxyToCore(req, res) {
     res.writeHead(upstreamRes.statusCode || 502, responseHeaders);
     upstreamRes.pipe(res);
   });
-  upstream.on('error', error => json(res, 502, { error: 'Water service is restarting. Please refresh in a moment.', detail: process.env.NODE_ENV === 'production' ? undefined : error.message }));
+  upstream.setTimeout(60000,()=>upstream.destroy(new Error('Core request timed out')));
+  req.once('aborted',()=>upstream.destroy());
+  res.once('close',()=>{if(!res.writableFinished)upstream.destroy();});
+  upstream.on('error', error => {
+    if(res.destroyed)return;
+    if(res.headersSent){res.end();return;}
+    json(res, 502, { error: 'Water service is restarting. Please refresh in a moment.', detail: process.env.NODE_ENV === 'production' ? undefined : error.message });
+  });
   req.pipe(upstream);
 }
 
@@ -222,8 +217,17 @@ function coreImpact() {
 }
 
 const server = http.createServer(async (req, res) => {
+ try {
   const target = new URL(req.url, 'http://localhost');
   const pathname = target.pathname;
+  if(['/api/service-areas/sync','/api/epa/reload','/api/local/reload'].includes(pathname)) return json(res,404,{error:'Not found.'});
+  if(pathname==='/api/diagnostics/geocode'&&!rateAllowed(req,'diagnostic-geocode',10,60000))return json(res,429,{error:'Please try again later.'});
+  if (pathname === '/healthz' && req.method === 'GET') return json(res,200,{process:'up',release:'national-integration',commit:process.env.RAILWAY_GIT_COMMIT_SHA||null});
+  if (['/','/national','/national/','/national-client.js'].includes(pathname) || pathname.startsWith('/api/national/')) {
+    national.server.emit('request',req,res);
+    return;
+  }
+  if (pathname === '/seminole' || pathname === '/seminole/') req.url='/';
   if ((pathname === '/api/impact' || pathname === '/api/community/impact') && req.method === 'GET') return json(res, 404, { error: 'Not found.' });
 
   if (pathname === '/api/community/config' && req.method === 'GET') {
@@ -456,8 +460,16 @@ const server = http.createServer(async (req, res) => {
   }
 
   return proxyToCore(req, res);
+ } catch(error) {
+   console.error('Gateway request failed:',error.code||error.name);
+   if(!res.headersSent) return json(res,500,{error:'The request could not be completed. Please try again.'});
+   res.end();
+ }
 });
 
+server.headersTimeout=10000;
+server.requestTimeout=65000;
+server.keepAliveTimeout=5000;
 server.on('error', error => {
   if (error.code === 'EADDRINUSE') console.error(`Port ${PORT} is already in use.`);
   else console.error(error);
@@ -467,6 +479,7 @@ server.on('error', error => {
 function shutdown(signal) {
   console.log(`${signal} received: closing community gateway.`);
   try { child.kill('SIGTERM'); } catch {}
+  national.close().catch(()=>{});
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(1), 10000).unref();
 }

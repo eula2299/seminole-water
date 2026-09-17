@@ -1,0 +1,19 @@
+{
+  "schema_version": "source-contract-verification/1",
+  "source": "WQP WQX3 fullPhysChem",
+  "verified_at": "2026-09-17T23:52:28.165937+00:00",
+  "source_url": "https://www.waterqualitydata.us/wqx3/Result/search?statecode=US%3A27&startDateLo=01-01-2020&startDateHi=01-31-2020&sampleMedia=Water&mimeType=csv&zip=yes&sorted=no&dataProfile=fullPhysChem&siteid=USGS-05288705",
+  "http_result": "200; text/plain CSV body",
+  "source_request_id": "7394f340-7e7c-487a-ba62-59053e286198",
+  "downloaded_bytes": 307116,
+  "raw_sha256": "b5e497fd4c6eace70f88c28a8967acc8affa9ce7f9248920bd0c044edccf9f91",
+  "actual_parsed_result_rows": 192,
+  "actual_normalized_result_rows": 192,
+  "source_declared_result_rows": null,
+  "source_count_header_present": false,
+  "independent_samples": null,
+  "household_samples_verified": 0,
+  "scope": "One known monitoring location and January 2020, used to verify the source contract and actual ingestion path.",
+  "nationwide_backfill_executed": false,
+  "note": "These are the actual rows acquired by the contract check, not a nationwide data-volume claim. Raw and normalized artifacts were verified in the execution workspace; source bytes are not checked into the code repository."
+}

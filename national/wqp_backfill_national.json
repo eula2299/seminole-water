@@ -1,0 +1,23 @@
+{
+  "schema_version": "wqp-national-acquisition-specification/1",
+  "source": "Water Quality Portal WQX3",
+  "endpoint": "https://www.waterqualitydata.us/wqx3/Result/search",
+  "profile": "fullPhysChem",
+  "sample_media": "Water",
+  "geography": "50 states, District of Columbia, American Samoa, Guam, Northern Mariana Islands, Puerto Rico, US Virgin Islands",
+  "states": ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "AS", "GU", "MP", "PR", "VI"],
+  "start_activity_date": "1900-01-01",
+  "end_activity_date_inclusive": "2026-09-17",
+  "partitioning": "state/year; oversized partitions bisected by activity date",
+  "initial_partition_count": 7112,
+  "planned_record_count": null,
+  "acquired_record_count": 0,
+  "status": "specified-not-executed-nationally",
+  "requires": ["persistent storage sized to measured source responses", "scheduled worker invocations", "failure review", "downstream columnar import and spatial indexing"],
+  "claims": {
+    "nationwide_acquisition_complete": false,
+    "household_water_quality_verified": false,
+    "independent_sample_count": null
+  },
+  "expand_command": "python national/wqp_backfill.py plan --output /data/wqp/plan-1900-2026.json --start 1900-01-01 --end 2026-09-17"
+}
