@@ -1,0 +1,2 @@
+# Required only for Parquet ingestion; Node lookup and JSONL tests have no new dependencies.
+pyarrow>=18,<25
