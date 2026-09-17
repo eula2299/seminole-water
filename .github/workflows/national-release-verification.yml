@@ -1,0 +1,40 @@
+name: National release verification
+on:
+  pull_request:
+    paths:
+      - 'national/**'
+      - 'tests/national*'
+      - 'platform.js'
+      - 'public/**'
+      - 'package.json'
+      - '.github/workflows/national-release-verification.yml'
+permissions:
+  contents: read
+concurrency:
+  group: national-release-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Export exact checked-out source
+        run: git archive --format=zip HEAD -o /tmp/national-source.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: national-source
+          path: /tmp/national-source.zip
+          retention-days: 3
+      - run: npm ci --ignore-scripts
+      - name: Full original regression suite
+        run: npm run test:all
+      - name: National regression suite
+        if: always()
+        run: node --test tests/national_*.test.js
