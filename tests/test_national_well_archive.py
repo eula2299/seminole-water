@@ -1,4 +1,4 @@
-import csv,hashlib,json,pathlib,shutil,sqlite3,tempfile,unittest
+import csv,hashlib,json,pathlib,shutil,sqlite3,tempfile,unittest,threading,concurrent.futures
 from national import well_archive as W
 
 class Store:
@@ -31,6 +31,40 @@ def fixture(root):
     return raw,dictionary
 
 class WellTests(unittest.TestCase):
+    def populated(self,root,states=('LA',)):
+        store=Store()
+        for state in states:
+            part=root/state;part.mkdir();raw,dictionary=fixture(part)
+            if state=='MI':
+                with sqlite3.connect(raw) as db:db.execute('UPDATE GW_Well SET latitude=latitude+14,longitude=longitude+7 WHERE latitude IS NOT NULL')
+            index=part/'index.sqlite';counts=W.make_index(raw,dictionary,index);store.put(state,index)
+            store.put_json(W.PREFIX+'/latest/'+state+'.json',{'schema':W.VERSION,'state':state,'item_id':W.CATALOG[state],'index_key':state,'source_url':W.ROOT_URL+W.CATALOG[state],'source_uploaded_at':'2023-01-01','retrieved_at':W.now(),'sha256':W.sha(raw),**counts})
+        return store,W.WellArchive(store,root/'cache')
+    def test_concurrent_state_lookups_do_not_discard_one_report(self):
+        with tempfile.TemporaryDirectory() as t:
+            store,archive=self.populated(pathlib.Path(t),('LA','MI'));entered=threading.Event();release=threading.Event();original=store.get
+            def delayed(key,path,checksum):
+                if key=='LA':
+                    entered.set()
+                    if not release.wait(5):raise TimeoutError('fixture release missing')
+                original(key,path,checksum)
+            store.get=delayed
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+                first=pool.submit(archive.near,30,-92)
+                try:
+                    self.assertTrue(entered.wait(2));other=pool.submit(archive.near,44,-85).result(timeout=3)
+                    self.assertEqual(len(other['records']),2);self.assertEqual(other['status'],'records-returned')
+                finally:release.set()
+                self.assertEqual(len(first.result(timeout=3)['records']),2)
+    def test_warm_index_is_reused_and_changed_file_is_verified_again(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=pathlib.Path(t);store,archive=self.populated(root);original=store.get;calls=[]
+            def counted(*args):calls.append(1);return original(*args)
+            store.get=counted
+            for _ in range(2):self.assertEqual(len(archive.near(30,-92)['records']),2)
+            self.assertEqual(len(calls),1)
+            next((root/'cache').glob('LA-*.sqlite')).write_bytes(b'corrupt fixture cache')
+            self.assertEqual(len(archive.near(30,-92)['records']),2);self.assertEqual(len(calls),2)
     def test_index_excludes_unlocated_wells_and_invalid_depth_without_losing_raw_count(self):
         with tempfile.TemporaryDirectory() as t:
             root=pathlib.Path(t);raw,dictionary=fixture(root);out=root/'index.sqlite';c=W.make_index(raw,dictionary,out)
