@@ -222,6 +222,9 @@ def download(url, target, max_bytes, timeout=45, retries=3, opener=None, sleeper
         except BaseException:
             target.unlink(missing_ok=True)
             raise
+    reason = getattr(last, 'reason', last)
+    if isinstance(reason, TimeoutError) or isinstance(last, urllib.error.HTTPError) and last.code in (408, 504):
+        raise BudgetExceeded(f'WQP transfer time budget exceeded after {retries + 1} attempts; split the date interval.') from last
     raise RuntimeError(f'Source transfer failed after {retries + 1} attempts: {last}')
 
 

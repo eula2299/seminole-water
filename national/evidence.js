@@ -59,7 +59,16 @@ function normalizeMeasurement(raw,asOf=new Date().toISOString().slice(0,10)){
 }
 function censusMatch(payload,input){
   const rows=payload?.result?.addressMatches;if(!Array.isArray(rows))throw new EvidenceError('CENSUS_SCHEMA','Census did not return an address-match list.',502);
-  const hits=rows.filter(x=>REGION_CODES.includes(x?.addressComponents?.state?.toUpperCase())&&(!input.state||x.addressComponents.state.toUpperCase()===input.state)&&typeof x.coordinates?.x==='number'&&typeof x.coordinates?.y==='number'&&Number.isFinite(x.coordinates.x)&&Number.isFinite(x.coordinates.y)&&Math.abs(x.coordinates.x)<=180&&Math.abs(x.coordinates.y)<=90);
+  const valid=rows.filter(x=>REGION_CODES.includes(x?.addressComponents?.state?.toUpperCase())&&(!input.state||x.addressComponents.state.toUpperCase()===input.state)&&typeof x.coordinates?.x==='number'&&typeof x.coordinates?.y==='number'&&Number.isFinite(x.coordinates.x)&&Number.isFinite(x.coordinates.y)&&Math.abs(x.coordinates.x)<=180&&Math.abs(x.coordinates.y)<=90);
+  // Census can return street-name aliases (SAINT/ST) for the same address on
+  // the exact same TIGER segment, side and interpolated point. These are not
+  // competing locations. Different points or house numbers remain ambiguous.
+  const seen=new Set(),hits=valid.filter(x=>{
+    const house=String(x.matchedAddress||'').match(/^\s*(\d+[A-Z0-9-]*)\s/i)?.[1]?.toUpperCase(),t=x.tigerLine,c=x.addressComponents;
+    const key=house&&t?.tigerLineId&&['L','R'].includes(t.side)&&c.city&&c.zip?fingerprint([house,t.tigerLineId,t.side,x.coordinates.x,x.coordinates.y,c.state.toUpperCase(),c.city.toUpperCase(),c.zip]):null;
+    if(!key)return true;
+    if(seen.has(key))return false;seen.add(key);return true;
+  });
   if(hits.length!==1)return {status:hits.length?'ambiguous':'unresolved',candidate_count:hits.length,candidates:hits.slice(0,5).map(x=>({address:x.matchedAddress,state:x.addressComponents.state}))};
   const hit=hits[0],geography={};
   for(const [key,label]of [['States','state'],['Counties','county'],['Census Tracts','tract'],['Census Blocks','block']]){const list=hit.geographies?.[key];if(Array.isArray(list)&&list.length===1)geography[label]={name:list[0].NAME||null,geoid:list[0].GEOID||null};}

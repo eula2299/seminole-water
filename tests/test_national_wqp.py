@@ -175,6 +175,20 @@ class WqpBackfillTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             handler.redirect_request(None, None, 302, '', {}, 'https://example.com/data')
 
+    def test_exhausted_timeouts_split_instead_of_publishing_or_parking_large_query(self):
+        target = self.root / 'partial.bin'
+        for error in (TimeoutError('The read operation timed out'), urllib.error.URLError(TimeoutError('timed out')), urllib.error.HTTPError(wqp.ENDPOINT, 504, 'Gateway timeout', {}, None)):
+            calls = []
+            def opener(*args, **kwargs):
+                calls.append(1); target.write_bytes(b'partial'); raise error
+            with self.assertRaises(wqp.BudgetExceeded):
+                wqp.download(wqp.ENDPOINT, target, 1000, retries=1, opener=opener, sleeper=lambda _: None)
+            self.assertEqual(len(calls), 2)
+            self.assertFalse(target.exists())
+        def unavailable(*args, **kwargs):raise urllib.error.URLError('DNS lookup failed')
+        with self.assertRaises(RuntimeError):
+            wqp.download(wqp.ENDPOINT, target, 1000, retries=0, opener=unavailable)
+
 
 if __name__ == '__main__':
     unittest.main()
