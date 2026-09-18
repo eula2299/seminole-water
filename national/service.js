@@ -97,10 +97,11 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
  function status(){
   const base={supported_input_regions:REGION_CODES,coverage_verified:false,national_unique_observations_ingested:'0',count_scope:'new national layer only; not the existing county dataset or publisher catalogs',household_laboratory_data:'not-connected',occurrence_database:'not-connected',advisories:'not-connected',lead_line_inventories:'not-connected',well_registries:'not-connected',ucmr:'not-connected-to-serving',wqp:'not-connected-to-serving',usgs:'not-connected-to-serving',billion_row_load_test:'not-run',deployment:'integrated-national-route'};
   if(context)base.usgs='bounded-live-environmental-queries';
+  if(propertyContext){base.lead_line_inventories='NYC-address-matched-inventory';base.well_registries='USGS-monitoring-well-locations';base.cleanup_sites='bounded-EPA-Superfund-queries';}
   if(!warehouse&&!archive)return base;
   const current=warehouse?warehouse.status().then(data=>({...base,...data,occurrence_database:data.status,datasets:data.sources||[],last_ingested_at:(data.sources||[]).map(s=>s.completed_at?new Date(s.completed_at).toISOString():null).filter(Boolean).sort().at(-1)||null,ucmr:(data.sources||[]).some(s=>s.source==='ucmr5'&&s.run_id)?'connected':'awaiting-import'})).catch(()=>({...base,national_unique_observations_ingested:null,occurrence_database:'unavailable'})):Promise.resolve(base);
   const historical=archive?archive.status().catch(()=>({ingestion_status:'unavailable',retained_source_records:null})):Promise.resolve(null);
-  return Promise.all([current,historical]).then(([data,history])=>({...data,wqp:history?.environmental_archive?.schema==='wqp-durable/1'?'persistent-bounded-geographic-lookups':data.wqp,historical_archive:history}));
+  return Promise.all([current,historical]).then(([data,history])=>({...data,well_registries:history?.well_archive?.published_states?.length?'acquired-state-NWWDB-and-USGS-monitoring-wells':data.well_registries,wqp:history?.environmental_archive?.schema==='wqp-durable/1'?'persistent-bounded-geographic-lookups':data.wqp,historical_archive:history}));
  }
 
  return {lookup,status};

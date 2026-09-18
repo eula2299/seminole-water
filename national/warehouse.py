@@ -25,6 +25,7 @@ LEASE_SECONDS=1800
 LOCK=threading.RLock()
 ENVIRONMENTAL_ARCHIVE=None
 COMPLIANCE_ARCHIVE=None
+WELL_ARCHIVE=None
 STATE={'schema':VERSION,'sources':{},'errors':{},'ingestion_status':'starting','current_archive':None,'target_minimum_records':200000000,'trained_prediction_models':0,'persistent_storage_bytes':None,'storage_accounting_checked_at':None}
 
 def utc(): return dt.datetime.now(dt.timezone.utc).isoformat()
@@ -247,6 +248,8 @@ def distinct_receipts(receipts):
  return list(unique.values())
 def status():
  with LOCK:s=json.loads(json.dumps(STATE))
+ if ENVIRONMENTAL_ARCHIVE:s['environmental_archive']=ENVIRONMENTAL_ARCHIVE.status()
+ if WELL_ARCHIVE:s['well_archive']=WELL_ARCHIVE.status()
  receipts=distinct_receipts(s['sources'].values());count=sum(x['distinct_source_rows'] for x in receipts)
  eligible=sum(x.get('eligible_source_records',0) for x in receipts if x.get('schema')==VERSION)
  s.update(retained_source_records=count,eligible_source_records=eligible,raw_rows=sum(x['raw_rows'] for x in receipts),published_archives=len(receipts),qualified_archives=sum(x.get('schema')==VERSION for x in receipts),active_archive_bytes=sum(x['stored_bytes'] for x in receipts),stored_bytes=s['persistent_storage_bytes'],storage_budget_bytes=MAX_TOTAL,target_met=eligible>=s['target_minimum_records'],count_definition='retained exact source-field rows deduplicated within each archive member; eligible rows additionally pass identity, date, and typed numeric or documented qualitative-result checks; neither count is an independent-observation or household count; cross-source duplication is not resolved',target_count_basis='eligible_source_records',household_safety_certified=False,coverage_complete=False)
@@ -356,7 +359,7 @@ def pws_report(pwsid):
  return {'schema':VERSION,'pwsid':pwsid,'status':'records-returned' if summaries else 'response-truncated' if matching else 'qualified-archives-unavailable' if not receipts else 'no-records-in-loaded-archives','summaries':summaries,'sources':sources,'compliance':compliance,'archives_checked':len(receipts),'legacy_archives_excluded':len(loaded)-len(receipts),'matching_summary_groups':matching,'returned_summary_groups':len(summaries),'truncated':truncated or omitted_raw>0,'omitted_large_latest_records':omitted_raw,'maximum_summary_groups':MAX_SUMMARIES,'scope':'public-system-samples-not-household','current_safety':'not-determined','cross_source_sample_independence_certified':False,'historical_data':True,'coverage_complete':False}
 
 def loop(stop=None,store_factory=Store,discover_fn=discover):
- global ENVIRONMENTAL_ARCHIVE,COMPLIANCE_ARCHIVE
+ global ENVIRONMENTAL_ARCHIVE,COMPLIANCE_ARCHIVE,WELL_ARCHIVE
  stop=stop or threading.Event();store=None;next_catalogue=0
  ROOT.mkdir(parents=True,exist_ok=True)
  while not stop.is_set():
@@ -381,7 +384,16 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
     COMPLIANCE_ARCHIVE=ComplianceArchive(store,ROOT/'compliance')
     with LOCK:STATE['compliance_archive']=COMPLIANCE_ARCHIVE.status()
    except Exception as e:log('compliance-restore-error',error=str(e)[:250])
+  if WELL_ARCHIVE is None and os.environ.get('WAREHOUSE_WELLS_ENABLED')=='true':
+   try:
+    from .well_archive import WellArchive
+    WELL_ARCHIVE=WellArchive(store,ROOT/'wells')
+   except Exception as e:log('well-restore-error',error=str(e)[:250])
   if time.monotonic()<next_catalogue:
+   if WELL_ARCHIVE:
+    try:
+     if WELL_ARCHIVE.step():log('well-archive-step',records=WELL_ARCHIVE.status()['source_well_records'],errors=WELL_ARCHIVE.status()['errors'])
+    except Exception as e:log('well-acquisition-error',error=str(e)[:250])
    if ENVIRONMENTAL_ARCHIVE:
     try:more=ENVIRONMENTAL_ARCHIVE.step()
     except Exception as e:
@@ -437,6 +449,10 @@ class Handler(BaseHTTPRequestHandler):
     params=urllib.parse.parse_qs(target.query,strict_parsing=True,max_num_fields=2)
     if set(params)!={'lat','lon'} or any(len(v)!=1 for v in params.values()):raise ValueError('Invalid environmental query')
     data=ENVIRONMENTAL_ARCHIVE.near(float(params['lat'][0]),float(params['lon'][0])) if ENVIRONMENTAL_ARCHIVE else {'status':'not-connected','records':[],'household_sample_verified':False}
+   elif target.path=='/wells/near':
+    params=urllib.parse.parse_qs(target.query,strict_parsing=True,max_num_fields=2)
+    if set(params)!={'lat','lon'} or any(len(v)!=1 for v in params.values()):raise ValueError('Invalid well query')
+    data=WELL_ARCHIVE.near(float(params['lat'][0]),float(params['lon'][0])) if WELL_ARCHIVE else {'status':'not-connected','records':[],'household_connection_verified':False}
    else:self.send_error(404);return
    payload=json.dumps(data,allow_nan=False,default=str).encode()
    if len(payload)>MAX_RESPONSE:

@@ -128,7 +128,8 @@ class EnvironmentalArchive:
         with self.lock:
             jobs=list((self.data or {}).get('jobs',{}).values());plan=(self.data or {}).get('plan',{})
             counts={s:sum(j['status']==s for j in jobs) for s in ('pending','complete','split','failed')}
-            return {'schema':'wqp-durable/1','status':self.phase,'source':'WQP-WQX3','source_url':Q.ENDPOINT,'plan_id':plan.get('plan_id'),'published_partitions':counts['complete'],'partition_status_counts':counts,'retained_source_rows':sum(j.get('manifest',{}).get('counts',{}).get('raw_result_rows',0) for j in jobs if j['status']=='complete'),'count_definition':'Acquired environmental result rows; not independent samples or household measurements. Do not add overlapping program totals.','household_safety_assessed':False,'coverage_complete':False,'error':self.error,'last_published_at':(self.head or {}).get('updated_at')}
+            failures=[{'state':j['partition']['state'],'start':j['partition']['start'],'end':j['partition']['end'],'attempts':j['attempts'],'error':j.get('error')} for j in jobs if j['status']=='failed']
+            return {'schema':'wqp-durable/1','status':self.phase,'source':'WQP-WQX3','source_url':Q.ENDPOINT,'plan_id':plan.get('plan_id'),'published_partitions':counts['complete'],'partition_status_counts':counts,'failed_partitions':failures[:12],'failed_partitions_truncated':len(failures)>12,'retained_source_rows':sum(j.get('manifest',{}).get('counts',{}).get('raw_result_rows',0) for j in jobs if j['status']=='complete'),'count_definition':'Acquired environmental result rows; not independent samples or household measurements. Do not add overlapping program totals.','household_safety_assessed':False,'coverage_complete':False,'error':self.error,'last_published_at':(self.head or {}).get('updated_at')}
 
     def step(self):
         with self.store.publication_lock():self._reload()
