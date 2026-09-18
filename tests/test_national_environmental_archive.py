@@ -1,4 +1,4 @@
-import copy,json,pathlib,tempfile,unittest
+import copy,io,json,pathlib,tempfile,unittest,zipfile
 from unittest import mock
 from national import environmental_archive as E
 from national import warehouse as W
@@ -68,5 +68,12 @@ class EnvironmentalArchiveTests(unittest.TestCase):
   archive.query_lock.acquire()
   try:self.assertEqual(archive.near(44.5,-93.5)['status'],'busy')
   finally:archive.query_lock.release()
+ def test_distinct_tables_with_same_row_number_are_not_collapsed(self):
+  body=io.BytesIO()
+  with zipfile.ZipFile(body,'w') as z:
+   z.writestr('a.csv',fixture(Location_HorzCoordReferenceSystemDatum='WGS84',Result_Characteristic='Arsenic'))
+   z.writestr('b.csv',fixture(Location_HorzCoordReferenceSystemDatum='WGS84',Result_Characteristic='Nitrate'))
+  archive=self.create(fetcher=self.fetch(body.getvalue()));archive.step();records=archive.near(44.5,-93.5)['records']
+  self.assertEqual(len(records),2);self.assertEqual({r['characteristic'] for r in records},{'Arsenic','Nitrate'})
 
 if __name__=='__main__':unittest.main()
