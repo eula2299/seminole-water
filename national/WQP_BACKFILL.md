@@ -149,3 +149,10 @@ python national/wqp_backfill.py run \
   --plan /data/wqp/site-contract.json --output /data/wqp/site-contract \
   --max-response-bytes 10000000 --max-decoded-bytes 40000000 --max-rows 10000
 ```
+## Timeout recovery
+
+Exhausted read timeouts and HTTP 408/504 responses subdivide the requested date
+interval after bounded retries. Existing parked read-timeout jobs are recovered
+as split parents with disjoint child intervals in the durable checkpoint. Failed
+checkpoint publication preserves the previous queue and counts. A single-day
+failure remains visible; it is never published as an empty result.

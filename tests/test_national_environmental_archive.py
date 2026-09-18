@@ -61,6 +61,33 @@ class EnvironmentalArchiveTests(unittest.TestCase):
  def test_bad_calendar_date_fails_instead_of_becoming_a_sample(self):
   archive=self.create(fetcher=self.fetch(fixture(Activity_StartDate='2020-01-35')));archive.step();s=archive.status()
   self.assertEqual(s['retained_source_rows'],0);self.assertEqual(s['partition_status_counts']['failed'],1)
+ def test_persisted_read_timeout_recovers_as_disjoint_children_and_resumes(self):
+  def old_timeout(*args):raise RuntimeError('Source transfer failed after 3 attempts: The read operation timed out')
+  archive=self.create(fetcher=old_timeout);archive.step();self.assertEqual(archive.status()['partition_status_counts']['failed'],1)
+  restart=self.create('restart');restart.step();s=restart.status()
+  self.assertEqual(s['partition_status_counts'],{'pending':1,'complete':1,'split':1,'failed':0})
+  self.assertEqual(s['retained_source_rows'],1)
+  children=E.Q.split_partition(self.plan['partitions'][0]);jobs=restart.data['jobs']
+  self.assertEqual(jobs[children[0]['id']]['status'],'complete');self.assertEqual(jobs[children[1]['id']]['status'],'pending')
+  self.assertEqual(jobs[self.plan['partitions'][0]['id']]['split_reason'],'upstream-timeout')
+ def test_timeout_recovery_publication_failure_retains_original_failed_checkpoint(self):
+  def old_timeout(*args):raise RuntimeError('Source transfer failed after 3 attempts: The read operation timed out')
+  archive=self.create(fetcher=old_timeout);archive.step();original=self.store.put_json
+  def fail_head(key,value):
+   if key==E.PREFIX+'/checkpoint-head.json':raise OSError('interrupted repair')
+   return original(key,value)
+  with mock.patch.object(self.store,'put_json',side_effect=fail_head):
+   with self.assertRaisesRegex(OSError,'interrupted repair'):archive.step()
+  self.assertEqual(archive.status()['partition_status_counts']['failed'],1)
+  restart=self.create('restart');self.assertEqual(restart.status()['partition_status_counts']['failed'],1)
+  restart.step();self.assertEqual(restart.status()['retained_source_rows'],1)
+ def test_single_day_timeout_remains_visible_and_does_not_create_duplicate_jobs(self):
+  self.plan=E.Q.make_plan(['MN'],'2020-01-06','2020-01-06')
+  def old_timeout(*args):raise RuntimeError('Source transfer failed after 3 attempts: The read operation timed out')
+  archive=self.create(fetcher=old_timeout)
+  for _ in range(3):archive.step()
+  self.assertFalse(archive.step());self.assertEqual(archive.status()['partition_status_counts']['failed'],1)
+  self.assertEqual(len(archive.data['jobs']),1);self.assertEqual(archive.status()['retained_source_rows'],0)
  def test_geographic_reads_reject_bad_coordinates_and_bound_concurrency(self):
   archive=self.create()
   for lat,lon in [(float('nan'),0),(0,float('inf')),(91,0),(0,181),(True,0)]:

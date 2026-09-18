@@ -131,8 +131,27 @@ class EnvironmentalArchive:
             failures=[{'state':j['partition']['state'],'start':j['partition']['start'],'end':j['partition']['end'],'attempts':j['attempts'],'error':j.get('error')} for j in jobs if j['status']=='failed']
             return {'schema':'wqp-durable/1','status':self.phase,'source':'WQP-WQX3','source_url':Q.ENDPOINT,'plan_id':plan.get('plan_id'),'published_partitions':counts['complete'],'partition_status_counts':counts,'failed_partitions':failures[:12],'failed_partitions_truncated':len(failures)>12,'retained_source_rows':sum(j.get('manifest',{}).get('counts',{}).get('raw_result_rows',0) for j in jobs if j['status']=='complete'),'count_definition':'Acquired environmental result rows; not independent samples or household measurements. Do not add overlapping program totals.','household_safety_assessed':False,'coverage_complete':False,'error':self.error,'last_published_at':(self.head or {}).get('updated_at')}
 
+    def _recover_timeouts(self):
+        # Earlier releases parked read timeouts behind every unattempted year.
+        # Preserve those failures as split parents and durably resume smaller,
+        # disjoint date ranges. A timeout never becomes an empty success.
+        repairs=[]
+        for ident,job in self.data['jobs'].items():
+            error=job.get('error') or ''
+            if job['status']=='failed' and error.startswith('Source transfer failed after ') and ('timed out' in error or 'total time budget' in error):
+                children=Q.split_partition(job['partition'])
+                if children:repairs.append((ident,children))
+        if not repairs:return
+        with self.lock:
+            previous=self.data;self.data=copy.deepcopy(previous)
+            for ident,children in repairs:
+                self.data['jobs'][ident].update(status='split',split_reason='upstream-timeout')
+                for child in children:self.data['jobs'].setdefault(child['id'],{'partition':child,'status':'pending','attempts':0})
+            try:self._save()
+            except Exception:self.data=previous;raise
+
     def step(self):
-        with self.store.publication_lock():self._reload()
+        with self.store.publication_lock():self._reload();self._recover_timeouts()
         with self.lock:
             pending=[j for j in self.data['jobs'].values() if j['status'] in ('pending','failed') and j['attempts']<3]
             if not pending:self.phase='complete-with-gaps' if any(j['status']=='failed' for j in self.data['jobs'].values()) else 'plan-acquired';return False
