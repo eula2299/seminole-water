@@ -1,0 +1,23 @@
+name: National service-line contract
+on:
+  pull_request:
+    paths: ['national/service_lines*', 'national/runtime.js', 'tests/national_service_lines*', '.github/workflows/national-service-line-contract.yml']
+permissions:
+  contents: read
+jobs:
+  verify-official-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/national_service_lines.test.js
+      - run: node national/service_lines_probe.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: service-line-live-contract
+          path: service-line-live-contract.json
+          retention-days: 7
