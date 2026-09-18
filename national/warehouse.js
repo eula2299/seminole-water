@@ -112,6 +112,9 @@ function createWarehouse({connectionString=process.env.DATABASE_URL,pool}={}) {
     },
     async publish(){
      try {await client.query('BEGIN');
+      // Finalizing a nationwide snapshot is bounded separately from resident
+      // requests. A large import must not inherit the 20-second lookup limit.
+      await client.query("SET LOCAL statement_timeout='120s'");
       // This scans only the staged run once, never the whole warehouse per request.
       await client.query(`UPDATE national_water.runs SET status='complete',completed_at=now(),
        unique_records=c.n,observation_count=c.observations,system_count=c.systems,violation_count=c.violations,
@@ -124,10 +127,19 @@ function createWarehouse({connectionString=process.env.DATABASE_URL,pool}={}) {
       if(valid.rows[0].unique_records==='0')throw new Error('EMPTY_SOURCE_IMPORT');
       await client.query('UPDATE national_water.sources SET active_run=$2,checked_at=now() WHERE source=$1',[source,id]);
       await client.query('COMMIT');
+      // Refresh planner statistics after a large load so address lookups can
+      // use the run/PWSID index immediately. This is outside publication.
+      try{await client.query('ANALYZE national_water.records');}catch{/* Autovacuum retries analysis independently. */}
       // Retain just the active snapshot, with small run metadata for freshness/failure audit.
       // Cleanup does not change a successfully committed publication into a failed import.
       try{const prior=await client.query('SELECT id FROM national_water.runs WHERE source=$1 AND id<>$2',[source,id]);await cleanup(prior.rows.map(r=>r.id));}catch{/* Retry stale-row cleanup under the next import lock. */}
-     }catch(e){await client.query('ROLLBACK').catch(()=>{});throw e;}finally{await release();}
+     }catch(e){
+      await client.query('ROLLBACK').catch(()=>{});
+      // publish releases its connection before syncSource can call fail().
+      // Persist the failed attempt here, while keeping the active snapshot.
+      await client.query(`UPDATE national_water.runs SET status='failed',completed_at=now(),error_code=$2 WHERE id=$1`,[id,String(e.code||e.message||'IMPORT_FAILED').slice(0,80)]).catch(()=>{});
+      throw e;
+     }finally{await release();}
     },
     async fail(code='IMPORT_FAILED'){if(released)return;try{await client.query(`UPDATE national_water.runs SET status='failed',completed_at=now(),error_code=$2 WHERE id=$1`,[id,String(code).slice(0,80)]);await cleanup([id]);}finally{await release();}},
     async activeHash(){const r=await client.query('SELECT r.source_sha256 FROM national_water.sources s JOIN national_water.runs r ON r.id=s.active_run WHERE s.source=$1',[source]);return r.rows[0]?.source_sha256;},

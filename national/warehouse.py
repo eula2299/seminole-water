@@ -12,6 +12,7 @@ except ImportError:
  from catalog import discover, download
 
 VERSION='occurrence-warehouse/2'
+PARSER_PROFILES={'ucmr':'ucmr-tab-bound-v2','syr3':'syr3-date-bound-v2','syr4':'syr4-quoted-date-bound-v2'}
 ROOT=pathlib.Path(os.environ.get('WAREHOUSE_DIR','/tmp/water-warehouse'))
 MAX_ARCHIVE=int(os.environ.get('WAREHOUSE_MAX_ARCHIVE_BYTES','2000000000'))
 MAX_TOTAL=int(os.environ.get('WAREHOUSE_MAX_TOTAL_BYTES','20000000000'))
@@ -49,17 +50,22 @@ def canonical_sql(columns,family):
  m=mapping(columns,family)
  q=m['qualifier']
  qualifier=(f"CASE {q} WHEN '<' THEN '<' WHEN '=' THEN '=' ELSE {q} END" if family=='ucmr' else f"CASE {q} WHEN '0' THEN '<' WHEN '1' THEN '=' ELSE {q} END")
- date=f"COALESCE(TRY_STRPTIME({m['date']}, '%m/%d/%Y')::DATE, TRY_CAST(SUBSTR({m['date']},1,10) AS DATE))"
+ # Match complete, documented date formats; never turn a malformed timestamp
+ # into a valid date by discarding its suffix. SYR4 uses e.g. 31-AUG-16.
+ date=f"COALESCE(TRY_STRPTIME({m['date']}, ['%m/%d/%Y','%m/%d/%Y %H:%M:%S','%Y-%m-%d','%Y-%m-%d %H:%M:%S','%Y-%m-%d %H:%M:%S.%f'] )::DATE"
+ if family=='syr4':date+=f",TRY_STRPTIME({m['date']}, '%d-%b-%y')::DATE"
+ date+=')'
  value=f"TRY_CAST({m['value']} AS DOUBLE)"
  valid=f"regexp_full_match(UPPER({m['pwsid']}),'[A-Z0-9]{{9}}') AND {date} IS NOT NULL AND {date}<=CURRENT_DATE AND {m['analyte']} IS NOT NULL"
- unit=f"LOWER(REPLACE(REPLACE(REPLACE({m['unit']},'µ','u'),'μ','u'),' ',''))"
+ result_unit=f"CASE WHEN {qualifier} IN ('<','<=','>','>=') AND {m['value']} IS NULL THEN {m['limit_unit']} ELSE {m['unit']} END"
+ unit=f"LOWER(REPLACE(REPLACE(REPLACE(({result_unit}),'µ','u'),'μ','u'),' ',''))"
  typed=f"{unit} IN ('mg/l','ug/l','ng/l','pci/l','bq/l','mfl','mpn/100ml','cfu/100ml','ntu','su')"
  numeric=f"isfinite({value}) AND {value}>=0"
- bound=f"COALESCE({value},TRY_CAST({m['limit']} AS DOUBLE))"
+ bound=f"CASE WHEN {m['value']} IS NULL THEN TRY_CAST({m['limit']} AS DOUBLE) ELSE {value} END"
  eligible=f"COALESCE(({valid}) AND ({typed}) AND (({qualifier}='=' AND {numeric}) OR ({qualifier} IN ('<','<=','>','>=') AND isfinite({bound}) AND {bound}>=0)),false)"
  return f"""SELECT UPPER({m['pwsid']}) AS pwsid,{m['name']} AS system_name,{m['analyte']} AS analyte,
  {date} AS sample_date,{m['date']} AS original_date,{m['value']} AS original_value,{m['unit']} AS original_unit,
- {qualifier} AS qualifier,{m['limit']} AS reporting_limit,{m['limit_unit']} AS reporting_limit_unit,
+ {qualifier} AS qualifier,{m['limit']} AS reporting_limit,{m['limit_unit']} AS reporting_limit_unit,{result_unit} AS result_unit,
  CASE WHEN ({eligible}) AND {qualifier}='=' THEN {value} ELSE NULL END AS detected_value,
  {m['sample']} AS sample_id,{m['point']} AS point_id,{m['facility']} AS facility_id,
  {m['point_type']} AS point_type,{m['source_type']} AS source_type,{m['origin']} AS origin_id,{m['presence']} AS presence,
@@ -67,13 +73,33 @@ def canonical_sql(columns,family):
  {valid} AS identity_date_valid,{eligible} AS summary_eligible,sha256(to_json(r)) AS source_record_sha256,to_json(r) AS original_record
  FROM raw_input r"""
 
+def prepare_member(source_file,family,member):
+ # EPA SYR3 alkalinity has two lines with a missing final ancillary chlorine
+ # field. Only this exact layout and signature can be padded. Measurements,
+ # identities and dates are unchanged; the untouched ZIP remains retained.
+ if family!='syr3' or pathlib.PurePosixPath(member).name.lower()!='alkalinity.txt':return source_file,0
+ target=pathlib.Path(source_file).with_suffix('.validated.tsv');padded=0
+ with open(source_file,encoding='utf-8-sig',newline='') as src,open(target,'w',encoding='utf-8',newline='') as dst:
+  header=src.readline().rstrip('\r\n').split('\t')
+  expected=['Residual Field Free Chlorine mg/L','Residual Field Total Chlorine mg/L']
+  if len(header)!=28 or header[-2:]!=expected:raise ValueError('Unrecognized SYR3 alkalinity trailing metadata layout')
+  dst.write('\t'.join(header)+'\n')
+  for number,line in enumerate(src,2):
+   row=line.rstrip('\r\n').split('\t')
+   if len(row)==27 and row[-1]==';':row.append('');padded+=1
+   elif len(row)!=28:raise ValueError(f'Unexpected SYR3 alkalinity field count on line {number}')
+   dst.write('\t'.join(row)+'\n')
+ return str(target),padded
+
 def process_member(source_file,parquet_path,summary_db,family,member):
  import duckdb
  con=duckdb.connect()
  con.execute("SET memory_limit='1800MB'; SET threads=2; SET preserve_insertion_order=false")
  con.execute('SET temp_directory='+lit(str(parquet_path.parent/'spill')))
  try:
-  con.execute("CREATE VIEW raw_input AS SELECT * FROM read_csv("+lit(source_file)+", delim='\t', header=true, all_varchar=true, quote='', escape='', strict_mode=true, max_line_size=1048576)")
+  source_file,padded=prepare_member(source_file,family,member)
+  quoting=lit('"' if family=='syr4' else '')
+  con.execute("CREATE VIEW raw_input AS SELECT * FROM read_csv("+lit(source_file)+", delim='\t', header=true, all_varchar=true, quote="+quoting+", escape="+quoting+", strict_mode=true, max_line_size=1048576)")
   columns=[x[0] for x in con.execute('SELECT * FROM raw_input LIMIT 0').description]
   sql=canonical_sql(columns,family)
   con.execute('CREATE TABLE normalized AS '+sql)
@@ -82,14 +108,14 @@ def process_member(source_file,parquet_path,summary_db,family,member):
   con.execute('CREATE TABLE distinct_rows AS SELECT * FROM normalized QUALIFY ROW_NUMBER() OVER (PARTITION BY source_record_sha256)=1')
   count,invalid,eligible=con.execute('SELECT COUNT(*),COUNT(*) FILTER (WHERE NOT COALESCE(identity_date_valid,false)),COUNT(*) FILTER (WHERE summary_eligible) FROM distinct_rows').fetchone()
   con.execute("COPY (SELECT * FROM distinct_rows ORDER BY pwsid,sample_date DESC) TO "+lit(parquet_path)+" (FORMAT PARQUET, COMPRESSION ZSTD, ROW_GROUP_SIZE 65536)")
-  cursor=con.execute("""SELECT pwsid,analyte,COALESCE(original_unit,reporting_limit_unit,''),evidence_scope,COUNT(*),COUNT(detected_value),COUNT(*) FILTER(WHERE qualifier IN ('<','<=')),MIN(sample_date)::VARCHAR,MAX(sample_date)::VARCHAR,MIN(detected_value),MAX(detected_value),arg_max(original_record,sample_date),0 FROM distinct_rows WHERE summary_eligible GROUP BY 1,2,3,4""")
+  cursor=con.execute("""SELECT pwsid,analyte,result_unit,evidence_scope,COUNT(*),COUNT(detected_value),COUNT(*) FILTER(WHERE qualifier IN ('<','<=')),MIN(sample_date)::VARCHAR,MAX(sample_date)::VARCHAR,MIN(detected_value),MAX(detected_value),arg_max(original_record,sample_date),0 FROM distinct_rows WHERE summary_eligible GROUP BY 1,2,3,4""")
   db=sqlite3.connect(summary_db)
   try:
    db.execute('CREATE TABLE IF NOT EXISTS summaries (pwsid TEXT,analyte TEXT,unit TEXT,scope TEXT,n INTEGER,detects INTEGER,nondetects INTEGER,first_date TEXT,last_date TEXT,min_detect REAL,max_detect REAL,latest_record TEXT,invalid_identity_date INTEGER,member TEXT)')
    while rows:=cursor.fetchmany(2000):db.executemany('INSERT INTO summaries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',[tuple(r)+(member,) for r in rows])
    db.commit()
   finally:db.close()
-  return {'member':member,'raw_rows':raw_count,'distinct_source_rows':count,'eligible_source_rows':eligible,'excluded_from_summary_rows':count-eligible,'invalid_identity_date_rows':invalid,'sha256':digest(parquet_path),'bytes':parquet_path.stat().st_size}
+  return {'member':member,'parser_profile':PARSER_PROFILES[family],'trailing_metadata_padding_rows':padded,'raw_rows':raw_count,'distinct_source_rows':count,'eligible_source_rows':eligible,'excluded_from_summary_rows':count-eligible,'invalid_identity_date_rows':invalid,'sha256':digest(parquet_path),'bytes':parquet_path.stat().st_size}
  finally:con.close()
 
 class Store:
@@ -224,10 +250,12 @@ def ingest(store,item):
  with LOCK:STATE['current_archive']=item['id']
  with tempfile.TemporaryDirectory(prefix='ingest-',dir=ROOT) as td:
   work=pathlib.Path(td);archive=work/'source.zip'
-  receipt={**item,**download(item['url'],archive,MAX_ARCHIVE),'retrieved_at':utc(),'schema':VERSION}
-  if existing and existing['sha256']==receipt['sha256'] and existing.get('schema')==VERSION:
+  profile=PARSER_PROFILES[item['family']]
+  receipt={**item,**download(item['url'],archive,MAX_ARCHIVE),'retrieved_at':utc(),'schema':VERSION,'parser_profile':profile}
+  old_profile=(existing or {}).get('parser_profile')
+  if existing and existing['sha256']==receipt['sha256'] and existing.get('schema')==VERSION and old_profile==profile:
    log('unchanged',source=item['id']);return
-  base='v2/data/'+receipt['sha256'];summary=work/'summary.sqlite';parts=[];skipped=[];expanded=0
+  base='v2/data/'+receipt['sha256']+'/'+profile;summary=work/'summary.sqlite';parts=[];skipped=[];expanded=0
   with zipfile.ZipFile(archive) as z:
    members=[m for m in z.infolist() if not m.is_dir() and m.filename.lower().endswith(('.txt','.tsv','.csv'))]
    for member in members:
@@ -255,6 +283,13 @@ def ingest(store,item):
   # duplicating immutable raw data already retained under an older schema.
   # Parquet schema stays explicit; serving reads only the rebuilt summary.
   previous={p['member']:p for p in (existing or {}).get('parts',[])}
+  # Version 1 receipts used basenames, while ZIP members can include folders.
+  # Match that legacy representation only when both sides are unambiguous.
+  old_names=[pathlib.PurePosixPath(n).name for n in previous]
+  new_names=[pathlib.PurePosixPath(p['member']).name for p in parts]
+  if len(set(old_names))==len(old_names) and len(set(new_names))==len(new_names):
+   by_name={pathlib.PurePosixPath(n).name:p for n,p in previous.items()}
+   previous={p['member']:by_name[pathlib.PurePosixPath(p['member']).name] for p in parts if pathlib.PurePosixPath(p['member']).name in by_name}
   reusable=bool(existing and existing.get('sha256')==receipt['sha256'] and previous and len(previous)==len(parts) and all(p['member'] in previous and p['raw_rows']==previous[p['member']].get('raw_rows') and p['distinct_source_rows']==previous[p['member']].get('distinct_source_rows') for p in parts))
   archive_key=base+'/original.zip'
   if reusable:
@@ -262,7 +297,7 @@ def ingest(store,item):
    store.verify_size(archive_key,receipt['archive_bytes'])
    for part in parts:
     old=previous[part['member']];store.verify_size(old['key'],old['bytes'])
-    part.update(key=old['key'],sha256=old['sha256'],bytes=old['bytes'],parquet_schema=old.get('parquet_schema',existing['schema']))
+    part.update(key=old['key'],sha256=old['sha256'],bytes=old['bytes'],parquet_schema=old.get('parquet_schema',existing['schema']),parquet_parser_profile=old.get('parquet_parser_profile',old.get('parser_profile','legacy')))
   else:
    for part in parts:part['parquet_schema']=VERSION
   receipt.update(archive_key=archive_key,reused_source_objects=reusable)
