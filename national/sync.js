@@ -79,7 +79,16 @@ async function syncSource(source,{warehouse,fetchImpl=fetch,inputFile,sourceUrl,
  const own=!warehouse;if(own)warehouse=createWarehouse();
  let job,temp;
  try{
-  if(!force&&!inputFile){const status=await warehouse.status();const active=status.sources.find(s=>s.source===source);if(active?.run_id&&Date.now()-new Date(active.checked_at||active.completed_at).getTime()<freshnessMs)return {source,status:'fresh',run_id:active.run_id};}
+  if(!force&&!inputFile){
+   const status=await warehouse.status();const active=status.sources.find(s=>s.source===source);
+   if(active?.run_id&&Date.now()-new Date(active.checked_at||active.completed_at).getTime()<freshnessMs)return {source,status:'fresh',run_id:active.run_id};
+   // A persisted capacity failure must not redownload the same national ZIP
+   // every hour or restart while the database still has no import capacity.
+   if(active?.latest_attempt?.error_code==='DATABASE_STORAGE_BUDGET_EXCEEDED'){
+    const capacity=await warehouse.importCapacity();
+    if(!capacity.can_import){const result={source,status:'storage-paused',...capacity};log({event:'source-capacity-paused',...result});return result;}
+   }
+  }
   // Lock is acquired before network work to avoid duplicate downloads across web replicas.
   const initialUrl=sourceUrl||SOURCES[source].url;
   job=await warehouse.beginImport(source,initialUrl);

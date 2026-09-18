@@ -35,6 +35,13 @@ function createWarehouse({connectionString=process.env.DATABASE_URL,pool}={}) {
   return initializing;
  }
  async function query(sql,args=[]) { if (!await initialize()) throw new Error('NATIONAL_DATABASE_NOT_CONFIGURED');return pool.query(sql,args); }
+ async function importCapacity() {
+  const budget=Number(process.env.NATIONAL_MAX_DATABASE_BYTES||3000000000);
+  if(!Number.isFinite(budget)||budget<1000000)throw new Error('INVALID_DATABASE_BUDGET');
+  const result=await query('SELECT pg_database_size(current_database())::text AS bytes');
+  const bytes=Number(result.rows[0].bytes);
+  return {can_import:Number.isFinite(bytes)&&bytes<budget,bytes,maximum_bytes:budget};
+ }
  async function status() {
   if (!pool) return unavailable();
   const result=await query(`SELECT s.source,s.checked_at,r.id AS run_id,r.completed_at,r.source_url,r.source_modified,
@@ -159,6 +166,6 @@ function createWarehouse({connectionString=process.env.DATABASE_URL,pool}={}) {
   }catch(e){await client.query('SELECT pg_advisory_unlock(hashtext($1))',['ismywaterok-national:'+source]).catch(()=>{});client.release();throw e;}
  }
  async function close(){if(own)await pool.end();}
- return {initialize,status,lookupSystem,searchSystems,beginImport,close};
+ return {initialize,status,lookupSystem,searchSystems,beginImport,importCapacity,close};
 }
 module.exports={createWarehouse,SCHEMA};
