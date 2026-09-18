@@ -14,7 +14,7 @@ except ImportError:
  from syr2 import chemical, export_mdb
 
 VERSION='occurrence-warehouse/2'
-PARSER_PROFILES={'ucmr':'ucmr-tab-bound-v2','syr2':'syr2-access-bound-v1','syr3':'syr3-date-bound-v2','syr4':'syr4-quoted-microbial-v3'}
+PARSER_PROFILES={'ucmr':'ucmr-tab-bound-v2','syr2':'syr2-access-bound-v1','syr3':'syr3-date-microbial-v3','syr4':'syr4-quoted-microbial-v3'}
 ROOT=pathlib.Path(os.environ.get('WAREHOUSE_DIR','/tmp/water-warehouse'))
 MAX_ARCHIVE=int(os.environ.get('WAREHOUSE_MAX_ARCHIVE_BYTES','2000000000'))
 MAX_TOTAL=int(os.environ.get('WAREHOUSE_MAX_TOTAL_BYTES','20000000000'))
@@ -71,11 +71,13 @@ def canonical_sql(columns,family,source_metadata=None):
  numeric=f"isfinite({value}) AND {value}>=0"
  bound=f"CASE WHEN {m['value']} IS NULL THEN TRY_CAST({m['limit']} AS DOUBLE) ELSE {value} END"
  eligible=f"COALESCE(({valid}) AND ({typed}) AND (({qualifier}='=' AND {numeric}) OR ({qualifier} IN ('<','<=','>','>=') AND isfinite({bound}) AND {bound}>=0)),false)"
- # EPA's SYR4 dictionary defines P/A only for TC (3100), EC (3014),
+ # EPA's SYR3/SYR4 dictionaries define P/A only for TC (3100), EC (3014),
  # and FC (3013). These are qualitative results, never concentrations.
+ # SYR3 guide, pages 5 and 11:
+ # https://www.epa.gov/sites/default/files/2016-12/documents/user_guide_to_obtaining_and_using_syr3_data.pdf
  # https://www.epa.gov/system/files/documents/2024-11/user-guide-to-downloading-and-using-syr4-data_0.pdf
  code=column(columns,'analytecode','analyteid')
- qualitative=f"COALESCE(({valid}) AND {code} IN ('3100','3014','3013') AND {m['presence']} IN ('P','A'),false)" if family=='syr4' else 'false'
+ qualitative=f"COALESCE(({valid}) AND {code} IN ('3100','3014','3013') AND {m['presence']} IN ('P','A'),false)" if family in ('syr3','syr4') else 'false'
  return f"""SELECT UPPER({m['pwsid']}) AS pwsid,{m['name']} AS system_name,{m['analyte']} AS analyte,
  {date} AS sample_date,{m['date']} AS original_date,{m['value']} AS original_value,{m['unit']} AS original_unit,
  {qualifier} AS qualifier,{m['limit']} AS reporting_limit,{m['limit_unit']} AS reporting_limit_unit,
@@ -239,13 +241,23 @@ class Store:
   temporary.replace(path)
 
 def summary_path(ident,sha):return ROOT/'summaries'/f'{ident}-{sha}.sqlite'
+def published_receipt(receipt):
+ # Discovery is not ingestion. Only apply to an activated published receipt.
+ # Copy metadata rather than mutating a persisted receipt during readback.
+ current=receipt.get('schema')==VERSION
+ expected=PARSER_PROFILES.get(receipt.get('family'))
+ return {**receipt,'count_state':'published' if current else 'retained-raw-only',
+         'parser_current':bool(current and expected and receipt.get('parser_profile')==expected)}
+
 def activate(store,receipt):
- # Legacy receipts remain visible as retained raw records, but their summaries
- # are never served as version 2 qualified evidence.
+ for key in ('id','sha256','raw_rows','distinct_source_rows','stored_bytes'):
+  if key not in receipt:raise ValueError('Incomplete published archive receipt: '+key)
+ # Legacy raw records remain visible, but legacy summaries are not served.
  if receipt.get('schema')==VERSION:
   p=summary_path(receipt['id'],receipt['sha256'])
   store.get(receipt['summary_key'],p,receipt['summary_sha256'])
- with LOCK:STATE['sources'][receipt['id']]=receipt;STATE['errors'].pop(receipt['id'],None)
+ active=published_receipt(receipt)
+ with LOCK:STATE['sources'][active['id']]=active;STATE['errors'].pop(active['id'],None)
 def distinct_receipts(receipts):
  unique={}
  for r in receipts:
@@ -259,7 +271,7 @@ def status():
  receipts=distinct_receipts(s['sources'].values());count=sum(x['distinct_source_rows'] for x in receipts)
  eligible=sum(x.get('eligible_source_records',0) for x in receipts if x.get('schema')==VERSION)
  s.update(retained_source_records=count,eligible_source_records=eligible,raw_rows=sum(x['raw_rows'] for x in receipts),published_archives=len(receipts),qualified_archives=sum(x.get('schema')==VERSION for x in receipts),active_archive_bytes=sum(x['stored_bytes'] for x in receipts),stored_bytes=s['persistent_storage_bytes'],storage_budget_bytes=MAX_TOTAL,target_met=eligible>=s['target_minimum_records'],count_definition='retained exact source-field rows deduplicated within each archive member; eligible rows additionally pass identity, date, and typed numeric or documented qualitative-result checks; neither count is an independent-observation or household count; cross-source duplication is not resolved',target_count_basis='eligible_source_records',household_safety_certified=False,coverage_complete=False)
- s['sources']={key:{k:v for k,v in receipt.items() if k not in ('parts','skipped_members')} for key,receipt in s['sources'].items()}
+ s['sources']={key:{k:v for k,v in receipt.items() if k not in ('parts','skipped_members')} for key,receipt in ((k,published_receipt(v)) for k,v in s['sources'].items())}
  return s
 
 def ingest(store,item):
@@ -324,6 +336,7 @@ def ingest(store,item):
   else:
    for part in parts:part['parquet_schema']=VERSION
   receipt.update(archive_key=archive_key,reused_source_objects=reusable)
+  receipt.update(count_state='published',parser_current=True)
   receipt.update(parts=parts,skipped_members=skipped,raw_rows=sum(x['raw_rows'] for x in parts),distinct_source_rows=sum(x['distinct_source_rows'] for x in parts),eligible_source_records=sum(x['eligible_source_rows'] for x in parts),summary_key=base+'/summary.sqlite',summary_sha256=digest(summary))
   receipt['stored_bytes']=receipt['archive_bytes']+summary.stat().st_size+sum(x['bytes'] for x in parts)
   with store.publication_lock():
