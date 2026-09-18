@@ -34,7 +34,11 @@ jobs:
               body=r.read();assert r.status==200
               if path=='/':assert b'Check your address' in body
               if path=='/seminole':assert b'Seminole' in body
-              if path=='/api/national/status':assert json.loads(body)['observations']['retained_source_records'] is None
+              if path=='/api/national/status':
+                status=json.loads(body)
+                assert status['occurrence_database']=='not-connected'
+                assert status['historical_archive'] is None
+                assert status['coverage_verified'] is False
               print(path,r.status,len(body))
           for path in ['/api/impact','/api/community/impact']:
             try:urllib.request.urlopen('http://127.0.0.1:8080'+path,timeout=5);raise AssertionError('Removed route restored')

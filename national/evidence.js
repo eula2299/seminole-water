@@ -41,12 +41,19 @@ function normalizeMeasurement(raw,asOf=new Date().toISOString().slice(0,10)){
   if(number!==null&&number<0)issues.push('negative-concentration');
   const converted=number!==null&&factor!==undefined?number*factor:null;
   if(converted!==null&&!Number.isFinite(converted))issues.push('conversion-overflow');
-  const limit=raw.reporting_limit==null?(inline||qsign?number:null):finiteNumber(raw.reporting_limit);
+  const limit=raw.reporting_limit==null?null:finiteNumber(raw.reporting_limit);
   const limitUnit=raw.reporting_limit_unit==null?unit:String(raw.reporting_limit_unit).replace(/[µμ]/g,'u').replace(/\s+/g,'').toLowerCase();
-  const bound=limit!==null&&limit>=0&&factors[limitUnit]!==undefined?limit*factors[limitUnit]:null;
-  if(censored&&(bound===null||!Number.isFinite(bound)))issues.push('reporting-limit-unresolved');
+  const convertedLimit=limit!==null&&limit>=0&&factors[limitUnit]!==undefined?limit*factors[limitUnit]:null;
+  const reportingLimit=convertedLimit!==null&&Number.isFinite(convertedLimit)?convertedLimit:null;
+  // A reported censor bound and a method's reporting limit are different facts.
+  // For "<1 mg/L", preserve 1 mg/L even if the reporting limit is separately
+  // supplied as 10 mg/L (or uses different units). A bare ND uses its limit.
+  const explicitCensor=!!(inline||qsign);
+  const explicitBound=number!==null&&number>=0&&converted!==null&&Number.isFinite(converted)?converted:null;
+  const bound=censored?(explicitCensor?explicitBound:reportingLimit):null;
+  if(censored&&bound===null)issues.push(explicitCensor?'censor-bound-unresolved':'reporting-limit-unresolved');
   const numericOk=!censored&&number!==null&&number>=0&&converted!==null&&Number.isFinite(converted);
-  return {original:raw,censored,censor_operator:operator,value_ug_l:numericOk?converted:null,reported_bound_ug_l:censored&&bound!==null&&Number.isFinite(bound)?bound:null,issues,eligible_for_numeric_analysis:numericOk&&issues.length===0,household_safety:'not-determined'};
+  return {original:raw,censored,censor_operator:operator,value_ug_l:numericOk?converted:null,reported_bound_ug_l:bound,reporting_limit_ug_l:reportingLimit,bound_source:bound===null?null:explicitCensor?'reported-value':'reporting-limit',issues,eligible_for_numeric_analysis:numericOk&&issues.length===0,household_safety:'not-determined'};
 }
 function censusMatch(payload,input){
   const rows=payload?.result?.addressMatches;if(!Array.isArray(rows))throw new EvidenceError('CENSUS_SCHEMA','Census did not return an address-match list.',502);

@@ -20,6 +20,37 @@ test('normalization retains original units and chemistry basis',()=>{const r=E.n
 for(const [unit,value]of [['ug/L',1],['µg/L',1],['μg/L',1],['ng/L',.001]])test('converts '+unit,()=>assert.equal(E.normalizeMeasurement({...measurement,unit}).value_ug_l,value));
 for(const value of ['<1','<=1','>1','>=1','≤1','≥1'])test('censored '+value+' is not an exact concentration',()=>{const r=E.normalizeMeasurement({...measurement,value});assert.equal(r.value_ug_l,null);assert.equal(r.eligible_for_numeric_analysis,false);assert.equal(r.reported_bound_ug_l,1000);});
 test('ND and reporting limit units are retained',()=>{const r=E.normalizeMeasurement({...measurement,value:'ND',reporting_limit:'4',reporting_limit_unit:'ng/L'});assert.equal(r.reported_bound_ug_l,.004);assert.equal(r.value_ug_l,null);});
+test('explicit censor bound is not overwritten by a separate reporting limit',()=>{
+ const r=E.normalizeMeasurement({...measurement,value:'<1',reporting_limit:'10'});
+ assert.equal(r.reported_bound_ug_l,1000);
+ assert.equal(r.reporting_limit_ug_l,10000);
+ assert.equal(r.bound_source,'reported-value');
+ assert.equal(r.value_ug_l,null);
+ assert.equal(r.eligible_for_numeric_analysis,false);
+});
+test('qualifier censor bound uses result units independently of reporting-limit units',()=>{
+ const r=E.normalizeMeasurement({...measurement,value:'2',qualifier:'>',reporting_limit:'5',reporting_limit_unit:'ng/L'});
+ assert.equal(r.reported_bound_ug_l,2000);
+ assert.equal(r.reporting_limit_ug_l,.005);
+ assert.equal(r.censor_operator,'>');
+ assert.equal(r.bound_source,'reported-value');
+ const noLimit=E.normalizeMeasurement({...measurement,value:'<1',reporting_limit_unit:'ng/L'});
+ assert.equal(noLimit.reported_bound_ug_l,1000);
+ assert.equal(noLimit.reporting_limit_ug_l,null);
+});
+test('invalid explicit censor bound cannot be silently replaced by a method reporting limit',()=>{
+ const r=E.normalizeMeasurement({...measurement,value:'<invalid',reporting_limit:'10'});
+ assert.equal(r.reported_bound_ug_l,null);
+ assert.equal(r.reporting_limit_ug_l,10000);
+ assert.equal(r.bound_source,null);
+ assert.ok(r.issues.includes('censor-bound-unresolved'));
+});
+test('bare nondetect uses independently converted reporting limit as its bound',()=>{
+ const r=E.normalizeMeasurement({...measurement,value:'ND',reporting_limit:'4',reporting_limit_unit:'ng/L'});
+ assert.equal(r.reported_bound_ug_l,.004);
+ assert.equal(r.reporting_limit_ug_l,.004);
+ assert.equal(r.bound_source,'reporting-limit');
+});
 test('ND without a detection limit stays unresolved',()=>assert.ok(E.normalizeMeasurement({...measurement,value:'ND'}).issues.includes('reporting-limit-unresolved')));
 test('unsupported ppm is not assumed mg/L',()=>assert.equal(E.normalizeMeasurement({...measurement,unit:'ppm'}).eligible_for_numeric_analysis,false));
 test('unknown medium cannot become water evidence',()=>assert.equal(E.normalizeMeasurement({...measurement,matrix:'soil'}).eligible_for_numeric_analysis,false));
@@ -60,4 +91,4 @@ test('HTTP lookup is wired and has no-store headers',async()=>withServer(async b
 test('HTTP rejects foreign origin',async()=>withServer(async base=>{const r=await fetch(base+'/api/national/lookup',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://invalid.example'},body:'{}'});assert.equal(r.status,403);}));
 test('HTTP rejects non-JSON content',async()=>withServer(async base=>{const r=await fetch(base+'/api/national/lookup',{method:'POST',body:'abc'});assert.equal(r.status,415);}));
 test('HTTP rejects malformed JSON',async()=>withServer(async base=>{const r=await fetch(base+'/api/national/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:'{'});assert.equal(r.status,400);}));
-test('browser interface discloses incomplete national coverage',async()=>withServer(async base=>{const r=await fetch(base+'/national');assert.equal(r.status,200);assert.match(await r.text(),/National expansion is not complete/);assert.match(r.headers.get('content-security-policy'),/frame-ancestors 'none'/);}));
+test('browser interface discloses variable coverage and limits of household evidence',async()=>withServer(async base=>{const r=await fetch(base+'/national');assert.equal(r.status,200);const html=await r.text();assert.match(html,/Record availability varies by location/);assert.match(html,/missing record does not establish that water is safe/);assert.match(html,/Household water safety cannot be certified from these records/);assert.match(r.headers.get('content-security-policy'),/frame-ancestors 'none'/);}));

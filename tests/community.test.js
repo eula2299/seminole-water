@@ -29,11 +29,9 @@ function publicText() {
 }
 
 test('production gateway preserves the community application and dependencies', () => {
-  assert.equal(pkg.scripts.start, 'node national/gateway.js');
-  assert.equal(pkg.scripts['start:seminole'], 'node platform.js');
-  const gateway = read('national/gateway.js');
-  assert.match(gateway, /fork\(path\.join\(__dirname,'\.\.\/platform\.js'\)/);
-  assert.match(gateway, /INTERNAL_APP_PORT:String\(port\+2\)/);
+  assert.equal(pkg.scripts.start, 'node platform.js');
+  assert.match(platform, /createNationalRuntime/);
+  assert.match(platform, /fork\(path\.join\(__dirname, 'server\.js'\)/);
   assert.ok(pkg.dependencies.pg);
   assert.ok(pkg.dependencies.nodemailer);
   assert.ok(pkg.dependencies['google-auth-library']);

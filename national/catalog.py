@@ -1,50 +1,69 @@
-"""Discover official occurrence archives; catalogue sizes are not ingested counts."""
+"""Discover official occurrence archives; catalogue sizes are never ingested counts."""
 from __future__ import annotations
-import concurrent.futures,hashlib,html.parser,json,pathlib,re,tempfile,time,urllib.parse,urllib.request,zipfile
+import concurrent.futures, hashlib, html.parser, io, json, os, pathlib, re, tempfile, time, urllib.parse, urllib.request, zipfile
 PAGES={
  'ucmr':'https://www.epa.gov/dwucmr/occurrence-data-unregulated-contaminant-monitoring-rule',
  'syr4':'https://www.epa.gov/dwsixyearreview/six-year-review-4-compliance-monitoring-data-2012-2019',
  'syr3':'https://www.epa.gov/dwsixyearreview/six-year-review-3-compliance-monitoring-data-2006-2011'}
+MAX_PAGE_BYTES=3000000
+READ_CHUNK_BYTES=1024*1024
 class Links(html.parser.HTMLParser):
- def __init__(self):super().__init__();self.links=[]
+ def __init__(self): super().__init__(); self.links=[]
  def handle_starttag(self,tag,attrs):
   if tag=='a':
    for key,value in attrs:
-    if key=='href':self.links.append(value)
+    if key=='href' and value: self.links.append(value)
 def approved(url):
  u=urllib.parse.urlsplit(url)
- if u.scheme!='https' or u.hostname not in ('www.epa.gov','epa.gov') or u.username or u.password or u.port:raise ValueError('unapproved EPA source')
+ if u.scheme!='https' or u.hostname not in ('www.epa.gov','epa.gov') or u.username is not None or u.password is not None or u.port is not None: raise ValueError('unapproved EPA source')
  return url
+class EPARedirectHandler(urllib.request.HTTPRedirectHandler):
+ def redirect_request(self,req,fp,code,msg,headers,newurl):
+  approved(newurl)
+  return super().redirect_request(req,fp,code,msg,headers,newurl)
+def _open_epa(url,timeout):
+ approved(url)
+ return urllib.request.build_opener(EPARedirectHandler()).open(urllib.request.Request(url,headers={'User-Agent':'IsMyWaterOK/1.0 public water evidence'}),timeout=timeout)
+def _validate_budget(max_bytes):
+ if isinstance(max_bytes,bool) or not isinstance(max_bytes,int) or max_bytes<0: raise ValueError('byte budget must be a nonnegative integer')
+def _bounded_chunks(response,max_bytes,message):
+ _validate_budget(max_bytes)
+ if int(response.headers.get('content-length') or 0)>max_bytes: raise ValueError(message)
+ size=0
+ while chunk:=response.read(min(READ_CHUNK_BYTES,max_bytes-size+1)):
+  size+=len(chunk)
+  if size>max_bytes: raise ValueError(message)
+  yield chunk
 def discover():
  out=[]
  for family,page in PAGES.items():
-  with urllib.request.urlopen(urllib.request.Request(page,headers={'User-Agent':'IsMyWaterOK/1.0 public water evidence'}),timeout=30) as r:
-   approved(r.url);content=r.read(3000000).decode('utf-8')
+  with _open_epa(page,timeout=30) as r:
+   approved(r.url); content=b''.join(_bounded_chunks(r,MAX_PAGE_BYTES,'source catalogue page byte budget exceeded')).decode('utf-8')
   parser=Links();parser.feed(content)
   for href in parser.links:
-   url=urllib.parse.urljoin(page,href);name=urllib.parse.unquote(urllib.parse.urlsplit(url).path.rsplit('/',1)[-1]).lower().lstrip('_')
-   if not name.endswith('.zip'):continue
+   url=urllib.parse.urljoin(page,href);name=urllib.parse.unquote(urllib.parse.urlsplit(url).path.rsplit('/',1)[-1]).lower()
+   if not name.endswith('.zip'): continue
    if family=='ucmr':
     m=re.fullmatch(r'ucmr([1-5])-occurrence-data.zip',name)
-    if not m:continue
+    if not m: continue
     ident='ucmr'+m[1]
    else:
-    if not name.startswith(family+'_') or any(x in name for x in ('paired','treatment','corrective','cryptobinning','adwr','microbes_dr','microbes_gw')):continue
+    name=name.lstrip('_')
+    if not name.startswith(family+'_') or any(x in name for x in ('paired','treatment','corrective','cryptobinning','adwr','microbes_dr','microbes_gw')): continue
     ident=re.sub('[^a-z0-9_-]','_',name[:-4])
    approved(url)
-   if not any(x['url']==url for x in out):out.append({'id':ident,'family':'ucmr' if family=='ucmr' else family,'url':url,'catalogue_url':page,'count_state':'not-downloaded'})
+   if not any(x['url']==url for x in out): out.append({'id':ident,'family':'ucmr' if family=='ucmr' else family,'url':url,'catalogue_url':page,'count_state':'not-downloaded'})
  order={'ucmr5':0,'ucmr4':1,'ucmr3':2,'ucmr2':3,'ucmr1':4}
  return sorted(out,key=lambda x:(order.get(x['id'],10 if x['family']=='syr4' else 20),x['id']))
 def download(url,path,max_bytes=2000000000):
- approved(url);h=hashlib.sha256();size=0;started=time.monotonic()
- with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'IsMyWaterOK/1.0 public water evidence'}),timeout=90) as r,open(path,'wb') as f:
+ approved(url);_validate_budget(max_bytes);h=hashlib.sha256();size=0;started=time.monotonic()
+ with _open_epa(url,timeout=90) as r,open(path,'wb') as f:
   approved(r.url)
-  if int(r.headers.get('content-length') or 0)>max_bytes:raise ValueError('source archive byte budget exceeded')
-  while chunk:=r.read(1024*1024):
+  for chunk in _bounded_chunks(r,max_bytes,'source archive byte budget exceeded'):
    size+=len(chunk)
-   if size>max_bytes or time.monotonic()-started>600:raise ValueError('source archive byte or time budget exceeded')
+   if time.monotonic()-started>600: raise ValueError('source archive time budget exceeded')
    h.update(chunk);f.write(chunk)
- if not zipfile.is_zipfile(path):raise ValueError('source did not return a ZIP archive')
+ if not zipfile.is_zipfile(path): raise ValueError('source did not return a ZIP archive')
  return {'sha256':h.hexdigest(),'archive_bytes':size}
 def probe():
  from warehouse import process_member

@@ -1,3 +1,7 @@
 node_modules/
 data/epa/raw/
 *.zip
+__pycache__/
+*.pyc
+national/downloads/
+national/backfill/

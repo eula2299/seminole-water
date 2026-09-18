@@ -21,9 +21,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install -r national/requirements.txt
+      - run: npm ci --ignore-scripts
+      - run: python -m pip install -r national/requirements.txt -r national/warehouse-requirements.txt
       - run: node --test tests/national_*.test.js
-      - run: python -m unittest discover -s tests -p 'test_national_ingest.py' -v
+      - run: python -m unittest discover -s tests -p 'test_national*.py' -v
   public-source-contracts:
     runs-on: ubuntu-latest
     timeout-minutes: 3
