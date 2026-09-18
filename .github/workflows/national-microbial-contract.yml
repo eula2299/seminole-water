@@ -1,0 +1,37 @@
+name: National microbial source contract
+on:
+  pull_request:
+    paths:
+      - 'national/warehouse.py'
+      - 'scripts/check_syr3_live_contract.py'
+      - 'tests/test_national_syr3_recovery.py'
+      - '.github/workflows/national-microbial-contract.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: microbial-contract-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  complete-source-archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        source: [syr3_ec-fc-dr, syr3_tc-dr-06-08, syr3_tc-dr-09-11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r national/warehouse-requirements.txt
+      - name: Independently count every source row and verify typed summaries
+        run: python -m scripts.check_syr3_live_contract --source '${{ matrix.source }}' --output 'verification/${{ matrix.source }}.json'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: microbial-contract-${{ matrix.source }}
+          path: verification/*.json
+          retention-days: 7
