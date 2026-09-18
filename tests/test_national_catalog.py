@@ -62,7 +62,7 @@ class CatalogTests(unittest.TestCase):
         ucmr += '<a href="/files/ucmr5-occurrence-data.zip">duplicate</a>'
         responses = [Response(ucmr.encode()),
                      Response(b'<a href="/syr4_rads.zip">data</a><a href="/syr4_paired.zip">excluded</a>'),
-                     Response(b'<a href="/syr3_rads.zip">data</a><a href="/syr3_treatment.zip">excluded</a>')]
+                     Response(b'<a href="/syr3_rads.zip">data</a><a href="/syr3_treatment.zip">excluded</a>'), Response(b'')]
         with mock.patch.object(catalog, '_open_epa', side_effect=responses):
             rows = catalog.discover()
         self.assertEqual([row['id'] for row in rows], ['ucmr5', 'ucmr4', 'ucmr3', 'ucmr2', 'ucmr1', 'syr4_rads', 'syr3_rads'])
@@ -74,11 +74,19 @@ class CatalogTests(unittest.TestCase):
             f'_syr4_{excluded}.zip' for excluded in
             ('paired', 'treatment', 'corrective', 'cryptobinning', 'adwr', 'microbes_dr', 'microbes_gw')]
         page = ''.join(f'<a href="/files/{name}">data</a>' for name in filenames)
-        with mock.patch.object(catalog, '_open_epa', side_effect=[Response(b''), Response(page.encode()), Response(b'')]):
+        with mock.patch.object(catalog, '_open_epa', side_effect=[Response(b''), Response(page.encode()), Response(b''), Response(b'')]):
             rows = catalog.discover()
         self.assertEqual([row['id'] for row in rows], ['syr4_phase_chem_1', 'syr4_rads'])
         self.assertEqual([row['url'] for row in rows], [f'https://www.epa.gov/files/{name}' for name in filenames[:2]])
         self.assertTrue(all(row['family'] == 'syr4' for row in rows))
+
+    def test_syr2_uses_only_reviewed_archives_including_corrected_nitrate(self):
+        page=''.join(f'<a href="/files/{name}">data</a>' for name in list(catalog.SYR2_ARCHIVES)+['nitrate-old.zip','unreviewed.mdb.zip'])
+        with mock.patch.object(catalog, '_open_epa', side_effect=[Response(b'') for _ in range(3)]+[Response(page.encode())]):
+            rows=catalog.discover()
+        self.assertEqual(len(rows),6)
+        self.assertEqual({row['id'] for row in rows},set(catalog.SYR2_ARCHIVES.values()))
+        self.assertTrue(all(row['family']=='syr2' for row in rows))
 
     def test_discovery_rejects_oversize_page_instead_of_truncating(self):
         response = Response(b' ' * 40, short_reads=3)
