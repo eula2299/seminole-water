@@ -56,30 +56,39 @@ def discover():
  order={'ucmr5':0,'ucmr4':1,'ucmr3':2,'ucmr2':3,'ucmr1':4}
  return sorted(out,key=lambda x:(order.get(x['id'],10 if x['family']=='syr4' else 20),x['id']))
 def download(url,path,max_bytes=2000000000):
- approved(url);_validate_budget(max_bytes);h=hashlib.sha256();size=0
+ approved(url);_validate_budget(max_bytes);h=hashlib.sha256();size=0;started=time.monotonic()
  with _open_epa(url,timeout=90) as r,open(path,'wb') as f:
   approved(r.url)
   for chunk in _bounded_chunks(r,max_bytes,'source archive byte budget exceeded'):
    size+=len(chunk)
+   if time.monotonic()-started>600: raise ValueError('source archive time budget exceeded')
    h.update(chunk);f.write(chunk)
  if not zipfile.is_zipfile(path): raise ValueError('source did not return a ZIP archive')
  return {'sha256':h.hexdigest(),'archive_bytes':size}
 def probe():
- rows=discover();result={'catalogue':rows,'probes':[]}
- wanted=[x for x in rows if x['id'] in ('ucmr5','syr4_rads','syr3_rads')]
+ from warehouse import process_member
+ rows=discover();result={'catalogue':rows,'probes':[]};wanted=[x for x in rows if x['id'] in ('ucmr5','syr4_rads','syr3_rads')]
  def one(item):
   with tempfile.TemporaryDirectory() as td:
-   p=pathlib.Path(td)/'source.zip';receipt=download(item['url'],p,200000000)
+   root=pathlib.Path(td);p=root/'source.zip';receipt=download(item['url'],p,200000000)
    with zipfile.ZipFile(p) as z:
     headers=[]
     for name in z.namelist():
      if name.lower().endswith(('.txt','.csv','.tsv')):
-      with z.open(name) as f: sample=f.read(16000).decode('utf-8-sig',errors='replace')
-      headers.append({'member':name,'bytes':z.getinfo(name).file_size,'first_lines':sample.splitlines()[:4]})
+      with z.open(name) as f:blob=f.read(16000)
+      try:sample=blob.decode('utf-8-sig')
+      except UnicodeDecodeError:sample=blob.decode('cp1252')
+      lines=sample.splitlines()[:4];entry={'member':name,'bytes':z.getinfo(name).file_size,'first_lines':lines}
+      if (item['family']!='ucmr' or name.lower()=='ucmr5_all.txt'):
+       src=root/'sample.tsv';src.write_text('\n'.join(lines)+'\n',encoding='utf-8')
+       dest=root/(hashlib.sha256(name.encode()).hexdigest()+'.parquet')
+       entry['schema_contract']=process_member(str(src),dest,root/'summary.sqlite',item['family'],name)
+      headers.append(entry)
    return {**item,**receipt,'schemas':headers}
- with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+ with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
   for future in [pool.submit(one,x) for x in wanted]:
    try:result['probes'].append(future.result())
    except Exception as e:result['probes'].append({'error':str(e)})
  print(json.dumps(result,indent=2));pathlib.Path('national-catalog-probe.json').write_text(json.dumps(result,indent=2))
-if __name__=='__main__': probe()
+ if len(result['probes'])!=3 or any('error' in x for x in result['probes']):raise RuntimeError('Source schema contract failed')
+if __name__=='__main__':probe()

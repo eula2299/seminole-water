@@ -213,6 +213,18 @@ function nationalClient(){
       sourceDetails(section,{status:archive.status,sources:archive.sources||[],truncated:archive.truncated},'Archive provenance and retrieval details');box.append(section);
     }
   }
+  function renderEnvironment(data){
+    const env=data.environment;if(!env||env.status==='not-requested')return;
+    const box=card('Nearby environmental readings','USGS monitoring · separate from drinking water');
+    paragraph(box,env.explanation||'These readings do not establish a connection to your water supply or the quality of water from your own tap or well.','muted');
+    if(env.status==='unavailable'){paragraph(box,'The environmental source was unavailable. No environmental finding was made.');return;}
+    if(!(env.records||[]).length){paragraph(box,'No observations were returned in this bounded search. This does not establish that the area has no water-quality concerns.');return;}
+    if(env.status==='partial')paragraph(box,'The source has additional pages. This report includes only the bounded set returned.','warning');
+    const table=node('table'),head=node('tr');for(const title of ['Monitoring station','Parameter','Reported reading','Sample date','Source status'])head.append(node('th',title));table.append(head);
+    for(const r of env.records){const row=node('tr');const reading=r.value===null||r.value===undefined?'Not reported':String(r.value)+(r.unit?' '+r.unit:' (unit not supplied)');for(const value of [r.station||'Not supplied',r.parameter||r.parameter_code||'Not supplied',reading,readableDate(r.sampled_at)+(r.not_recent?' · older than 30 days':''),r.approval_status||'Not supplied'])row.append(node('td',String(value)));table.append(row);}
+    const wrap=node('div',undefined,'table-scroll');wrap.append(table);box.append(wrap);
+    for(const source of env.sources||[])resource(box,'View USGS source response',source.url,'Retrieved '+readableDate(source.retrieved_at));
+  }
   function renderHealthContext(data){
     const contexts=matchedHealthContexts(data);if(!contexts.length)return;
     const box=card('What these contaminants can mean','General health context');
@@ -237,7 +249,7 @@ function nationalClient(){
     results.replaceChildren();
     const title=node('h2','Your water records','results-title');title.tabIndex=-1;title.id='results-heading';results.append(title);
     const summary=node('div',undefined,'finding');summary.append(node('strong','Your household water safety is not determined by this lookup.'));paragraph(summary,'Review the provider match, the actual sample dates, and the evidence available for your location. No household water sample was authenticated in this lookup.');results.append(summary);
-    renderAddress(data);renderSystems(data);renderOccurrence(data);renderArchive(data);renderHealthContext(data);renderNextSteps(data);
+    renderAddress(data);renderSystems(data);renderOccurrence(data);renderArchive(data);renderEnvironment(data);renderHealthContext(data);renderNextSteps(data);
     const gaps=card('What is still unknown','Evidence gaps');list(gaps,data.gaps||['Source coverage has not been established.']);
     const checks=node('details');checks.append(node('summary','Source checks and report details'));const audit=data.audit||[];for(const item of audit)paragraph(checks,String(item.agent).replaceAll('-',' ')+': '+String(item.status).replaceAll('-',' ')+' · retrieved '+readableDate(item.retrieved_at),'muted');paragraph(checks,'Report generated: '+readableDate(data.generated_at)+'. Retrieval date and sample date are different.','muted');sourceDetails(checks,data,'View complete machine-readable response');gaps.append(checks);
     if(data.coverage)updateStatus(data.coverage);
@@ -250,6 +262,7 @@ function nationalClient(){
     submit.disabled=true;results.setAttribute('aria-busy','true');message.textContent='Checking your address and official water records…';message.className='message';
     try{
       const body=Object.fromEntries(new FormData(form));
+      body.include_environment=body.include_environment==='yes';
       if(body.supply_type==='private-well')delete body.pwsid;
       const response=await fetch('/api/national/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:controller.signal});
       let data;try{data=await response.json();}catch{throw new Error('The service returned an unreadable response. Please try again.');}
@@ -282,9 +295,10 @@ const HTML=`<!doctype html>
 <label for="state">State or territory<select id="state" name="state" required autocomplete="address-level1"><option value="">Select a state or territory</option>${REGION_CODES.map(code=>'<option value="'+code+'">'+REGION_NAMES[code]+'</option>').join('')}</select></label>
 <label for="zip">ZIP code<input id="zip" name="zip" maxlength="10" autocomplete="postal-code" inputmode="numeric" pattern="[0-9]{5}(-[0-9]{4})?" placeholder="12345"><span class="field-note">Enter a city or ZIP code.</span></label>
 <label for="supply">Water supply<select id="supply" name="supply_type" aria-describedby="supply-help"><option value="unknown">I’m not sure</option><option value="public">Public water utility</option><option value="private-well">Private well</option></select></label>
+<label class="wide" for="include-environment">Nearby environmental readings<select id="include-environment" name="include_environment"><option value="yes">Include USGS monitoring context</option><option value="no">Water system records only</option></select><span class="field-note">Nearby streams and monitoring wells are separate evidence, not tests of your tap.</span></label>
 </div><p id="supply-help" class="field-note">If the mapped provider is unclear, compare the candidates with your water bill.</p>
 <details><summary>Know your public water system ID?</summary><label for="pwsid">Full system ID (PWSID)<input id="pwsid" name="pwsid" maxlength="9" minlength="9" pattern="[A-Za-z0-9]{9}" autocapitalize="characters" spellcheck="false" placeholder="Nine letters and numbers" aria-describedby="pwsid-help"></label><p id="pwsid-help" class="field-note">Find this ID on your utility’s annual water report. You can search by ID and state without entering an address. Private wells do not have a public system ID.</p></details>
-<button id="lookup-button" class="lookup-button" type="submit">Find my water records</button><p id="message" class="message" role="status" aria-live="polite" tabindex="-1"></p><p class="privacy">Your address is sent to the U.S. Census geocoder and its coordinates to EPA’s service-area map. The national lookup does not save your address or send it to an AI model.</p></form>
+<button id="lookup-button" class="lookup-button" type="submit">Find my water records</button><p id="message" class="message" role="status" aria-live="polite" tabindex="-1"></p><p class="privacy">Your address is sent to the U.S. Census geocoder and its coordinates to EPA’s service-area map. If you include environmental readings, a surrounding search area is sent to USGS. The national lookup does not save your address or send it to an AI model.</p></form>
 <aside class="dataset-panel" aria-labelledby="dataset-title"><h2 id="dataset-title" class="dataset-heading">What powers this lookup</h2><div><strong id="dataset-count" class="dataset-number">Loading…</strong><p class="dataset-caption">stored national observations</p></div><div id="archive-inventory" hidden><strong id="archive-count" class="dataset-number">Unavailable</strong><p class="dataset-caption">archived source records · separate count</p></div><div><strong>Latest ingestion</strong><p id="dataset-date" class="muted">Checking…</p></div><p id="dataset-scope" class="muted">Checking the live dataset inventory.</p><p id="coverage-note" class="muted">Record availability varies by location. A missing record does not establish that water is safe.</p><details><summary>Dataset coverage and freshness</summary><div id="dataset-details"></div></details></aside></div>
 <div id="results" aria-busy="false"></div>
 <section class="how" aria-label="How to use this lookup"><div><span class="step-number">01 / MATCH</span><h2>Confirm your provider</h2><p>A mapped service area offers a candidate. Your water bill or utility can confirm your actual connection.</p></div><div><span class="step-number">02 / READ</span><h2>Follow the evidence</h2><p>See the result, its units, the sampling date, and its source. Utility records describe the system, not your individual tap.</p></div><div><span class="step-number">03 / ACT</span><h2>Get the next answer</h2><p>Find official reports and certified testing resources. For current advisories, check your utility or health department.</p></div></section>

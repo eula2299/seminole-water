@@ -1,0 +1,35 @@
+name: National context source contract
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/national-context-contract.yml'
+      - 'national/context.js'
+permissions:
+  contents: read
+jobs:
+  source-schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read bounded public environmental samples
+        run: |
+          node <<'JS'
+          const fs=require('node:fs');
+          (async()=>{
+           const out={};
+           for(const [key,url] of Object.entries({usgs:'https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items?f=json&bbox=-77.2,38.7,-76.8,39&limit=3',wqp:'https://www.waterqualitydata.us/wqx3/Result/search?countrycode=US&lat=38.9&long=-77.04&within=1&startDateLo=01-01-2025&startDateHi=09-17-2026&mimeType=csv&dataProfile=fullPhysChem&sampleMedia=Water'})){
+            try{const r=await fetch(url,{signal:AbortSignal.timeout(40000)});const reader=r.body.getReader();let text='',n=0;while(true){const {done,value}=await reader.read();if(done)break;n+=value.length;text+=Buffer.from(value).toString('utf8');if(n>1000000){await reader.cancel();break;}}out[key]={status:r.status,url:r.url,content_type:r.headers.get('content-type'),bytes_inspected:n,body:text.slice(0,20000)};}catch(e){out[key]={error:e.name,message:e.message};}
+           }
+           fs.writeFileSync('national-context-schemas.json',JSON.stringify(out,null,2));console.log(JSON.stringify(out,null,2));
+          })();
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: national-context-schemas
+          path: national-context-schemas.json
+          retention-days: 3

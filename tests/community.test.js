@@ -28,8 +28,10 @@ function publicText() {
     .join('\n');
 }
 
-test('production starts through the community gateway', () => {
+test('production gateway preserves the community application and dependencies', () => {
   assert.equal(pkg.scripts.start, 'node platform.js');
+  assert.match(platform, /createNationalRuntime/);
+  assert.match(platform, /fork\(path\.join\(__dirname, 'server\.js'\)/);
   assert.ok(pkg.dependencies.pg);
   assert.ok(pkg.dependencies.nodemailer);
   assert.ok(pkg.dependencies['google-auth-library']);

@@ -45,7 +45,8 @@
     "mail:monthly": "node scripts/send_digest.js monthly",
     "test:national": "node --test tests/national_*.test.js",
     "sync:national": "node national/sync.js --source all",
-    "start:national": "node national/server.js"
+    "start:national": "node national/server.js",
+    "start:seminole": "node platform.js"
   },
   "dependencies": {
     "google-auth-library": "^10.9.1",
