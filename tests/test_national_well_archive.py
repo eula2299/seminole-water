@@ -36,8 +36,8 @@ class WellTests(unittest.TestCase):
             root=pathlib.Path(t);raw,dictionary=fixture(root);out=root/'index.sqlite';c=W.make_index(raw,dictionary,out)
             self.assertEqual(c['source_well_records'],3);self.assertEqual(c['mapped_well_records'],2);self.assertEqual(c['excluded_spatial_records'],1)
             with sqlite3.connect(out) as d:
-                rows={r[0]:json.loads(r[1]) for r in d.execute('select id,record from wells')}
-            self.assertEqual(rows['001']['depth_ft'],123);self.assertIsNone(rows['002']['depth_ft']);self.assertFalse(rows['001']['household_connection_verified'])
+                rows=dict(d.execute('select id,depth_ft from wells'))
+            self.assertEqual(rows['001'],123);self.assertIsNone(rows['002'])
     def test_unknown_coordinate_datum_and_conflicting_well_ids_are_not_published(self):
         with tempfile.TemporaryDirectory() as t:
             root=pathlib.Path(t);raw,dictionary=fixture(root);dictionary.write_text(dictionary.read_text().replace('4326','4269'))
@@ -59,6 +59,14 @@ class WellTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             store=Store();store.put_json(W.PREFIX+'/latest/LA.json',{'schema':'wrong'})
             with self.assertRaises(ValueError):W.WellArchive(store,pathlib.Path(t))
+    def test_existing_legacy_inventory_remains_readable_during_index_upgrade(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=pathlib.Path(t);index=root/'legacy.sqlite';record={'id':'001','latitude':30,'longitude':-92,'depth_ft':123}
+            with sqlite3.connect(index) as db:
+                db.execute('CREATE TABLE wells(id TEXT,latitude REAL,longitude REAL,record TEXT)');db.execute('INSERT INTO wells VALUES(?,?,?,?)',('001',30,-92,json.dumps(record)))
+            store=Store();store.put('legacy-index',index);store.put_json(W.PREFIX+'/latest/LA.json',{'schema':W.LEGACY,'state':'LA','item_id':W.CATALOG['LA'],'index_key':'legacy-index','index_sha256':W.sha(index),'index_bytes':index.stat().st_size,'source_well_records':1,'mapped_well_records':1,'source_url':W.ROOT_URL+W.CATALOG['LA'],'source_uploaded_at':'2023-01-01','retrieved_at':W.now(),'sha256':'source-sha'})
+            result=W.WellArchive(store,root/'cache').near(30,-92)
+            self.assertEqual(result['records'][0]['depth_ft'],123);self.assertFalse(result['records'][0]['household_connection_verified'])
     def test_failed_publication_preserves_prior_state_snapshot_and_restart(self):
         with tempfile.TemporaryDirectory() as t:
             root=pathlib.Path(t);raw,dictionary=fixture(root);store=Store();ident=W.CATALOG['LA']

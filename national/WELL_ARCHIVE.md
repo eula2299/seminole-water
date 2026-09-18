@@ -13,6 +13,12 @@ and invalid depths remain distinct from zero. Duplicate well identities prevent
 publication. Original files remain available for audit even when records cannot
 be mapped.
 
+Version 2 stores well attributes in typed SQLite columns instead of repeating
+JSON field names and generated display labels for every record. It keeps the
+256 MB per-state index limit. Legacy indexes remain readable during migration;
+version 2 artifacts use separate object keys so a failed upgrade cannot overwrite
+the active index.
+
 The existing object-store publication lease and capacity accounting apply.
 Uploads complete before the per-state receipt changes, so a failed refresh
 preserves the prior active inventory. One state is acquired per worker step,
