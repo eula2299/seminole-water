@@ -37,5 +37,9 @@ test('Postgres atomic snapshots, idempotency, lock, query, counts and failure re
   const sys=await w.beginImport('sdwis','https://echo.epa.gov/fixture.zip');await sys.batch([normalize('sdwis','system',{PWSID:'NY0000001',PWS_NAME:'Fixture system',STATE_CODE:'NY',PWS_ACTIVITY_CODE:'A'})]);await sys.publish();assert.equal((await w.searchSystems({state:'NY',query:'Fixture'}))[0].pwsid,'NY0000001');
   const replacement=await w.beginImport('ucmr5','https://www.epa.gov/new.zip');await replacement.batch([normalize('ucmr5','observation',{...sample,SampleID:'S2',AnalyticalResultsSign:'=',AnalyticalResultValue:'0.02'})]);await replacement.publish();assert.equal((await w.lookupSystem('NY0000001')).observations[0].sample_id,'S2');assert.equal((await w.status()).national_unique_observations_ingested,'1');
   const conflicts=await w.beginImport('ucmr5','https://www.epa.gov/new.zip');await conflicts.batch([observation]);await assert.rejects(conflicts.batch([{...observation,data:{...observation.data,value:1}}]));await conflicts.fail('TEST_CONFLICT');assert.equal((await w.lookupSystem('NY0000001')).observations[0].sample_id,'S2');
+  const empty=await w.beginImport('ucmr5','https://www.epa.gov/empty.zip');await assert.rejects(empty.publish(),/EMPTY_SOURCE_IMPORT/);
+  status=await w.status();assert.equal(status.sources.find(s=>s.source==='ucmr5').latest_attempt.status,'failed');assert.equal(status.sources.find(s=>s.source==='ucmr5').latest_attempt.error_code,'EMPTY_SOURCE_IMPORT');
+  assert.equal((await w.lookupSystem('NY0000001')).observations[0].sample_id,'S2');
+  const retry=await w.beginImport('ucmr5','https://www.epa.gov/retry.zip');assert.ok(retry);await retry.fail('END_TEST');
  }finally{await pool.query('DROP SCHEMA IF EXISTS national_water CASCADE');await pool.end();}
 });

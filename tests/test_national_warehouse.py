@@ -4,6 +4,43 @@ from national import warehouse as W
 from national.warehouse import process_member,canonical_sql,status
 from botocore.exceptions import ClientError
 class WarehouseTests(unittest.TestCase):
+ def test_syr4_quoted_fields_short_dates_and_nondetect_units(self):
+  import csv,duckdb
+  with tempfile.TemporaryDirectory() as t:
+   p=pathlib.Path(t);f=p/'input.tsv'
+   with f.open('w',newline='') as out:
+    writer=csv.writer(out,delimiter='\t',quoting=csv.QUOTE_ALL)
+    writer.writerow(['PWSID','System Name','Analyte Name','Sample Collection Date','Value','Unit','Detect','Detection Limit Value','Detection Limit Unit','Sampling Point Type'])
+    writer.writerows([['AK2270312','Utility "A"\tNorth','RADIUM','31-AUG-16','','','0','1','PCI/L','EP'],['AK2270312','Utility "A"\tNorth','RADIUM','21-APR-15','0.188','PCI/L','1','','','EP']])
+   r=process_member(str(f),p/'x.parquet',p/'s.sqlite','syr4','test.txt')
+   self.assertEqual(r['raw_rows'],2);self.assertEqual(r['invalid_identity_date_rows'],0);self.assertEqual(r['eligible_source_rows'],2)
+   with sqlite3.connect(p/'s.sqlite') as db:rows=db.execute('SELECT pwsid,n,detects,nondetects,unit,first_date,last_date,min_detect,max_detect FROM summaries').fetchall()
+   self.assertEqual(rows,[('AK2270312',2,1,1,'PCI/L','2015-04-21','2016-08-31',0.188,0.188)])
+   with duckdb.connect() as db:self.assertEqual(db.execute('SELECT DISTINCT system_name FROM read_parquet(?)',[str(p/'x.parquet')]).fetchall(),[('Utility "A"\tNorth',)])
+ def test_date_and_bound_parsing_rejects_malformed_values(self):
+  with tempfile.TemporaryDirectory() as t:
+   p=pathlib.Path(t);f=p/'input.tsv'
+   header='PWSID\tAnalyte Name\tSample Collection Date\tValue\tUnit\tDetect\tDetection Limit Value\tDetection Limit Unit\n'
+   rows=['FL0000001\tARSENIC\t9/16/2009 0:00:00\t\tUG/L\t0\t1\tMG/L',
+         'FL0000001\tARSENIC\t2009-09-16 BAD\t2\tUG/L\t1\t1\tMG/L',
+         'FL0000001\tARSENIC\t2009-09-16\tbad\tUG/L\t0\t1\tMG/L',
+         'FL0000001\tARSENIC\t2/30/2009 0:00:00\t2\tUG/L\t1\t1\tMG/L']
+   f.write_text(header+'\n'.join(rows)+'\n')
+   r=process_member(str(f),p/'x.parquet',p/'s.sqlite','syr3','fixture')
+   self.assertEqual(r['eligible_source_rows'],1);self.assertEqual(r['invalid_identity_date_rows'],2)
+   with sqlite3.connect(p/'s.sqlite') as db:self.assertEqual(db.execute('SELECT unit,detects,nondetects,max_detect FROM summaries').fetchall(),[('MG/L',0,1,None)])
+ def test_syr3_ancillary_padding_is_exact_and_auditable(self):
+  with tempfile.TemporaryDirectory() as t:
+   p=pathlib.Path(t);f=p/'input.tsv'
+   header=['field'+str(n) for n in range(26)]+['Residual Field Free Chlorine mg/L','Residual Field Total Chlorine mg/L']
+   prefix=['preserved']*26
+   f.write_text('\t'.join(header)+'\n'+'\t'.join(prefix+[';'])+'\n')
+   path,count=W.prepare_member(str(f),'syr3','folder/alkalinity.txt')
+   self.assertEqual(count,1);self.assertEqual(pathlib.Path(path).read_text().splitlines()[1].split('\t'),prefix+[';',''])
+   self.assertEqual(f.read_text().splitlines()[1].split('\t'),prefix+[';'])
+   f.write_text('\t'.join(header)+'\n'+'\t'.join(prefix+['unexpected'])+'\n')
+   with self.assertRaisesRegex(ValueError,'field count'):W.prepare_member(str(f),'syr3','alkalinity.txt')
+   self.assertEqual(W.prepare_member(str(f),'syr3','other.txt'),(str(f),0))
  def test_ucmr_preserves_ids_nondetects_and_real_zero(self):
   with tempfile.TemporaryDirectory() as t:
    p=pathlib.Path(t);f=p/'input.tsv';header='PWSID\tPWSName\tContaminant\tCollectionDate\tAnalyticalResultValue\tUnits\tAnalyticalResultsSign\tMRL\tSampleID\tSamplePointType\n'
@@ -94,7 +131,7 @@ class HardenedWarehouseTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as t:
    p=pathlib.Path(t);archive=p/'official.zip'
    text='PWSID\tPWSName\tContaminant\tCollectionDate\tAnalyticalResultValue\tUnits\tAnalyticalResultsSign\tMRL\nCA0000001\tExample\tPFAS-A\t9/27/2023\t1\tug/L\t=\t0.003\n'
-   with zipfile.ZipFile(archive,'w') as z:z.writestr('ucmr5_all.txt',text)
+   with zipfile.ZipFile(archive,'w') as z:z.writestr('folder/ucmr5_all.txt',text)
    sha=W.digest(archive);item={'id':'ucmr5','family':'ucmr','url':'https://www.epa.gov/source.zip','catalogue_url':'https://www.epa.gov/catalogue'}
    client=MemoryS3();store=W.Store(client=client,bucket='test',max_total=1000000)
    old={**item,'schema':'occurrence-warehouse/1','sha256':sha,'distinct_source_rows':99,'raw_rows':99,'stored_bytes':100}
@@ -106,7 +143,8 @@ class HardenedWarehouseTests(unittest.TestCase):
     report=W.pws_report('CA0000001');self.assertEqual(report['summaries'][0]['max_detect'],1.0)
     # A schema migration must recalculate qualification without re-uploading
     # already retained source objects or consuming their storage a second time.
-    legacy={**receipt,'schema':'occurrence-warehouse/1'}
+    legacy=copy.deepcopy(receipt);legacy['schema']='occurrence-warehouse/1'
+    legacy['parts'][0]['member']='ucmr5_all.txt'
     client.put_object(Key='v1/latest/ucmr5.json',Body=json.dumps(legacy).encode())
     client.objects.pop('v2/latest/ucmr5.json')
     with mock.patch.object(store,'put',wraps=store.put) as uploaded:
@@ -114,6 +152,11 @@ class HardenedWarehouseTests(unittest.TestCase):
     updated=store.json('v2/latest/ucmr5.json')
     self.assertTrue(updated['reused_source_objects']);self.assertEqual(updated['eligible_source_records'],1)
     self.assertEqual([call.args[0] for call in uploaded.call_args_list],[updated['summary_key']])
+    # An unchanged ZIP must be requalified after a parser correction.
+    outdated=copy.deepcopy(updated);outdated['parser_profile']='old-parser'
+    client.put_object(Key='v2/latest/ucmr5.json',Body=json.dumps(outdated).encode())
+    with mock.patch.object(W,'process_member',wraps=W.process_member) as parsed:W.ingest(store,item)
+    parsed.assert_called_once();self.assertEqual(store.json('v2/latest/ucmr5.json')['parser_profile'],W.PARSER_PROFILES['ucmr'])
    self.assertIn('v1/latest/ucmr5.json',client.objects)
  def test_legacy_summaries_cannot_be_served_as_schema2(self):
   W.STATE['sources']={'old':{'id':'old','schema':'occurrence-warehouse/1','sha256':'abc','distinct_source_rows':300000000,'raw_rows':300000000,'stored_bytes':1}}

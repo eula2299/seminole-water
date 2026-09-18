@@ -83,6 +83,9 @@ def probe():
        src=root/'sample.tsv';src.write_text('\n'.join(lines)+'\n',encoding='utf-8')
        dest=root/(hashlib.sha256(name.encode()).hexdigest()+'.parquet')
        entry['schema_contract']=process_member(str(src),dest,root/'summary.sqlite',item['family'],name)
+       contract=entry['schema_contract']
+       if contract['invalid_identity_date_rows'] or not contract['eligible_source_rows']:
+        raise ValueError('Live sample did not produce qualified identity/date/measurement rows: '+name)
       headers.append(entry)
    return {**item,**receipt,'schemas':headers}
  with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
