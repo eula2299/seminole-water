@@ -156,3 +156,16 @@ interval after bounded retries. Existing parked read-timeout jobs are recovered
 as split parents with disjoint child intervals in the durable checkpoint. Failed
 checkpoint publication preserves the previous queue and counts. A single-day
 failure remains visible; it is never published as an empty result.
+
+## Incomplete-response recovery
+
+An HTTP 200 response can contain valid CSV rows followed by WQP's explicit
+`ERROR: INCOMPLETE DATA` footer. A live North Dakota request reproduced this
+on September 18, 2026. The reader rejects the entire prefix and subdivides the
+date interval just as it does for an exhausted transfer budget. A one-day
+failure remains visible. Other malformed rows still fail strict validation.
+
+Durable jobs parked by the earlier reader's generic malformed-row error are
+retried once with parser profile `wqx3-explicit-incomplete-footer-v2`. Their
+earlier error and attempt count remain in the checkpoint. The migration cannot
+reset failed jobs indefinitely or count any partial prefix as acquired data.

@@ -129,6 +129,22 @@ class WqpBackfillTests(unittest.TestCase):
         result = wqp.run(plan, self.root, max_rows=1, fetcher=self.fetcher(fixture(2)))
         self.assertEqual(result['partition_status_counts'], {'failed': 1})
 
+    def test_http_success_with_explicit_incomplete_footer_never_publishes_prefix(self):
+        data = fixture() + (wqp.INCOMPLETE_FOOTER + '\n').encode()
+        result = wqp.run(self.plan, self.root, fetcher=self.fetcher(data))
+        self.assertEqual(result['partition_status_counts'], {'pending': 2, 'split': 1})
+        self.assertEqual(result['actual_raw_result_rows'], 0)
+        self.assertEqual(list((self.root / 'environmental').iterdir()), [])
+        self.assertIn('explicitly marked', result['attempted_this_invocation'][0]['error'])
+
+    def test_incomplete_footer_on_one_day_remains_failed_and_unrelated_bad_rows_are_rejected(self):
+        for suffix in (wqp.INCOMPLETE_FOOTER, 'unexpected missing fields'):
+            with self.subTest(suffix=suffix), tempfile.TemporaryDirectory() as output:
+                plan = wqp.make_plan(['MN'], '2020-01-06', '2020-01-06')
+                result = wqp.run(plan, output, fetcher=self.fetcher(fixture() + (suffix + '\n').encode()))
+                self.assertEqual(result['partition_status_counts'], {'failed': 1})
+                self.assertEqual(result['actual_raw_result_rows'], 0)
+
     def test_plan_identity_cannot_change_in_place(self):
         wqp.run(self.plan, self.root, fetcher=self.fetcher())
         other = wqp.make_plan(['FL'], '2020-01-01', '2020-01-31')

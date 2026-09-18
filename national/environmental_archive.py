@@ -5,7 +5,7 @@ The serving index contains the latest reported result per location/analyte/unit/
 method/fraction within each partition. It never assigns a household or PWSID.
 """
 from __future__ import annotations
-import contextlib, copy, datetime as dt, gzip, hashlib, json, math, os, pathlib, shutil, sqlite3, tempfile, threading, time
+import contextlib, copy, datetime as dt, gzip, hashlib, json, math, os, pathlib, re, shutil, sqlite3, tempfile, threading, time
 from functools import lru_cache
 from . import wqp_backfill as Q
 
@@ -135,18 +135,27 @@ class EnvironmentalArchive:
         # Earlier releases parked read timeouts behind every unattempted year.
         # Preserve those failures as split parents and durably resume smaller,
         # disjoint date ranges. A timeout never becomes an empty success.
-        repairs=[]
+        repairs=[];retries=[]
         for ident,job in self.data['jobs'].items():
             error=job.get('error') or ''
             if job['status']=='failed' and error.startswith('Source transfer failed after ') and ('timed out' in error or 'total time budget' in error):
                 children=Q.split_partition(job['partition'])
                 if children:repairs.append((ident,children))
-        if not repairs:return
+            elif (job['status']=='failed' and job.get('parser_profile')!=Q.PARSER_PROFILE
+                    and re.fullmatch(r'Malformed WQX3 CSV row \d+\.',error)):
+                # Retry once under the reviewed footer contract. An unrelated
+                # malformed row still fails; never pad missing chemistry fields.
+                retries.append(ident)
+        if not repairs and not retries:return
         with self.lock:
             previous=self.data;self.data=copy.deepcopy(previous)
             for ident,children in repairs:
                 self.data['jobs'][ident].update(status='split',split_reason='upstream-timeout')
                 for child in children:self.data['jobs'].setdefault(child['id'],{'partition':child,'status':'pending','attempts':0})
+            for ident in retries:
+                job=self.data['jobs'][ident]
+                job.update(status='pending',previous_error=job.get('error'),previous_attempts=job['attempts'],
+                           attempts=0,parser_profile=Q.PARSER_PROFILE)
             try:self._save()
             except Exception:self.data=previous;raise
 
@@ -182,7 +191,7 @@ class EnvironmentalArchive:
                     self.store.put_json(base+'/manifest.json',manifest)
                 with self.lock:
                     previous=self.data;self.data=copy.deepcopy(previous)
-                    self.data['jobs'][ident]={'partition':part,'status':'complete' if manifest else 'split' if children else 'failed','attempts':job['attempts']+1,'error':failure,'manifest':manifest}
+                    self.data['jobs'][ident]={**{k:job[k] for k in ('previous_error','previous_attempts') if k in job},'partition':part,'status':'complete' if manifest else 'split' if children else 'failed','attempts':job['attempts']+1,'error':failure,'manifest':manifest,'parser_profile':Q.PARSER_PROFILE}
                     for child in children:self.data['jobs'].setdefault(child['id'],{'partition':child,'status':'pending','attempts':0})
                     try:self._save()
                     except Exception:self.data=previous;raise
