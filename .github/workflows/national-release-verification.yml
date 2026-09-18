@@ -65,6 +65,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: python -m pip install -r national/warehouse-requirements.txt
       - run: python national/catalog.py
       - uses: actions/upload-artifact@v4
         if: always()
