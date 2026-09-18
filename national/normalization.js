@@ -24,8 +24,7 @@ function normalize(source, kind, raw, provenance = {}) {
   if (!validPwsid(pwsid)) throw new Error('Invalid full federal PWSID');
   const common = {pwsid, source, raw_sha256:fingerprint(raw)};
   if (kind === 'system') {
-    if (!r.pwsname) throw new Error('Missing system name');
-    const data = {...common, name:r.pwsname, state:r.statecode || r.state || null,
+    const data = {...common, name:r.pwsname || pwsid, name_reported:!!r.pwsname, state:r.statecode || r.state || null,
       population_served:finiteNumber(r.populationservedcount), system_type:r.pwstypecode || null,
       active:r.pwsactivitycode === 'A', source_water_type:r.primarysourcecode || null,
       city:r.cityname || null, zip:r.zipcode || null, reporting_period:r.submissionyearquarter || null};

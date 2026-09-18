@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test');
 const assert=require('node:assert/strict');
-const {HTML,CLIENT,safeSourceUrl,readableDate,formatOccurrence,systemFacts,statusSummary,formatAnalyteSummary}=require('../national/ui');
+const {HTML,CLIENT,safeSourceUrl,readableDate,formatOccurrence,systemFacts,statusSummary,formatAnalyteSummary,archiveStatusSummary,formatArchiveSummary,matchedHealthContexts}=require('../national/ui');
 
 test('national client compiles without inline event handlers or unsafe HTML insertion',()=>{
   assert.doesNotThrow(()=>new Function(CLIENT));
@@ -61,6 +61,30 @@ test('complete contaminant summaries preserve detected zeros and exclude ND resu
   assert.equal(formatAnalyteSummary({minimum_detected:'3',maximum_detected:'2',unit:'µg/L'}).range,'Detected range not established');
 });
 
+test('archive counts remain exact and distinct from current observation counts',()=>{
+  assert.deepEqual(archiveStatusSummary({retained_source_records:'12345678901234567',eligible_source_records:'110000000',published_archives:6,ingestion_status:'in-progress'}),{retained:'12,345,678,901,234,567',eligible:'110,000,000',published:'6',status:'in progress'});
+  assert.equal(archiveStatusSummary({retained_source_records:Number.MAX_SAFE_INTEGER+1}).retained,'Unavailable');
+  assert.equal(archiveStatusSummary({}).retained,'Unavailable');
+});
+
+test('archive summaries preserve source and scope and quarantine invalid identity/date rows',()=>{
+  const raw={analyte:'Arsenic',unit:'µg/L',scope:'source-water',n:'25',detects:'20',nondetects:'5',first_date:'2012-01-01',last_date:'2019-12-31',min_detect:'0.1',max_detect:'2',source_id:'EPA-SYR4',invalid_identity_date:0};
+  const formatted=formatArchiveSummary(raw);
+  assert.equal(formatted.scope,'Source water');assert.equal(formatted.rawScope,'source-water');assert.equal(formatted.source,'EPA-SYR4');assert.equal(formatted.range,'0.1 – 2 µg/L');assert.equal(formatted.detects,'20');assert.equal(formatted.samples,'25');
+  assert.equal(formatArchiveSummary({...raw,invalid_identity_date:1}),null);
+  assert.equal(formatArchiveSummary({...raw,scope:'unclassified'}).scope,'Scope not established');
+  assert.equal(formatArchiveSummary({...raw,scope:'system-monitoring'}).scope,'System monitoring');
+});
+
+test('health context renders only source-backed contexts attached to actual returned analytes',()=>{
+  const context={matched:true,id:'arsenic',label:'Arsenic',summary:'Source-backed test explanation.',scope:'general-contaminant-information-not-household-risk',sources:[{title:'EPA',url:'https://www.epa.gov/ground-water-and-drinking-water'}]};
+  assert.deepEqual(matchedHealthContexts({health_context:[context]}),[]);
+  const data={occurrence:{summary:[{analytes:[{analyte:'Arsenic',health_context:context},{analyte:'Unmapped substance',health_context:{matched:false}}]}],records:[{contaminant:'ARSENIC',health_context:context}]},systems:[{archive:{summaries:[{analyte:'Invalid historical analyte',invalid_identity_date:1,health_context:context}]}}]};
+  const result=matchedHealthContexts(data);assert.equal(result.length,1);assert.deepEqual(result[0].analytes,['ARSENIC','Arsenic']);
+  assert.deepEqual(matchedHealthContexts({...data,supply:{type:'private-well'}}),[]);
+  assert.deepEqual(matchedHealthContexts({occurrence:{records:[{analyte:'Arsenic',health_context:{...context,sources:[{url:'javascript:alert(1)'}]}}]}}),[]);
+});
+
 test('official system fields retain zero violation values without declaring the water safe',()=>{
   const facts=systemFacts({PWSName:'Example Water',PopulationServedCount:'12000',PrimarySourceCode:'GW',PWS_TYPE_CODE:'CWS',PWSActivityCode:'A',QtrsWithViol:0,UnknownField:'ignored'});
   assert.deepEqual(facts,[{label:'System name',value:'Example Water'},{label:'Population served',value:'12,000'},{label:'Primary source',value:'Groundwater'},{label:'System type',value:'Community water system'},{label:'System status',value:'Active'},{label:'Quarters with violations',value:'0'}]);
@@ -100,25 +124,25 @@ test('browser client renders source summaries, reruns a chosen provider, and res
     addEventListener(name,fn){this.listeners[name]=fn;}
     focus(){}scrollIntoView(){}reportValidity(){return true;}
   }
-  const ids=['lookup-form','results','message','lookup-button','dataset-count','dataset-date','dataset-scope','coverage-note','dataset-details','supply-help'];
+  const ids=['lookup-form','results','message','lookup-button','dataset-count','dataset-date','dataset-scope','coverage-note','dataset-details','supply-help','archive-inventory','archive-count'];
   const elements=Object.fromEntries(ids.map(id=>['#'+id,new Element('div')]));
   const form=elements['#lookup-form'];form.elements=Object.fromEntries(['street','city','state','zip','supply_type','pwsid'].map(name=>[name,new Element('input')]));
   Object.assign(form.elements.street,{value:'123 Main St'});form.elements.city.value='Sanford';form.elements.state.value='FL';form.elements.supply_type.value='public';
-  const status={national_unique_observations_ingested:'8888888',last_ingested_at:'2026-09-17T12:00:00Z',datasets:[{source:'ucmr5',observation_count:'8888888',system_count:'4000',completed_at:'2026-09-17T12:00:00Z',latest_attempt:{status:'complete'}}]};
+  const status={national_unique_observations_ingested:'8888888',last_ingested_at:'2026-09-17T12:00:00Z',datasets:[{source:'ucmr5',observation_count:'8888888',system_count:'4000',completed_at:'2026-09-17T12:00:00Z',latest_attempt:{status:'complete'}}],historical_archive:{retained_source_records:'123456789',eligible_source_records:'120000000',published_archives:'6',ingestion_status:'running'}};
   const submitted=[];
   const context={document:{querySelector:selector=>elements[selector],createElement:tag=>new Element(tag)},URL,Date,BigInt,AbortSignal,AbortController,setTimeout,clearTimeout,window:{matchMedia:()=>({matches:true})},FormData:class {constructor(form){this.entries=Object.entries(form.elements).filter(([,v])=>!v.disabled).map(([k,v])=>[k,v.value]);}*[Symbol.iterator](){yield* this.entries;}},fetch:async(url,options)=>{
     if(url.endsWith('/status'))return {ok:true,json:async()=>status};
     const input=JSON.parse(options.body);submitted.push(input);const well=input.supply_type==='private-well';
-    return {ok:true,json:async()=>({address:{status:'matched',matched_address:'123 MAIN ST',precision:'address-range-interpolation-not-rooftop'},supply:{type:input.supply_type},provider:{candidates:well?[]:[{pwsid:'FL1234567',name:'Example Water',provenance:'modeled'}],user_selected_pwsid:input.pwsid||null},systems:well?[]:[{pwsid:'FL1234567',status:'records-returned',records:[{data:{PWSName:'Example Water',PopulationServedCount:'25000',QtrsWithViol:'0'}}],warehouse:{sources:[]}}],occurrence:{records:well?[]:[{pwsid:'FL1234567',analyte:'PFOS',value:null,reported_value:'',unit:'µg/L',censored:true,qualifier:'<',reporting_limit:0.004,sample_date:'2025-06-12'}],summary:well?[]:[{pwsid:'FL1234567',analytes:[{analyte:'PFOS',unit:'µg/L',sample_results:'130',non_detects:'130',first_sample:'2024-01-01',last_sample:'2025-12-31',minimum_detected:null,maximum_detected:null}],counts:{observation:'130'},truncated:{observations:true}}]},coverage:status,gaps:['No household sample supplied.'],audit:[],generated_at:'2026-09-17T12:00:00Z'})};
+    return {ok:true,json:async()=>({address:{status:'matched',matched_address:'123 MAIN ST',precision:'address-range-interpolation-not-rooftop'},supply:{type:input.supply_type},provider:{candidates:well?[]:[{pwsid:'FL1234567',name:'Example Water',provenance:'modeled'}],user_selected_pwsid:input.pwsid||null},systems:well?[]:[{pwsid:'FL1234567',status:'records-returned',records:[{data:{PWSName:'Example Water',PopulationServedCount:'25000',QtrsWithViol:'0'}}],warehouse:{sources:[]},archive:{status:'ready',summaries:[{analyte:'Arsenic',scope:'source-water',source_id:'EPA-SYR4',unit:'µg/L',n:500,detects:400,nondetects:100,min_detect:0.1,max_detect:3,first_date:'2012-01-01',last_date:'2019-12-31',invalid_identity_date:0},{analyte:'Quarantined analyte',scope:'system-monitoring',source_id:'EPA-SYR4',invalid_identity_date:1}],sources:[{id:'EPA-SYR4',url:'https://www.epa.gov/safewater',retrieved_at:'2026-09-17T12:00:00Z'}]}}],occurrence:{records:well?[]:[{pwsid:'FL1234567',analyte:'PFOS',value:null,reported_value:'',unit:'µg/L',censored:true,qualifier:'<',reporting_limit:0.004,sample_date:'2025-06-12'}],summary:well?[]:[{pwsid:'FL1234567',analytes:[{analyte:'PFOS',unit:'µg/L',sample_results:'130',non_detects:'130',first_sample:'2024-01-01',last_sample:'2025-12-31',minimum_detected:null,maximum_detected:null}],counts:{observation:'130'},truncated:{observations:true}}]},coverage:status,gaps:['No household sample supplied.'],audit:[],generated_at:'2026-09-17T12:00:00Z'})};
   }};
   vm.runInNewContext(CLIENT,context);
   const settle=async()=>{for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));};
-  await settle();assert.equal(elements['#dataset-count'].textContent,'8,888,888');assert.match(elements['#dataset-details'].textContent,/4,000 systems/);
+  await settle();assert.equal(elements['#dataset-count'].textContent,'8,888,888');assert.match(elements['#dataset-details'].textContent,/4,000 systems/);assert.equal(elements['#archive-count'].textContent,'123,456,789');assert.equal(elements['#archive-inventory'].hidden,false);
   form.listeners.submit({preventDefault(){}});await settle();
   assert.match(elements['#results'].textContent,/Contaminant summary/);
   assert.match(elements['#results'].textContent,/130 stored sample results/);
   assert.match(elements['#results'].textContent,/Reporting limit: 0.004 µg\/L/);
-  assert.match(elements['#results'].textContent,/No quantified detection reported/);
+  assert.match(elements['#results'].textContent,/No quantified detection reported/);const archiveCard=elements['#results'].children.find(x=>x.children?.some(y=>y.tag==='h2'&&y.textContent==='Historical federal archive'));assert.ok(archiveCard);assert.match(archiveCard.textContent,/EPA-SYR4/);assert.match(archiveCard.textContent,/Source water/);assert.doesNotMatch(archiveCard.textContent,/Quarantined analyte/);
   function find(element,predicate){if(predicate(element))return element;for(const child of element.children){const match=find(child,predicate);if(match)return match;}return null;}
   const candidate=find(elements['#results'],x=>x.tag==='button'&&x.textContent==='View this system');assert.ok(candidate);candidate.listeners.click();await settle();
   assert.equal(submitted.at(-1).pwsid,'FL1234567');assert.match(elements['#results'].textContent,/Selected for this report/);

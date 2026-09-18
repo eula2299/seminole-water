@@ -1,5 +1,6 @@
 'use strict';
 const {EvidenceError,validateInput,fingerprint,censusMatch,boundaryCandidates,echoRows,queryId,REGION_CODES}=require('./evidence');
+const {getHealthContext}=require('./health_context');
 const ENDPOINTS=Object.freeze({
   census:'https://geocoding.geo.census.gov/geocoder/geographies/address',
   boundaries:'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Water_System_Boundaries/FeatureServer/0/query',
@@ -31,7 +32,7 @@ function transport({fetchImpl=globalThis.fetch,timeoutMs=6500,maxBytes=2000000}=
  };
 }
 function query(base,params){const u=new URL(base);for(const[k,v]of Object.entries(params))if(v!==''&&v!=null)u.searchParams.set(k,String(v));return u.toString();}
-function createEngine({request=transport(),warehouse=null,now=()=>new Date(),deadlineMs=20000}={}){
+function createEngine({request=transport(),warehouse=null,archive=null,now=()=>new Date(),deadlineMs=20000}={}){
  async function lookup(raw){
   const input=validateInput(raw),signal=AbortSignal.timeout(deadlineMs),audit=[];
   async function stage(name,fn){const started=now().toISOString();try{signal.throwIfAborted();const value=await fn();audit.push({agent:name,type:'deterministic',status:'completed',retrieved_at:started});return value;}catch(e){audit.push({agent:name,type:'deterministic',status:'unavailable',retrieved_at:started,error_code:e.code||'SOURCE_UNAVAILABLE'});return null;}}
@@ -51,8 +52,10 @@ function createEngine({request=transport(),warehouse=null,now=()=>new Date(),dea
    for(let i=0;i<selected.length;i+=2)await Promise.all(selected.slice(i,i+2).map(async pwsid=>{
     const liveJob=stage(`public-system:${pwsid}`,async()=>{let data=await get(query(ENDPOINTS.systems,{output:'JSON',p_pid:pwsid,queryset:10,responseset:10}));const qid=queryId(data);if(qid)data=await get(query(ENDPOINTS.query,{output:'JSON',qid,pageno:1}));return echoRows(data,pwsid);});
     const storedJob=warehouse?stage(`stored-evidence:${pwsid}`,()=>warehouse.lookupSystem(pwsid,{limit:120})):null;
-    const [records,stored]=await Promise.all([liveJob,storedJob]);
-    systems.push({pwsid,status:records===null?'unavailable':records.length?'records-returned':'no-matching-records',scope:'public-system-not-household',records:(records||[]).map(data=>({data,sha256:fingerprint(data)})),source:SOURCE_DOCS.systems,warehouse:stored});
+    const archiveJob=archive?stage(`historical-archive:${pwsid}`,()=>archive.lookupSystem(pwsid)):null;
+    const [records,stored,historical]=await Promise.all([liveJob,storedJob,archiveJob]);
+    if(historical?.summaries)historical.summaries=historical.summaries.map(r=>({...r,health_context:getHealthContext(r.analyte)}));
+    systems.push({pwsid,status:records===null?'unavailable':records.length?'records-returned':'no-matching-records',scope:'public-system-not-household',records:(records||[]).map(data=>({data,sha256:fingerprint(data)})),source:SOURCE_DOCS.systems,warehouse:stored,archive:historical});
    }));
   }
   systems.sort((a,b)=>a.pwsid.localeCompare(b.pwsid));
@@ -63,15 +66,22 @@ function createEngine({request=transport(),warehouse=null,now=()=>new Date(),dea
   if(selected.length>4)gaps.push('More than four candidate providers: confirm a full PWSID before retrieving federal records.');
   const conflict=!!input.pwsid&&ids.length>0&&!ids.includes(input.pwsid);if(conflict)gaps.push('The supplied PWSID conflicts with the mapped candidate set.');
   if(input.pwsid)gaps.push('The PWSID is user-selected, not independently verified as connected to this household.');
-  const occurrenceRecords=systems.flatMap(s=>(s.warehouse?.observations||[]).map(r=>({...r,pwsid:s.pwsid,scope:'public-system-not-household'})));
+  const occurrenceRecords=systems.flatMap(s=>(s.warehouse?.observations||[]).map(r=>({...r,pwsid:s.pwsid,scope:'public-system-not-household',health_context:getHealthContext(r.analyte)})));
   const storedStates=systems.map(s=>s.warehouse?.status||'unavailable');
   const failed=storedStates.some(s=>!['records-returned','no-matching-records'].includes(s));
   const occurrenceStatus=input.supply_type==='private-well'?'not-applicable':!warehouse?'not-connected':!systems.length?'provider-unresolved':occurrenceRecords.length?(failed?'partial':'records-returned'):storedStates.every(s=>s==='not-connected')?'not-connected':failed?'unavailable':'no-records-returned';
-  const occurrence={status:occurrenceStatus,records:occurrenceRecords,summary:systems.map(s=>({pwsid:s.pwsid,status:s.warehouse?.status||'unavailable',analytes:s.warehouse?.observation_summary||[],counts:s.warehouse?.counts,truncated:s.warehouse?.truncated})),household_sample:false};
+  const occurrence={status:occurrenceStatus,records:occurrenceRecords,summary:systems.map(s=>({pwsid:s.pwsid,status:s.warehouse?.status||'unavailable',analytes:(s.warehouse?.observation_summary||[]).map(r=>({...r,health_context:getHealthContext(r.analyte)})),counts:s.warehouse?.counts,truncated:s.warehouse?.truncated})),household_sample:false};
   const next_steps=input.supply_type==='private-well'?[{title:'Test your own well',description:'A state-certified laboratory can test a sample from your well. Nearby environmental measurements cannot establish the chemistry of this well.',url:'https://www.cdc.gov/drinking-water/safety/guidelines-for-testing-well-water.html'},{title:'Find a certified drinking-water laboratory',url:'https://www.epa.gov/dwlabcert/contact-information-certification-programs-and-certified-laboratories-drinking-water'}]:[{title:'Confirm the provider on your water bill',description:'Mapped service areas may overlap and include modeled boundaries. Use your full public water system ID to narrow the records.'},{title:'Find your annual water quality report',url:'https://www.epa.gov/ccr'},{title:'Check current notices with your utility',description:'Federal compliance and sampling records are historical and do not replace current boil-water or do-not-drink notices.'}];
   return {schema_version:'national-evidence/2',generated_at:now().toISOString(),release_state:'incomplete-national-coverage',address:address||{status:'unavailable'},supply:{type:input.supply_type,evidence:'user-reported'},provider:{status:boundaryStatus,candidates,user_selected_pwsid:input.pwsid||null,conflict,household_connection_verified:false,nearby_screen:{method:'30m-envelope-not-a-calibrated-geocode-error-bound',status:nearbyStatus,candidates:nearby||[]}},systems,occurrence,next_steps,household_safety:{status:'not-determined',measured_concentrations:[]},gaps,audit,models:{nationally_validated_models:0,predictive_inference_enabled:false},coverage:await status(),sources:SOURCE_DOCS};
  }
- function status(){const base={supported_input_regions:REGION_CODES,coverage_verified:false,national_unique_observations_ingested:'0',count_scope:'new national layer only; not the existing county dataset or publisher catalogs',household_laboratory_data:'not-connected',occurrence_database:'not-connected',advisories:'not-connected',lead_line_inventories:'not-connected',well_registries:'not-connected',ucmr:'not-connected-to-serving',wqp:'not-connected-to-serving',usgs:'not-connected-to-serving',billion_row_load_test:'not-run',deployment:'integrated-national-route'};return warehouse?warehouse.status().then(data=>({...base,...data,occurrence_database:data.status,datasets:data.sources||[],last_ingested_at:(data.sources||[]).map(s=>s.completed_at).filter(Boolean).sort().at(-1)||null,ucmr:(data.sources||[]).some(s=>s.source==='ucmr5'&&s.run_id)?'connected':'awaiting-import'})).catch(()=>({...base,national_unique_observations_ingested:null,occurrence_database:'unavailable'})):base;}
+ function status(){
+  const base={supported_input_regions:REGION_CODES,coverage_verified:false,national_unique_observations_ingested:'0',count_scope:'new national layer only; not the existing county dataset or publisher catalogs',household_laboratory_data:'not-connected',occurrence_database:'not-connected',advisories:'not-connected',lead_line_inventories:'not-connected',well_registries:'not-connected',ucmr:'not-connected-to-serving',wqp:'not-connected-to-serving',usgs:'not-connected-to-serving',billion_row_load_test:'not-run',deployment:'integrated-national-route'};
+  if(!warehouse&&!archive)return base;
+  const current=warehouse?warehouse.status().then(data=>({...base,...data,occurrence_database:data.status,datasets:data.sources||[],last_ingested_at:(data.sources||[]).map(s=>s.completed_at?new Date(s.completed_at).toISOString():null).filter(Boolean).sort().at(-1)||null,ucmr:(data.sources||[]).some(s=>s.source==='ucmr5'&&s.run_id)?'connected':'awaiting-import'})).catch(()=>({...base,national_unique_observations_ingested:null,occurrence_database:'unavailable'})):Promise.resolve(base);
+  const historical=archive?archive.status().catch(()=>({ingestion_status:'unavailable',retained_source_records:null})):Promise.resolve(null);
+  return Promise.all([current,historical]).then(([data,history])=>({...data,historical_archive:history}));
+ }
+
  return {lookup,status};
 }
 module.exports={ENDPOINTS,SOURCE_DOCS,safeTarget,transport,query,createEngine};

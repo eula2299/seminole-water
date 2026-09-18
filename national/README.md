@@ -60,6 +60,22 @@ unconfigured. Production requires a working PostgreSQL connection and enough
 storage for the requested import; authentication continues using its separate
 existing tables.
 
+## Historical federal archive
+
+`NATIONAL_ARCHIVE_URL` connects the gateway to the private historical EPA
+warehouse. UCMR and Six-Year Review archives retain source records and provenance
+in object storage with per-system summaries. This count is displayed separately
+from PostgreSQL observations because UCMR5 overlaps; totals are never added.
+Only corrected schema version 2 summaries are eligible for display. Records with
+invalid dates, unidentified units, or unqualified values are excluded from
+numerical summaries, while raw source records remain auditable. Source-water
+summaries remain distinct from system monitoring and household evidence.
+
+`national/warehouse.Dockerfile` builds that separate service. It requires
+AWS_S3_BUCKET_NAME, AWS_ENDPOINT_URL, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+and AWS_DEFAULT_REGION supplied as service variables. No credentials belong in
+the repository. Stored byte budgets include old and unfinished uploads.
+
 ## Environmental archive
 
 `wqp_backfill.py` supports WQP WQX3 state/year acquisition, bounded downloads,

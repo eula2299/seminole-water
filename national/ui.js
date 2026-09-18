@@ -66,6 +66,27 @@ function formatAnalyteSummary(analyte){
   else if(min!==null&&min!==undefined||max!==null&&max!==undefined)range='Detected range not established';
   return {name:String(analyte.analyte||'Unnamed analyte'),range,samples:count(analyte.sample_results),nonDetects:count(analyte.non_detects),first:readableDate(analyte.first_sample),last:readableDate(analyte.last_sample)};
 }
+function archiveStatusSummary(archive){
+  const count=value=>(typeof value==='number'?Number.isSafeInteger(value)&&value>=0:typeof value==='string'&&/^\d+$/.test(value))?BigInt(value).toLocaleString('en-US'):'Unavailable';
+  return {retained:count(archive?.retained_source_records),eligible:count(archive?.eligible_source_records),published:count(archive?.published_archives),status:typeof archive?.ingestion_status==='string'?archive.ingestion_status.replaceAll('-',' '):'Not supplied'};
+}
+function formatArchiveSummary(record){
+  if(Number(record.invalid_identity_date)>0)return null;
+  const value=formatAnalyteSummary({analyte:record.analyte,unit:record.unit,sample_results:record.n,non_detects:record.nondetects,minimum_detected:record.min_detect,maximum_detected:record.max_detect,first_sample:record.first_date,last_sample:record.last_date});
+  return {...value,source:String(record.source_id||'Source ID not supplied'),scope:record.scope==='source-water'?'Source water':record.scope==='system-monitoring'?'System monitoring':'Scope not established',rawScope:String(record.scope||'unspecified'),detects:/^\d+$/.test(String(record.detects))?BigInt(record.detects).toLocaleString('en-US'):'Not supplied'};
+}
+function matchedHealthContexts(data){
+  if(data.supply?.type==='private-well')return [];
+  const rows=[...(data.occurrence?.records||[]),...(data.occurrence?.summary||[]).flatMap(group=>group.analytes||[]),...(data.systems||[]).flatMap(system=>(system.archive?.summaries||[]).filter(row=>!(Number(row.invalid_identity_date)>0)))];
+  const matched=new Map();
+  for(const row of rows){const context=row.health_context,name=row.analyte||row.contaminant||row.contaminant_name;
+    if(!name||context?.matched!==true||!context.id||!context.label||!context.summary||context.scope!=='general-contaminant-information-not-household-risk')continue;
+    const sources=(context.sources||[]).filter(source=>safeSourceUrl(source.url));if(!sources.length)continue;
+    const current=matched.get(context.id);if(current){if(!current.analytes.includes(String(name)))current.analytes.push(String(name));}
+    else matched.set(context.id,{...context,sources,analytes:[String(name)]});
+  }
+  return [...matched.values()];
+}
 
 function nationalClient(){
   const form=document.querySelector('#lookup-form'),results=document.querySelector('#results'),message=document.querySelector('#message'),submit=document.querySelector('#lookup-button');
@@ -85,6 +106,7 @@ function nationalClient(){
   function facts(parent,pairs){if(!pairs.length)return;const dl=node('dl',undefined,'facts');for(const {label,value}of pairs){const row=node('div');row.append(node('dt',label),node('dd',value));dl.append(row);}parent.append(dl);}
   function resource(parent,label,url,description){const item=node('div',undefined,'resource');item.append(link(label,url));if(description)item.append(node('p',description,'muted'));parent.append(item);}
   function sourceDetails(parent,data,label){const details=node('details');details.append(node('summary',label||'View source records'));details.append(node('pre',JSON.stringify(data,null,2)));parent.append(details);}
+  function makeTable(parent,title,headers){const wrapper=node('div',undefined,'table-scroll');wrapper.tabIndex=0;wrapper.setAttribute('role','region');wrapper.setAttribute('aria-label',title+'; scroll horizontally on smaller screens');const table=node('table');table.append(node('caption',title));const head=node('thead'),hr=node('tr');for(const text of headers){const th=node('th',text);th.scope='col';hr.append(th);}head.append(hr);table.append(head);const body=node('tbody');table.append(body);wrapper.append(table);parent.append(wrapper);return body;}
   function updateStatus(status){
     const summary=statusSummary(status);
     document.querySelector('#dataset-count').textContent=summary.count;
@@ -95,6 +117,9 @@ function nationalClient(){
     const datasets=Array.isArray(status.datasets)?status.datasets:Object.entries(status.datasets||{}).map(([name,value])=>typeof value==='object'?{name,...value}:{name,status:value});
     if(datasets.length){for(const dataset of datasets){const row=node('div',undefined,'dataset');row.append(node('strong',dataset.name||dataset.source||dataset.id||'Dataset'));const detail=[];const state=dataset.latest_attempt?.status??dataset.status;if(state)detail.push(String(state).replaceAll('-',' '));for(const [label,count]of [['observations',dataset.observation_count??dataset.unique_observations],['systems',dataset.system_count],['violations',dataset.violation_count]])if(count!==undefined&&/^\d+$/.test(String(count)))detail.push(BigInt(count).toLocaleString('en-US')+' '+label);if(dataset.observation_count===undefined&&dataset.unique_observations===undefined){const count=dataset.unique_records??dataset.row_count??dataset.records??dataset.count;if(count!==undefined&&/^\d+$/.test(String(count)))detail.push(BigInt(count).toLocaleString('en-US')+' records');}const date=dataset.completed_at??dataset.last_ingested_at??dataset.updated_at??dataset.retrieved_at;if(date)detail.push('updated '+readableDate(date));row.append(node('p',detail.join(' · ')||'Count and freshness not supplied.','muted'));container.append(row);}}
     else paragraph(container,'Per-source counts are not available in this status response.');
+    const archive=status.historical_archive,archivePanel=document.querySelector('#archive-inventory');
+    archivePanel.hidden=!archive;
+    if(archive){const summary=archiveStatusSummary(archive);document.querySelector('#archive-count').textContent=summary.retained;const detail=node('div',undefined,'dataset');detail.append(node('strong','Historical federal archive'));paragraph(detail,summary.eligible+' source records eligible for summaries · '+summary.published+' published archives','muted');paragraph(detail,'Ingestion status: '+summary.status,'muted');paragraph(detail,'Archive source records may overlap current observations. These counts are not added together and are not a count of independent samples.','muted');container.append(detail);}
   }
   async function loadStatus(){
     try{const response=await fetch('/api/national/status',{signal:AbortSignal.timeout(10000),cache:'no-store'});if(!response.ok)throw new Error('Status unavailable');updateStatus(await response.json());}
@@ -150,7 +175,6 @@ function nationalClient(){
     const box=card('Reported water measurements','3 · Results, units, and sample dates');
     if(!records.length&&!groups.length){paragraph(box,occurrence.status==='unavailable'?'The measurement source is unavailable. No concentration finding was made.':'No measured concentrations were returned for this lookup. This does not mean contaminants were absent.');return;}
     paragraph(box,'These are public water system samples, not samples from your home. A detected range summarizes the reported samples; it is not a household exposure estimate or a safety limit.','muted');
-    function makeTable(parent,title,headers){const wrapper=node('div',undefined,'table-scroll');wrapper.tabIndex=0;wrapper.setAttribute('role','region');wrapper.setAttribute('aria-label',title+'; scroll horizontally on smaller screens');const table=node('table');table.append(node('caption',title));const head=node('thead'),hr=node('tr');for(const text of headers){const th=node('th',text);th.scope='col';hr.append(th);}head.append(hr);table.append(head);const body=node('tbody');table.append(body);wrapper.append(table);parent.append(wrapper);return body;}
     for(const group of groups){
       const body=makeTable(box,'Contaminant summary · '+group.pwsid,['Contaminant','Detected range','Sample results','Below reporting limit','Sampling period']);
       for(const analyte of group.analytes){const value=formatAnalyteSummary(analyte),row=node('tr'),period=node('td');period.append(node('span',value.first),node('br'),node('span','to '+value.last));row.append(node('td',value.name),node('td',value.range),node('td',value.samples),node('td',value.nonDetects),period);body.append(row);}
@@ -168,6 +192,41 @@ function nationalClient(){
     }
     if(occurrence.summary)sourceDetails(box,occurrence.summary,'Dataset scope and measurement summary');
   }
+  function renderArchive(data){
+    if(data.supply?.type==='private-well')return;
+    const systems=(data.systems||[]).filter(system=>system.archive);
+    if(!systems.length)return;
+    const box=card('Historical federal archive','Earlier source records');
+    paragraph(box,'Historical programs are shown by source and sampling scope. These source-derived records are not independent household samples; overlapping archives are not combined with the current measurement summaries.','muted');
+    for(const system of systems){
+      const archive=system.archive,records=(archive.summaries||[]).map(formatArchiveSummary).filter(Boolean);
+      const section=node('article',undefined,'system');section.append(node('h3','System '+system.pwsid));
+      if(!records.length)paragraph(section,archive.status==='unavailable'?'The historical archive is unavailable for this lookup.':'No eligible historical summary was returned for this system.');
+      else {
+        const body=makeTable(section,'Historical records · '+system.pwsid,['Contaminant / source','Sampling scope','Detected range','Source records','Detections / non-detections','Sampling period']);
+        for(const record of records){const row=node('tr'),name=node('td',record.name),scope=node('td',record.scope),detections=node('td',record.detects+' / '+record.nonDetects),period=node('td');name.append(node('p',record.source,'muted'));scope.append(node('p',record.rawScope,'muted'));period.append(node('span',record.first),node('br'),node('span','to '+record.last));row.append(name,scope,node('td',record.range),node('td',record.samples),detections,period);body.append(row);}
+        paragraph(section,'Source-water results describe the sampled source, not treated water at your tap. System-monitoring results also do not establish household exposure. Rows with an unspecified scope retain that uncertainty.','muted');
+      }
+      if((archive.summaries||[]).some(record=>Number(record.invalid_identity_date)>0))paragraph(section,'Summaries containing invalid identity or date records were excluded.','muted');
+      if(archive.truncated===true||archive.truncated&&Object.values(archive.truncated).some(value=>value===true))paragraph(section,'The historical response was limited; additional archive summaries may exist.','muted');
+      for(const source of archive.sources||[]){const url=source.catalogue_url||source.url;if(url)resource(section,'Archive source: '+String(source.id||'Source ID not supplied'),url,'Retrieved: '+readableDate(source.retrieved_at));}
+      sourceDetails(section,{status:archive.status,sources:archive.sources||[],truncated:archive.truncated},'Archive provenance and retrieval details');box.append(section);
+    }
+  }
+  function renderHealthContext(data){
+    const contexts=matchedHealthContexts(data);if(!contexts.length)return;
+    const box=card('What these contaminants can mean','General health context');
+    paragraph(box,'These explanations match contaminants named in the returned records. A listed contaminant may have been below the reporting limit. The records do not establish your exposure or predict a health outcome.','muted');
+    for(const context of contexts){
+      const item=node('details');item.append(node('summary',context.label));
+      paragraph(item,'Named in these records: '+context.analytes.join(', '),'muted');
+      paragraph(item,context.summary);
+      if(context.what_result_means)paragraph(item,context.what_result_means);
+      if(context.practical_step){const next=node('p');next.append(node('strong','Practical next step: '),node('span',context.practical_step));item.append(next);}
+      for(const source of context.sources)resource(item,source.title||'Official health information',source.url);
+      if(context.reviewed_at)paragraph(item,'Reference reviewed: '+readableDate(context.reviewed_at),'muted');box.append(item);
+    }
+  }
   function renderNextSteps(data){
     const isWell=data.supply?.type==='private-well';
     const box=card(isWell?'What to do for your private well':'Your next steps',isWell?'2 · Check the water you actually use':'Make the results useful');
@@ -178,7 +237,7 @@ function nationalClient(){
     results.replaceChildren();
     const title=node('h2','Your water records','results-title');title.tabIndex=-1;title.id='results-heading';results.append(title);
     const summary=node('div',undefined,'finding');summary.append(node('strong','Your household water safety is not determined by this lookup.'));paragraph(summary,'Review the provider match, the actual sample dates, and the evidence available for your location. No household water sample was authenticated in this lookup.');results.append(summary);
-    renderAddress(data);renderSystems(data);renderOccurrence(data);renderNextSteps(data);
+    renderAddress(data);renderSystems(data);renderOccurrence(data);renderArchive(data);renderHealthContext(data);renderNextSteps(data);
     const gaps=card('What is still unknown','Evidence gaps');list(gaps,data.gaps||['Source coverage has not been established.']);
     const checks=node('details');checks.append(node('summary','Source checks and report details'));const audit=data.audit||[];for(const item of audit)paragraph(checks,String(item.agent).replaceAll('-',' ')+': '+String(item.status).replaceAll('-',' ')+' · retrieved '+readableDate(item.retrieved_at),'muted');paragraph(checks,'Report generated: '+readableDate(data.generated_at)+'. Retrieval date and sample date are different.','muted');sourceDetails(checks,data,'View complete machine-readable response');gaps.append(checks);
     if(data.coverage)updateStatus(data.coverage);
@@ -204,7 +263,7 @@ function nationalClient(){
   loadStatus();
 }
 
-const CLIENT="'use strict';\n"+[safeSourceUrl,readableDate,formatOccurrence,systemFacts,statusSummary,formatAnalyteSummary].map(fn=>fn.toString()).join('\n')+'\n('+nationalClient.toString()+')();\n';
+const CLIENT="'use strict';\n"+[safeSourceUrl,readableDate,formatOccurrence,systemFacts,statusSummary,formatAnalyteSummary,archiveStatusSummary,formatArchiveSummary,matchedHealthContexts].map(fn=>fn.toString()).join('\n')+'\n('+nationalClient.toString()+')();\n';
 const REGION_NAMES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',DC:'District of Columbia',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming',AS:'American Samoa',GU:'Guam',MP:'Northern Mariana Islands',PR:'Puerto Rico',VI:'U.S. Virgin Islands'};
 const HTML=`<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -226,9 +285,9 @@ const HTML=`<!doctype html>
 </div><p id="supply-help" class="field-note">If the mapped provider is unclear, compare the candidates with your water bill.</p>
 <details><summary>Know your public water system ID?</summary><label for="pwsid">Full system ID (PWSID)<input id="pwsid" name="pwsid" maxlength="9" minlength="9" pattern="[A-Za-z0-9]{9}" autocapitalize="characters" spellcheck="false" placeholder="Nine letters and numbers" aria-describedby="pwsid-help"></label><p id="pwsid-help" class="field-note">Find this ID on your utility’s annual water report. You can search by ID and state without entering an address. Private wells do not have a public system ID.</p></details>
 <button id="lookup-button" class="lookup-button" type="submit">Find my water records</button><p id="message" class="message" role="status" aria-live="polite" tabindex="-1"></p><p class="privacy">Your address is sent to the U.S. Census geocoder and its coordinates to EPA’s service-area map. The national lookup does not save your address or send it to an AI model.</p></form>
-<aside class="dataset-panel" aria-labelledby="dataset-title"><h2 id="dataset-title" class="dataset-heading">What powers this lookup</h2><div><strong id="dataset-count" class="dataset-number">Loading…</strong><p class="dataset-caption">stored national observations</p></div><div><strong>Latest ingestion</strong><p id="dataset-date" class="muted">Checking…</p></div><p id="dataset-scope" class="muted">Checking the live dataset inventory.</p><p id="coverage-note" class="muted">Record availability varies by location. A missing record does not establish that water is safe.</p><details><summary>Dataset coverage and freshness</summary><div id="dataset-details"></div></details></aside></div>
+<aside class="dataset-panel" aria-labelledby="dataset-title"><h2 id="dataset-title" class="dataset-heading">What powers this lookup</h2><div><strong id="dataset-count" class="dataset-number">Loading…</strong><p class="dataset-caption">stored national observations</p></div><div id="archive-inventory" hidden><strong id="archive-count" class="dataset-number">Unavailable</strong><p class="dataset-caption">archived source records · separate count</p></div><div><strong>Latest ingestion</strong><p id="dataset-date" class="muted">Checking…</p></div><p id="dataset-scope" class="muted">Checking the live dataset inventory.</p><p id="coverage-note" class="muted">Record availability varies by location. A missing record does not establish that water is safe.</p><details><summary>Dataset coverage and freshness</summary><div id="dataset-details"></div></details></aside></div>
 <div id="results" aria-busy="false"></div>
 <section class="how" aria-label="How to use this lookup"><div><span class="step-number">01 / MATCH</span><h2>Confirm your provider</h2><p>A mapped service area offers a candidate. Your water bill or utility can confirm your actual connection.</p></div><div><span class="step-number">02 / READ</span><h2>Follow the evidence</h2><p>See the result, its units, the sampling date, and its source. Utility records describe the system, not your individual tap.</p></div><div><span class="step-number">03 / ACT</span><h2>Get the next answer</h2><p>Find official reports and certified testing resources. For current advisories, check your utility or health department.</p></div></section>
 </main><footer><span>Independent public-interest tool. Household water safety cannot be certified from these records.</span><nav aria-label="Footer links"><a href="/contact.html">Contact</a><a href="/feedback.html">Feedback</a></nav></footer></div></body></html>`;
 
-module.exports={HTML,CLIENT,safeSourceUrl,readableDate,formatOccurrence,systemFacts,statusSummary,formatAnalyteSummary};
+module.exports={HTML,CLIENT,safeSourceUrl,readableDate,formatOccurrence,systemFacts,statusSummary,formatAnalyteSummary,archiveStatusSummary,formatArchiveSummary,matchedHealthContexts};
