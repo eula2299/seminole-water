@@ -1,6 +1,6 @@
 """Discover official occurrence archives; catalogue sizes are never ingested counts."""
 from __future__ import annotations
-import concurrent.futures, hashlib, html.parser, io, json, os, pathlib, re, tempfile, urllib.parse, urllib.request, zipfile
+import concurrent.futures, hashlib, html.parser, io, json, os, pathlib, re, tempfile, time, urllib.parse, urllib.request, zipfile
 PAGES={
  'ucmr':'https://www.epa.gov/dwucmr/occurrence-data-unregulated-contaminant-monitoring-rule',
  'syr4':'https://www.epa.gov/dwsixyearreview/six-year-review-4-compliance-monitoring-data-2012-2019',

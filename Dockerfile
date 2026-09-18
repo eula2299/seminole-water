@@ -5,5 +5,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
 COPY --chown=node:node . .
 ENV NODE_ENV=production
+ENV PORT=8080
+EXPOSE 8080
 USER node
 CMD ["node", "platform.js"]

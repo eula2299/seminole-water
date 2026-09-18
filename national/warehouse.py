@@ -93,12 +93,13 @@ def process_member(source_file,parquet_path,summary_db,family,member):
  finally:con.close()
 
 class Store:
- def __init__(self,client=None,bucket=None,max_total=None):
+ def __init__(self,client=None,bucket=None,max_total=None,provider=None):
   import boto3
   from botocore.config import Config
   self.bucket=bucket or os.environ['AWS_S3_BUCKET_NAME']
   self.client=client or boto3.client('s3',endpoint_url=os.environ['AWS_ENDPOINT_URL'],region_name=os.environ.get('AWS_DEFAULT_REGION','auto'),config=Config(signature_version='s3v4',connect_timeout=10,read_timeout=90,retries={'max_attempts':3},s3={'addressing_style':'path'}))
   self.max_total=MAX_TOTAL if max_total is None else max_total
+  self.provider=provider or os.environ.get('WAREHOUSE_STORAGE_PROVIDER','s3')
   self.lease=None;self.lease_lock=threading.RLock();self.pending_bytes=0
  def json(self,key,with_etag=False):
   from botocore.exceptions import ClientError
@@ -115,7 +116,10 @@ class Store:
   # Count the entire bucket, including superseded archive keys, unpublished
   # uploads, historical object versions, and unfinished multipart parts.
   # Permissions/API failures fail closed rather than inventing a zero size.
-  versioned=self.client.get_bucket_versioning(Bucket=self.bucket).get('Status') in ('Enabled','Suspended')
+  # Railway documents that its buckets do not implement object versioning.
+  # This explicit deployment setting is not an error-triggered fallback.
+  # https://docs.railway.com/storage-buckets#s3-compatibility (reviewed 2026-09-18)
+  versioned=False if self.provider=='railway' else self.client.get_bucket_versioning(Bucket=self.bucket).get('Status') in ('Enabled','Suspended')
   operation='list_object_versions' if versioned else 'list_objects_v2'
   field='Versions' if versioned else 'Contents'
   total=0;objects=0;multipart=0
@@ -183,6 +187,8 @@ class Store:
   body=json.dumps(value,allow_nan=False).encode();self.write(key,body,len(body),'application/json')
  def put(self,key,path):
   with open(path,'rb') as body:self.write(key,body,path.stat().st_size)
+ def verify_size(self,key,size):
+  if int(self.client.head_object(Bucket=self.bucket,Key=key)['ContentLength'])!=size:raise ValueError('Retained object size differs from its receipt')
  def get(self,key,path,sha):
   if path.exists() and digest(path)==sha:return
   path.parent.mkdir(parents=True,exist_ok=True);temporary=path.with_suffix('.part')
@@ -245,13 +251,30 @@ def ingest(store,item):
     parts.append(part);text.unlink();log('member-processed',source=item['id'],member=name,rows=part['distinct_source_rows'])
   if not parts:raise ValueError('No sample tables matched the validated schema')
   db=sqlite3.connect(summary);db.execute('CREATE INDEX IF NOT EXISTS summaries_pws ON summaries(pwsid)');db.commit();db.close()
+  # Rebuild qualified summaries from the freshly verified source without
+  # duplicating immutable raw data already retained under an older schema.
+  # Parquet schema stays explicit; serving reads only the rebuilt summary.
+  previous={p['member']:p for p in (existing or {}).get('parts',[])}
+  reusable=bool(existing and existing.get('sha256')==receipt['sha256'] and previous and len(previous)==len(parts) and all(p['member'] in previous and p['raw_rows']==previous[p['member']].get('raw_rows') and p['distinct_source_rows']==previous[p['member']].get('distinct_source_rows') for p in parts))
+  archive_key=base+'/original.zip'
+  if reusable:
+   archive_key=existing.get('archive_key','v1/data/'+receipt['sha256']+'/original.zip')
+   store.verify_size(archive_key,receipt['archive_bytes'])
+   for part in parts:
+    old=previous[part['member']];store.verify_size(old['key'],old['bytes'])
+    part.update(key=old['key'],sha256=old['sha256'],bytes=old['bytes'],parquet_schema=old.get('parquet_schema',existing['schema']))
+  else:
+   for part in parts:part['parquet_schema']=VERSION
+  receipt.update(archive_key=archive_key,reused_source_objects=reusable)
   receipt.update(parts=parts,skipped_members=skipped,raw_rows=sum(x['raw_rows'] for x in parts),distinct_source_rows=sum(x['distinct_source_rows'] for x in parts),eligible_source_records=sum(x['eligible_source_rows'] for x in parts),summary_key=base+'/summary.sqlite',summary_sha256=digest(summary))
   receipt['stored_bytes']=receipt['archive_bytes']+summary.stat().st_size+sum(x['bytes'] for x in parts)
   with store.publication_lock():
    metadata_size=len(json.dumps(receipt,allow_nan=False).encode())
-   store.ensure_capacity(receipt['stored_bytes']+2*metadata_size+4096)
-   store.put(base+'/original.zip',archive)
-   for part in parts:store.put(part['key'],work/pathlib.PurePosixPath(part['key']).name)
+   additional=summary.stat().st_size if reusable else receipt['stored_bytes']
+   store.ensure_capacity(additional+2*metadata_size+4096)
+   if not reusable:
+    store.put(archive_key,archive)
+    for part in parts:store.put(part['key'],work/pathlib.PurePosixPath(part['key']).name)
    store.put(receipt['summary_key'],summary)
    store.put_json(base+'/receipt.json',receipt)
    store.put_json('v2/latest/'+item['id']+'.json',receipt)

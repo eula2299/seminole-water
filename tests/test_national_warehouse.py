@@ -52,6 +52,7 @@ class MemoryS3:
   self.versions.append({'Key':Key,'Size':len(body),'VersionId':str(self.serial)})
   return {'ETag':etag}
  def download_file(self,bucket,key,path):pathlib.Path(path).write_bytes(self.objects[key][0])
+ def head_object(self,Key,**kwargs):return {'ContentLength':len(self.objects[Key][0])}
 
 class HardenedWarehouseTests(unittest.TestCase):
  def setUp(self):self.saved=copy.deepcopy(W.STATE)
@@ -83,6 +84,12 @@ class HardenedWarehouseTests(unittest.TestCase):
    with self.assertRaisesRegex(ValueError,'budget'):first.put_json('too-large',{'text':'x'*10000})
   self.assertNotIn('too-large',client.objects)
   with second.publication_lock():second.put_json('after-release',{'ok':True})
+ def test_railway_provider_uses_documented_unversioned_inventory_without_hiding_other_failures(self):
+  client=MemoryS3();client.get_bucket_versioning=mock.Mock(side_effect=RuntimeError('unsupported'))
+  client.put_object(Key='retained',Body=b'12345')
+  self.assertEqual(W.Store(client=client,bucket='test',provider='railway').inventory()['bytes'],5)
+  client.get_bucket_versioning.assert_not_called()
+  with self.assertRaises(RuntimeError):W.Store(client=client,bucket='test',provider='s3').inventory()
  def test_same_raw_archive_is_rebuilt_when_legacy_schema_changes(self):
   with tempfile.TemporaryDirectory() as t:
    p=pathlib.Path(t);archive=p/'official.zip'
@@ -97,6 +104,16 @@ class HardenedWarehouseTests(unittest.TestCase):
     W.ingest(store,item)
     receipt=store.json('v2/latest/ucmr5.json');self.assertEqual(receipt['schema'],W.VERSION);self.assertEqual(receipt['eligible_source_records'],1)
     report=W.pws_report('CA0000001');self.assertEqual(report['summaries'][0]['max_detect'],1.0)
+    # A schema migration must recalculate qualification without re-uploading
+    # already retained source objects or consuming their storage a second time.
+    legacy={**receipt,'schema':'occurrence-warehouse/1'}
+    client.put_object(Key='v1/latest/ucmr5.json',Body=json.dumps(legacy).encode())
+    client.objects.pop('v2/latest/ucmr5.json')
+    with mock.patch.object(store,'put',wraps=store.put) as uploaded:
+     W.ingest(store,item)
+    updated=store.json('v2/latest/ucmr5.json')
+    self.assertTrue(updated['reused_source_objects']);self.assertEqual(updated['eligible_source_records'],1)
+    self.assertEqual([call.args[0] for call in uploaded.call_args_list],[updated['summary_key']])
    self.assertIn('v1/latest/ucmr5.json',client.objects)
  def test_legacy_summaries_cannot_be_served_as_schema2(self):
   W.STATE['sources']={'old':{'id':'old','schema':'occurrence-warehouse/1','sha256':'abc','distinct_source_rows':300000000,'raw_rows':300000000,'stored_bytes':1}}

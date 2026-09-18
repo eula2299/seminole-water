@@ -1,0 +1,52 @@
+name: National production startup
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - 'national/**'
+      - 'package.json'
+      - '.github/workflows/national-startup.yml'
+permissions:
+  contents: read
+jobs:
+  container-startup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact production image
+        run: docker build -t water-national .
+      - name: Start without production credentials
+        run: docker run -d --name water-smoke -p 8080:8080 water-national
+      - name: Verify new and preserved routes
+        run: |
+          python3 <<'PY'
+          import urllib.request,urllib.error,json,time
+          for attempt in range(30):
+            try:
+              with urllib.request.urlopen('http://127.0.0.1:8080/healthz',timeout=3) as r: assert r.status==200
+              break
+            except Exception:
+              if attempt==29:raise
+              time.sleep(1)
+          for path in ['/','/seminole','/api/auth/me','/api/community/config','/api/national/status']:
+            with urllib.request.urlopen('http://127.0.0.1:8080'+path,timeout=5) as r:
+              body=r.read();assert r.status==200
+              if path=='/':assert b'Check your address' in body
+              if path=='/seminole':assert b'Seminole' in body
+              if path=='/api/national/status':
+                status=json.loads(body)
+                assert status['occurrence_database']=='not-connected'
+                assert status['historical_archive'] is None
+                assert status['coverage_verified'] is False
+              print(path,r.status,len(body))
+          for path in ['/api/impact','/api/community/impact']:
+            try:urllib.request.urlopen('http://127.0.0.1:8080'+path,timeout=5);raise AssertionError('Removed route restored')
+            except urllib.error.HTTPError as e:assert e.code==404
+          PY
+      - name: Container logs
+        if: always()
+        run: docker logs water-smoke
+      - name: Cleanup
+        if: always()
+        run: docker rm -f water-smoke || true
