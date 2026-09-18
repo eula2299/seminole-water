@@ -1,0 +1,45 @@
+name: National live acceptance
+on:
+  push:
+    branches: [main, national-coverage-recovery-2026-09-18]
+    paths: ['national/**', 'tests/national*', '.github/workflows/national-live-acceptance.yml']
+  pull_request:
+    paths: ['national/**', 'tests/national*', '.github/workflows/national-live-acceptance.yml']
+permissions:
+  contents: read
+concurrency:
+  group: national-live-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  production-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Read current production evidence without residential addresses
+        run: |
+          python - <<'PY'
+          import json, pathlib, urllib.request, datetime
+          results = {'checked_at': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'checks': {}}
+          for path in ['/healthz', '/api/national/status']:
+              try:
+                  req = urllib.request.Request('https://www.ismywaterok.com'+path, headers={'User-Agent':'IsMyWaterOK-Release-Verification/1','Accept':'application/json'})
+                  with urllib.request.urlopen(req, timeout=45) as response:
+                      body = response.read(4_000_001)
+                      if len(body)>4_000_000: raise ValueError('Response exceeded verification budget')
+                      results['checks'][path] = {'status':response.status,'body':json.loads(body)}
+              except Exception as e:
+                  results['checks'][path] = {'error':str(e)}
+          pathlib.Path('national-production-evidence.json').write_text(json.dumps(results,indent=2))
+          print(json.dumps(results,indent=2))
+          assert all(c.get('status')==200 for c in results['checks'].values()), 'Production health or evidence unavailable'
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: national-production-evidence
+          path: national-production-evidence.json
+          retention-days: 7
