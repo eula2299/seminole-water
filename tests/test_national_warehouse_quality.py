@@ -26,4 +26,4 @@ class QualityTests(unittest.TestCase):
   self.assertEqual(r['identity_date_valid_rows'],1);self.assertEqual(rows[0]['min_detect'],2)
  def test_parser_versions_do_not_overwrite_cache_snapshots(self):
   self.assertNotEqual(summary_path('a','b',1),summary_path('a','b',2))
-if __name__=='__main__':unittest.main()"}
+if __name__=='__main__':unittest.main()
