@@ -38,6 +38,12 @@ atomically switches a source pointer after validation. Failed imports leave the
 previous source active. The status endpoint reports counts from active imports
 and the latest attempt, with source timestamps and archive hashes.
 
+A persisted database-capacity failure is checked before the next automatic
+download. Imports remain paused while allocated database bytes meet the configured
+ceiling and resume when capacity is available. Existing published evidence remains
+readable; object-store acquisition uses its own budget. This does not hide a failed
+bulk compliance import or treat it as an absence of violations.
+
 The application checks for source refreshes on startup and hourly; sources
 checked within seven days are skipped. `NATIONAL_SYNC_ENABLED=false` disables
 background imports. `NATIONAL_MAX_DATABASE_BYTES` defaults to 3,000,000,000 to

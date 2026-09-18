@@ -3,7 +3,7 @@ const {test}=require('node:test');const assert=require('node:assert/strict');
 const {mkdtemp,rm,writeFile}=require('node:fs/promises');const {join}=require('node:path');const {tmpdir}=require('node:os');const {spawnSync}=require('node:child_process');
 const {normalize,date,identifyMember}=require('../national/normalization');
 const {createWarehouse}=require('../national/warehouse');
-const {importArchive,approved,discoverUcmr}=require('../national/sync');
+const {importArchive,approved,discoverUcmr,syncSource}=require('../national/sync');
 const sample={PWSID:'NY0000001',PWSName:'Fixture utility',FacilityID:'001',SamplePointID:'EP1',SamplePointType:'EP',SampleID:'S1',CollectionDate:'1/15/2025',Contaminant:'PFOA',MRL:'0.004',Units:'µg/L',MethodID:'EPA 533',AnalyticalResultsSign:'<',AnalyticalResultValue:'',State:'NY'};
 test('real EPA UCMR plural qualifier, CP1252 unit and blank nondetect never become zero',()=>{const r=normalize('ucmr5','observation',sample);assert.equal(r.pwsid,'NY0000001');assert.equal(r.data.value,null);assert.equal(r.data.censored,true);assert.equal(r.data.reporting_limit,0.004);assert.equal(r.data.unit,'µg/L');assert.equal(r.data.analytical_method,'EPA 533');});
 test('explicit UCMR censor bound remains distinct from method reporting limit',()=>{const r=normalize('ucmr5','observation',{...sample,AnalyticalResultValue:'1',MRL:'10'});assert.equal(r.data.reported_bound,1);assert.equal(r.data.reporting_limit,10);assert.equal(r.data.value,null);});
@@ -18,11 +18,19 @@ test('UCMR discovery selects whole dataset, excluding duplicate state and method
 test('archive streams CP1252 rows, ignores companion tables, validates completion',async()=>{const dir=await mkdtemp(join(tmpdir(),'national-test-'));try{const file=join(dir,'fixture.zip');const script=`import zipfile,sys,json\nr=json.loads(sys.argv[2])\nwith zipfile.ZipFile(sys.argv[1],'w') as z:\n z.writestr('UCMR5_All.txt',('\\t'.join(r)+'\\r\\n'+'\\t'.join(r.values())+'\\r\\n').encode('cp1252'))\n z.writestr('UCMR5_ZIPCodes.txt','PWSID\\tZIP\\nNY0000001\\t10001\\n')\n`;const result=spawnSync('python3',['-c',script,file,JSON.stringify(sample)]);assert.equal(result.status,0,result.stderr?.toString());const batches=[];const meta=await importArchive(file,'ucmr5',{batch:async r=>batches.push(r)},{batchSize:1});assert.equal(meta.source_rows,1);assert.equal(batches[0][0].data.censored,true);assert.equal(batches[0][0].data.unit,'µg/L');}finally{await rm(dir,{recursive:true,force:true});}});
 test('malformed or unexpected ZIP cannot publish an empty success',async()=>{const dir=await mkdtemp(join(tmpdir(),'national-test-'));try{const file=join(dir,'fixture.zip');spawnSync('python3',['-c',"import zipfile,sys\nwith zipfile.ZipFile(sys.argv[1],'w') as z:z.writestr('other.csv','wrong,header\\na,b\\n')",file]);await assert.rejects(importArchive(file,'ucmr5',{batch:async()=>{}}),/ARCHIVE_PARSE_FAILED/);}finally{await rm(dir,{recursive:true,force:true});}});
 // Real PostgreSQL integration is intentionally opt-in; use a dedicated test database.
+test('persisted capacity failure pauses before downloading and resumes when capacity changes',async()=>{
+ let available=false,attempts=0;const events=[];
+ const warehouse={status:async()=>({sources:[{source:'sdwis-violations',latest_attempt:{status:'failed',error_code:'DATABASE_STORAGE_BUDGET_EXCEEDED'}}]}),importCapacity:async()=>({can_import:available,bytes:3000000000,maximum_bytes:available?4000000000:3000000000}),beginImport:async()=>{attempts++;return null;}};
+ const options={warehouse,fetchImpl:async()=>{throw new Error('Unexpected download');},log:e=>events.push(e)};
+ assert.equal((await syncSource('sdwis-violations',options)).status,'storage-paused');assert.equal(attempts,0);assert.equal(events[0].event,'source-capacity-paused');
+ available=true;assert.equal((await syncSource('sdwis-violations',options)).status,'already-running');assert.equal(attempts,1);
+});
 test('Postgres atomic snapshots, idempotency, lock, query, counts and failure retention',{skip:!process.env.TEST_DATABASE_URL},async()=>{
  const {Pool}=require('pg');const pool=new Pool({connectionString:process.env.TEST_DATABASE_URL,max:5,statement_timeout:20000});
  const w=createWarehouse({pool});
  try{
   await pool.query('DROP SCHEMA IF EXISTS national_water CASCADE');await w.initialize();
+  const capacity=await w.importCapacity();assert.equal(capacity.can_import,true);assert.ok(capacity.bytes>0);
   const a=await w.beginImport('ucmr5','https://www.epa.gov/fixture.zip');assert.ok(a);
   const locked=await w.beginImport('ucmr5','https://www.epa.gov/fixture.zip');assert.equal(locked,null);
   const observation=normalize('ucmr5','observation',sample);
