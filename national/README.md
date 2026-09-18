@@ -81,6 +81,10 @@ invalid dates, unidentified units, or unqualified values are excluded from
 numerical summaries, while raw source records remain auditable. Source-water
 summaries remain distinct from system monitoring and household evidence.
 
+The [SYR2 Access importer](SYR2_ARCHIVE.md) also acquires the six EPA archives
+covering 1998–2005, including the publisher's corrected nitrate database. Export
+counts must match original table counts before publication.
+
 `national/warehouse.Dockerfile` builds that separate service. It requires
 AWS_S3_BUCKET_NAME, AWS_ENDPOINT_URL, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
 and AWS_DEFAULT_REGION supplied as service variables. No credentials belong in

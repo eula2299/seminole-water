@@ -8,11 +8,13 @@ import contextlib, datetime as dt, hashlib, io, json, os, pathlib, re, shutil, s
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 try:
  from .catalog import discover, download
+ from .syr2 import chemical, export_mdb
 except ImportError:
  from catalog import discover, download
+ from syr2 import chemical, export_mdb
 
 VERSION='occurrence-warehouse/2'
-PARSER_PROFILES={'ucmr':'ucmr-tab-bound-v2','syr3':'syr3-date-bound-v2','syr4':'syr4-quoted-microbial-v3'}
+PARSER_PROFILES={'ucmr':'ucmr-tab-bound-v2','syr2':'syr2-access-bound-v1','syr3':'syr3-date-bound-v2','syr4':'syr4-quoted-microbial-v3'}
 ROOT=pathlib.Path(os.environ.get('WAREHOUSE_DIR','/tmp/water-warehouse'))
 MAX_ARCHIVE=int(os.environ.get('WAREHOUSE_MAX_ARCHIVE_BYTES','2000000000'))
 MAX_TOTAL=int(os.environ.get('WAREHOUSE_MAX_TOTAL_BYTES','20000000000'))
@@ -44,13 +46,16 @@ def column(columns,*options,required=False):
   if option in index:return 'NULLIF(TRIM('+quote(index[option])+"), '')"
  if required:raise ValueError('Missing required source column: '+','.join(options))
  return 'NULL::VARCHAR'
-def mapping(columns,family):
+def mapping(columns,family,source_metadata=None):
  c=lambda *o,**kw:column(columns,*o,**kw)
+ if family=='syr2':
+  info=chemical((source_metadata or {}).get('table',''))
+  return dict(pwsid=c('pwsid',required=True),name=c('pwsname'),analyte=f"CASE WHEN {c('chemid',required=True)}={lit(info['code'])} THEN {lit(info['analyte'])} ELSE NULL END",date=c('date',required=True),value=c('value',required=True),unit=c('units',required=True),qualifier=c('detect',required=True),limit='NULL::VARCHAR',limit_unit=c('units'),sample=c('sampleid'),point=c('samplepointid'),point_type='NULL::VARCHAR',facility='NULL::VARCHAR',source_type='NULL::VARCHAR',origin=c('id'),presence='NULL::VARCHAR')
  if family=='ucmr':
   return dict(pwsid=c('pwsid',required=True),name=c('pwsname'),analyte=c('contaminant',required=True),date=c('collectiondate',required=True),value=c('analyticalresultvalue',required=True),unit=c('units',required=True),qualifier=c('analyticalresultssign',required=True),limit=c('mrl'),limit_unit=c('units'),sample=c('sampleid'),point=c('samplepointid'),point_type=c('samplepointtype'),facility=c('facilityid'),source_type=c('ucmr1sampletype'),origin=c('sampleid'),presence='NULL::VARCHAR')
  return dict(pwsid=c('pwsid',required=True),name=c('systemname','pwsname'),analyte=c('analytename','contaminant',required=True),date=c('samplecollectiondate','collectiondate',required=True),value=c('value','analyticalresultvalue',required=True),unit=c('unit','units',required=True),qualifier=c('detect',required=True),limit=c('detectionlimitvalue'),limit_unit=c('detectionlimitunit'),sample=c('sampleid'),point=c('samplingpointid','samplepointid'),point_type=c('samplingpointtype','samplepointtype'),facility=c('waterfacilityid','facilityid'),source_type=c('sourcetypecode'),origin=c('sixyearid','sixyearreviewid','sampleid'),presence=c('presenceindicatorcode'))
-def canonical_sql(columns,family):
- m=mapping(columns,family)
+def canonical_sql(columns,family,source_metadata=None):
+ m=mapping(columns,family,source_metadata)
  q=m['qualifier']
  qualifier=(f"CASE {q} WHEN '<' THEN '<' WHEN '=' THEN '=' ELSE {q} END" if family=='ucmr' else f"CASE {q} WHEN '0' THEN '<' WHEN '1' THEN '=' ELSE {q} END")
  # Match complete, documented date formats; never turn a malformed timestamp
@@ -101,20 +106,21 @@ def prepare_member(source_file,family,member):
    dst.write('\t'.join(row)+'\n')
  return str(target),padded
 
-def process_member(source_file,parquet_path,summary_db,family,member):
+def process_member(source_file,parquet_path,summary_db,family,member,source_metadata=None):
  import duckdb
  con=duckdb.connect()
  con.execute("SET memory_limit='1800MB'; SET threads=2; SET preserve_insertion_order=false")
  con.execute('SET temp_directory='+lit(str(parquet_path.parent/'spill')))
  try:
   source_file,padded=prepare_member(source_file,family,member)
-  quoting=lit('"' if family=='syr4' else '')
+  quoting=lit('"' if family in ('syr2','syr4') else '')
   con.execute("CREATE VIEW raw_input AS SELECT * FROM read_csv("+lit(source_file)+", delim='\t', header=true, all_varchar=true, quote="+quoting+", escape="+quoting+", strict_mode=true, max_line_size=1048576)")
   columns=[x[0] for x in con.execute('SELECT * FROM raw_input LIMIT 0').description]
-  sql=canonical_sql(columns,family)
+  sql=canonical_sql(columns,family,source_metadata)
   con.execute('CREATE TABLE normalized AS '+sql)
   raw_count=con.execute('SELECT COUNT(*) FROM normalized').fetchone()[0]
   if not raw_count:raise ValueError('Empty sample member')
+  if family=='syr2' and raw_count!=(source_metadata or {}).get('source_table_rows'):raise ValueError('SYR2 export row count differs from source table count')
   con.execute('CREATE TABLE distinct_rows AS SELECT * FROM normalized QUALIFY ROW_NUMBER() OVER (PARTITION BY source_record_sha256)=1')
   count,invalid,eligible=con.execute('SELECT COUNT(*),COUNT(*) FILTER (WHERE NOT COALESCE(identity_date_valid,false)),COUNT(*) FILTER (WHERE summary_eligible) FROM distinct_rows').fetchone()
   con.execute("COPY (SELECT * FROM distinct_rows ORDER BY pwsid,sample_date DESC) TO "+lit(parquet_path)+" (FORMAT PARQUET, COMPRESSION ZSTD, ROW_GROUP_SIZE 65536)")
@@ -269,7 +275,8 @@ def ingest(store,item):
    log('unchanged',source=item['id']);return
   base='v2/data/'+receipt['sha256']+'/'+profile;summary=work/'summary.sqlite';parts=[];skipped=[];expanded=0
   with zipfile.ZipFile(archive) as z:
-   members=[m for m in z.infolist() if not m.is_dir() and m.filename.lower().endswith(('.txt','.tsv','.csv'))]
+   extensions=('.mdb',) if item['family']=='syr2' else ('.txt','.tsv','.csv')
+   members=[m for m in z.infolist() if not m.is_dir() and m.filename.lower().endswith(extensions)]
    for member in members:
     name=pathlib.PurePosixPath(member.filename).name;low=name.lower()
     if item['family']=='ucmr' and not re.fullmatch(r'ucmr[1-5]_all\.txt',low):skipped.append({'member':name,'reason':'ancillary-not-observation-table'});continue
@@ -278,16 +285,20 @@ def ingest(store,item):
     if expanded>MAX_EXPANDED:raise ValueError('Expanded archive budget exceeded')
     raw=work/'member.raw';text=work/'member.tsv'
     with z.open(member) as src,open(raw,'wb') as dst:shutil.copyfileobj(src,dst,1024*1024)
-    encoding='utf-8-sig'
-    try:
-     with open(raw,'r',encoding=encoding) as src,open(text,'w',encoding='utf-8',newline='') as dst:
-      while chunk:=src.read(1024*1024):dst.write(chunk)
-    except UnicodeDecodeError:
-     encoding='cp1252'
-     with open(raw,'r',encoding=encoding) as src,open(text,'w',encoding='utf-8',newline='') as dst:
-      while chunk:=src.read(1024*1024):dst.write(chunk)
+    encoding='utf-8-sig';source_metadata=None
+    if item['family']=='syr2':
+     source_metadata=export_mdb(raw,text);encoding='mdbtools-utf8-export'
+    else:
+     try:
+      with open(raw,'r',encoding=encoding) as src,open(text,'w',encoding='utf-8',newline='') as dst:
+       while chunk:=src.read(1024*1024):dst.write(chunk)
+     except UnicodeDecodeError:
+      encoding='cp1252'
+      with open(raw,'r',encoding=encoding) as src,open(text,'w',encoding='utf-8',newline='') as dst:
+       while chunk:=src.read(1024*1024):dst.write(chunk)
     raw.unlink();partpath=work/(hashlib.sha256(member.filename.encode()).hexdigest()[:16]+'.parquet')
-    part=process_member(str(text),partpath,summary,item['family'],member.filename);part['encoding']=encoding;part['key']=base+'/'+partpath.name
+    part=process_member(str(text),partpath,summary,item['family'],member.filename,source_metadata);part['encoding']=encoding;part['key']=base+'/'+partpath.name
+    if source_metadata:part['source_table']=source_metadata
     parts.append(part);text.unlink();log('member-processed',source=item['id'],member=name,rows=part['distinct_source_rows'])
   if not parts:raise ValueError('No sample tables matched the validated schema')
   db=sqlite3.connect(summary);db.execute('CREATE INDEX IF NOT EXISTS summaries_pws ON summaries(pwsid)');db.commit();db.close()
