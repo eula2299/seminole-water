@@ -25,11 +25,13 @@ const allowedCities = [
   'Geneva','Chuluota','Heathrow','Winter Park','Maitland','Orlando','Apopka'
 ];
 const rateBuckets = new Map();
+let coreReady = false;
 
 const child = fork(path.join(__dirname, 'server.js'), [], {
   env: { ...process.env, PORT: String(CORE_PORT) },
   stdio: 'inherit'
 });
+child.on('message', message => { if (message?.type === 'core-ready') coreReady = true; });
 child.on('exit', code => {
   if (code !== 0) console.error(`Core water service exited with code ${code}`);
   process.exit(code || 0);
@@ -222,7 +224,7 @@ const server = http.createServer(async (req, res) => {
   const pathname = target.pathname;
   if(['/api/service-areas/sync','/api/epa/reload','/api/local/reload'].includes(pathname)) return json(res,404,{error:'Not found.'});
   if(pathname==='/api/diagnostics/geocode'&&!rateAllowed(req,'diagnostic-geocode',10,60000))return json(res,429,{error:'Please try again later.'});
-  if (pathname === '/healthz' && req.method === 'GET') return json(res,200,{process:'up',release:'national-integration',commit:process.env.RAILWAY_GIT_COMMIT_SHA||null});
+  if (pathname === '/healthz' && req.method === 'GET') return json(res,coreReady?200:503,{process:'up',core:coreReady?'ready':'starting',release:'national-integration',commit:process.env.RAILWAY_GIT_COMMIT_SHA||null});
   if (['/','/national','/national/','/national-client.js'].includes(pathname) || pathname.startsWith('/api/national/')) {
     national.server.emit('request',req,res);
     return;

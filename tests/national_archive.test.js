@@ -1,6 +1,12 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const {createArchive}=require('../national/archive');
+test('environmental archive preserves its separate scope and validates coordinates',async()=>{
+ let url;const archive=createArchive({baseUrl:'http://localhost:8080',fetchImpl:async u=>{url=u;return Response.json({status:'records-returned',household_sample_verified:false,records:[{site_id:'USGS-X',value_text:'<0.005',pwsid:null}]});}});
+ const result=await archive.lookupEnvironment({latitude:44.5,longitude:-93.5});assert.equal(url.pathname,'/environment/near');assert.equal(url.searchParams.get('lat'),'44.5');assert.equal(result.records[0].value_text,'<0.005');assert.equal(result.household_sample_verified,false);
+ await assert.rejects(archive.lookupEnvironment({latitude:NaN,longitude:0}),/coordinates/);
+ await assert.rejects(createArchive({baseUrl:'http://localhost',fetchImpl:async()=>Response.json({records:[],household_sample_verified:true})}).lookupEnvironment({latitude:0,longitude:0}),/SCHEMA/);
+});
 test('archive is optional and rejects unsafe configured HTTP destinations',()=>{
  assert.equal(createArchive({baseUrl:''}),null);
  for(const baseUrl of ['file:///tmp/data','http://public.example','https://user:pass@example.com'])assert.throws(()=>createArchive({baseUrl}));

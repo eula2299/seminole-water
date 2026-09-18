@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'Dockerfile'
+      - 'platform.js'
+      - 'server.js'
       - 'national/**'
       - 'package.json'
       - '.github/workflows/national-startup.yml'

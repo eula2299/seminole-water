@@ -23,6 +23,7 @@ MAX_CLIENTS=int(os.environ.get('WAREHOUSE_MAX_CLIENTS','16'))
 STORAGE_RETRY_SECONDS=max(5,int(os.environ.get('WAREHOUSE_RETRY_SECONDS','60')))
 LEASE_SECONDS=1800
 LOCK=threading.RLock()
+ENVIRONMENTAL_ARCHIVE=None
 STATE={'schema':VERSION,'sources':{},'errors':{},'ingestion_status':'starting','current_archive':None,'target_minimum_records':200000000,'trained_prediction_models':0,'persistent_storage_bytes':None,'storage_accounting_checked_at':None}
 
 def utc(): return dt.datetime.now(dt.timezone.utc).isoformat()
@@ -348,7 +349,8 @@ def pws_report(pwsid):
  return {'schema':VERSION,'pwsid':pwsid,'status':'records-returned' if summaries else 'response-truncated' if matching else 'qualified-archives-unavailable' if not receipts else 'no-records-in-loaded-archives','summaries':summaries,'sources':sources,'archives_checked':len(receipts),'legacy_archives_excluded':len(loaded)-len(receipts),'matching_summary_groups':matching,'returned_summary_groups':len(summaries),'truncated':truncated or omitted_raw>0,'omitted_large_latest_records':omitted_raw,'maximum_summary_groups':MAX_SUMMARIES,'scope':'public-system-samples-not-household','current_safety':'not-determined','cross_source_sample_independence_certified':False,'historical_data':True,'coverage_complete':False}
 
 def loop(stop=None,store_factory=Store,discover_fn=discover):
- stop=stop or threading.Event();store=None
+ global ENVIRONMENTAL_ARCHIVE
+ stop=stop or threading.Event();store=None;next_catalogue=0
  ROOT.mkdir(parents=True,exist_ok=True)
  while not stop.is_set():
   try:
@@ -360,6 +362,21 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
    with LOCK:STATE['ingestion_status']='storage-unavailable';STATE['errors']['storage']=type(e).__name__
    log('storage-unavailable',error=type(e).__name__)
    stop.wait(STORAGE_RETRY_SECONDS);continue
+  if ENVIRONMENTAL_ARCHIVE is None and os.environ.get('WAREHOUSE_WQP_ENABLED')=='true':
+   try:
+    from .environmental_archive import EnvironmentalArchive
+    ENVIRONMENTAL_ARCHIVE=EnvironmentalArchive(store,ROOT/'environmental')
+   except Exception as e:log('environmental-restore-error',error=str(e)[:250])
+  if time.monotonic()<next_catalogue:
+   if ENVIRONMENTAL_ARCHIVE:
+    try:more=ENVIRONMENTAL_ARCHIVE.step()
+    except Exception as e:
+     ENVIRONMENTAL_ARCHIVE.phase='acquisition-paused';ENVIRONMENTAL_ARCHIVE.error=str(e)[:250];more=False
+     log('environmental-acquisition-paused',error=str(e)[:250])
+    with LOCK:STATE['environmental_archive']=ENVIRONMENTAL_ARCHIVE.status()
+    stop.wait(2 if more else 300)
+   else:stop.wait(min(60,max(1,next_catalogue-time.monotonic())))
+   continue
   try:
    items=discover_fn()
    with LOCK:STATE['catalogue_archives']=len(items);STATE['ingestion_status']='ingesting';STATE['errors'].pop('catalogue',None)
@@ -378,7 +395,9 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
   except Exception as e:
    with LOCK:STATE['ingestion_status']='catalogue-unavailable';STATE['errors']['catalogue']=type(e).__name__
    log('catalogue-unavailable',error=type(e).__name__)
-  stop.wait(STORAGE_RETRY_SECONDS if STATE['ingestion_status']=='catalogue-unavailable' else max(1,int(os.environ.get('WAREHOUSE_REFRESH_HOURS','168')))*3600)
+  next_catalogue=time.monotonic()+(STORAGE_RETRY_SECONDS if STATE['ingestion_status']=='catalogue-unavailable' else max(1,int(os.environ.get('WAREHOUSE_REFRESH_HOURS','168')))*3600)
+  if ENVIRONMENTAL_ARCHIVE:
+   with LOCK:STATE['environmental_archive']=ENVIRONMENTAL_ARCHIVE.status()
 
 class Handler(BaseHTTPRequestHandler):
  def setup(self):
@@ -391,6 +410,10 @@ class Handler(BaseHTTPRequestHandler):
    if target.path=='/healthz':data={'process':'up','published_archives':status()['published_archives']}
    elif target.path=='/status':data=status()
    elif re.fullmatch(r'/pws/[A-Z0-9]{9}',target.path):data=pws_report(target.path.rsplit('/',1)[-1])
+   elif target.path=='/environment/near':
+    params=urllib.parse.parse_qs(target.query,strict_parsing=True,max_num_fields=2)
+    if set(params)!={'lat','lon'} or any(len(v)!=1 for v in params.values()):raise ValueError('Invalid environmental query')
+    data=ENVIRONMENTAL_ARCHIVE.near(float(params['lat'][0]),float(params['lon'][0])) if ENVIRONMENTAL_ARCHIVE else {'status':'not-connected','records':[],'household_sample_verified':False}
    else:self.send_error(404);return
    payload=json.dumps(data,allow_nan=False,default=str).encode()
    if len(payload)>MAX_RESPONSE:

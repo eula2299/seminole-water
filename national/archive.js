@@ -28,6 +28,13 @@ function createArchive({baseUrl=process.env.NATIONAL_ARCHIVE_URL,fetchImpl=fetch
   const accepted=data.summaries.filter(r=>Number(r.invalid_identity_date||0)===0&&r.analyte&&r.source_id);
   return {...data,status:accepted.length?'records-returned':data.status,summaries:accepted,quarantined_summaries:data.summaries.length-accepted.length,household_sample:false};
  }
- return {status,lookupSystem};
+ async function lookupEnvironment(address){
+  const {latitude:lat,longitude:lon}=address;
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)throw new Error('Invalid environmental coordinates');
+  const data=await get('/environment/near?'+new URLSearchParams({lat:String(lat),lon:String(lon)}));
+  if(!Array.isArray(data.records)||data.household_sample_verified!==false)throw new Error('ARCHIVE_ENVIRONMENT_SCHEMA');
+  return data;
+ }
+ return {status,lookupSystem,lookupEnvironment};
 }
 module.exports={createArchive};

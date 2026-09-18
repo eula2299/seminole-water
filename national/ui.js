@@ -122,6 +122,8 @@ function nationalClient(){
     const archive=status.historical_archive,archivePanel=document.querySelector('#archive-inventory');
     archivePanel.hidden=!archive;
     if(archive){const summary=archiveStatusSummary(archive);document.querySelector('#archive-count').textContent=summary.retained;const detail=node('div',undefined,'dataset');detail.append(node('strong','Historical federal archive'));paragraph(detail,summary.eligible+' source records eligible for summaries · '+summary.published+' published archives','muted');paragraph(detail,'Ingestion status: '+summary.status,'muted');paragraph(detail,'Archive source records may overlap current observations. These counts are not added together and are not a count of independent samples.','muted');container.append(detail);}
+    const environmental=archive?.environmental_archive;
+    if(environmental){const detail=node('div',undefined,'dataset');detail.append(node('strong','WQP environmental archive'));const count=/^\d+$/.test(String(environmental.retained_source_rows))?BigInt(environmental.retained_source_rows).toLocaleString('en-US'):'Unavailable';paragraph(detail,count+' acquired environmental result rows · '+String(environmental.status||'Unknown status').replaceAll('-',' '),'muted');paragraph(detail,'Environmental monitoring has separate coverage and is not a test of household drinking water.','muted');container.append(detail);}
   }
   async function loadStatus(){
     try{const response=await fetch('/api/national/status',{signal:AbortSignal.timeout(10000),cache:'no-store'});if(!response.ok)throw new Error('Status unavailable');updateStatus(await response.json());}
@@ -227,6 +229,17 @@ function nationalClient(){
     const wrap=node('div',undefined,'table-scroll');wrap.append(table);box.append(wrap);
     for(const source of env.sources||[])resource(box,'View USGS source response',source.url,'Retrieved '+readableDate(source.retrieved_at));
   }
+  function renderArchivedEnvironment(data){
+    const env=data.archived_environment;if(!env||env.status==='not-requested')return;
+    const box=card('Nearby historical monitoring','Water Quality Portal · acquired environmental records');
+    paragraph(box,env.selection||'This search uses acquired environmental records near the mapped address. It does not verify a connection to the home or its well.','muted');
+    if(!(env.records||[]).length){paragraph(box,['unavailable','busy'].includes(env.status)?'The environmental archive could not be queried. No environmental finding was made.':'No record was returned from the bounded search of acquired partitions. Acquisition is incomplete; this is not evidence that contaminants are absent.');return;}
+    const body=makeTable(box,'Historical environmental measurements',['Monitoring site','Parameter','Reported result','Sample date','Source qualifiers']);
+    for(const record of env.records){const row=node('tr');let value=record.value_text?record.value_text+(record.unit_text?' '+record.unit_text:' (unit not supplied)'):record.detection_condition||'Result not reported';if(record.detection_limit_value_text)value+='; reported limit '+record.detection_limit_value_text+(record.detection_limit_unit_text?' '+record.detection_limit_unit_text:'');for(const text of [record.site_id||'Not supplied',record.characteristic||'Not supplied',value,readableDate(record.sample_date),[record.qualifier,record.detection_condition,record.result_status].filter(Boolean).join(' · ')||'Not supplied'])row.append(node('td',String(text)));body.append(row);}
+    if(env.truncated)paragraph(box,'Additional partitions or results exist outside this bounded response.','muted');
+    if(env.records.some(r=>r.coordinate_transform?.operation_accuracy_m!==undefined))paragraph(box,'Some source coordinates were converted to WGS84 using documented datum transformations. This does not verify the original location accuracy.','muted');
+    for(const source of env.sources||[])resource(box,'Official WQP source response',source.url,'Retrieved '+readableDate(source.retrieved_at));
+  }
   function renderHealthContext(data){
     const contexts=matchedHealthContexts(data);if(!contexts.length)return;
     const box=card('What these contaminants can mean','General health context');
@@ -251,7 +264,7 @@ function nationalClient(){
     results.replaceChildren();
     const title=node('h2','Your water records','results-title');title.tabIndex=-1;title.id='results-heading';results.append(title);
     const summary=node('div',undefined,'finding');summary.append(node('strong','Your household water safety is not determined by this lookup.'));paragraph(summary,'Review the provider match, the actual sample dates, and the evidence available for your location. No household water sample was authenticated in this lookup.');results.append(summary);
-    renderAddress(data);renderSystems(data);renderOccurrence(data);renderArchive(data);renderEnvironment(data);renderHealthContext(data);renderNextSteps(data);
+    renderAddress(data);renderSystems(data);renderOccurrence(data);renderArchive(data);renderEnvironment(data);renderArchivedEnvironment(data);renderHealthContext(data);renderNextSteps(data);
     const gaps=card('What is still unknown','Evidence gaps');list(gaps,data.gaps||['Source coverage has not been established.']);
     const checks=node('details');checks.append(node('summary','Source checks and report details'));const audit=data.audit||[];for(const item of audit)paragraph(checks,String(item.agent).replaceAll('-',' ')+': '+String(item.status).replaceAll('-',' ')+' · retrieved '+readableDate(item.retrieved_at),'muted');paragraph(checks,'Report generated: '+readableDate(data.generated_at)+'. Retrieval date and sample date are different.','muted');sourceDetails(checks,data,'View complete machine-readable response');gaps.append(checks);
     if(data.coverage)updateStatus(data.coverage);
