@@ -8,7 +8,7 @@ import csv,datetime as dt,hashlib,json,math,pathlib,re,shutil,sqlite3,tempfile,t
 
 CATALOG={'LA':'64d673e5d34ef477cf3e136b','MI':'65495208d34ee4b6e05c2340','MN':'63065d7ed34e3b967a8bd833'}
 ROOT_URL='https://www.sciencebase.gov/catalog/item/'
-PREFIX='wells/v1';VERSION='nwwdb-wells/1';MAX_FILE=2_000_000_000;MAX_INDEX=256_000_000
+PREFIX='wells/v1';VERSION='nwwdb-wells/2';LEGACY='nwwdb-wells/1';MAX_FILE=2_000_000_000;MAX_INDEX=256_000_000
 FIELDS=('gwWellName','gwWellOtherName','gwUnitName','gwWellConstructedDepth','latitude','longitude','positionalAccuracy','locationMeasurementMethod','locationDate')
 def now():return dt.datetime.now(dt.timezone.utc).isoformat()
 def sha(path):
@@ -45,7 +45,7 @@ def dictionary_contract(path):
 def make_index(source,dictionary,target):
     dictionary_contract(dictionary)
     db=sqlite3.connect(f'file:{source}?mode=ro&immutable=1',uri=True);db.execute('PRAGMA query_only=ON');db.execute('PRAGMA trusted_schema=OFF')
-    out=sqlite3.connect(target);out.execute('PRAGMA cache_size=-8192');out.execute('CREATE TABLE wells (id TEXT PRIMARY KEY,latitude REAL,longitude REAL,record TEXT)')
+    out=sqlite3.connect(target);out.execute('PRAGMA cache_size=-8192');out.execute('CREATE TABLE wells (id TEXT PRIMARY KEY,latitude REAL,longitude REAL,depth_ft REAL,aquifer TEXT,coordinate_accuracy TEXT,location_method TEXT,location_date TEXT)')
     total=0;mapped=0;invalid=0
     try:
         if db.execute("SELECT type FROM sqlite_master WHERE name='GW_Well'").fetchone()!=('table',):raise ValueError('Well source table missing')
@@ -60,8 +60,10 @@ def make_index(source,dictionary,target):
                 except (ValueError,TypeError):invalid+=1;continue
                 if not isinstance(ident,str) or not ident.strip() or len(ident)>512 or not math.isfinite(lat) or not math.isfinite(lon) or not -90<=lat<=90 or not -180<=lon<=180:invalid+=1;continue
                 depth=r['gwWellConstructedDepth'];depth=depth if isinstance(depth,(int,float)) and math.isfinite(depth) and depth>=0 else None
-                record={'id':ident,'name':'State well '+ident,'latitude':lat,'longitude':lon,'depth_ft':depth,'aquifer':r['gwUnitName'],'coordinate_accuracy':r['positionalAccuracy'],'location_method':r['locationMeasurementMethod'],'location_date':r['locationDate'],'household_connection_verified':False}
-                out.execute('INSERT INTO wells VALUES(?,?,?,?)',(ident,lat,lon,json.dumps(record,allow_nan=False)));mapped+=1
+                metadata=[r[k] for k in ('gwUnitName','positionalAccuracy','locationMeasurementMethod','locationDate')]
+                if any(x is not None and (not isinstance(x,(str,int,float)) or isinstance(x,float) and not math.isfinite(x) or len(str(x))>4096) for x in metadata):raise ValueError('Well metadata scalar contract changed')
+                metadata=[None if x is None else str(x) for x in metadata]
+                out.execute('INSERT INTO wells VALUES(?,?,?,?,?,?,?,?)',(ident,lat,lon,depth,*metadata));mapped+=1
             out.commit()
         out.execute('CREATE INDEX wells_point ON wells(latitude,longitude)');out.commit()
     finally:db.close();out.close()
@@ -76,7 +78,7 @@ class WellArchive:
             receipt=store.json(f'{PREFIX}/latest/{state}.json')
             if receipt:self._activate(state,receipt)
     def _activate(self,state,receipt):
-        if receipt.get('schema')!=VERSION or receipt.get('state')!=state or receipt.get('item_id')!=CATALOG[state] or receipt.get('index_bytes',MAX_INDEX+1)>MAX_INDEX:raise ValueError('Invalid well receipt')
+        if receipt.get('schema') not in (VERSION,LEGACY) or receipt.get('state')!=state or receipt.get('item_id')!=CATALOG[state] or receipt.get('index_bytes',MAX_INDEX+1)>MAX_INDEX:raise ValueError('Invalid well receipt')
         with self.lock:self.receipts[state]=receipt
     def status(self):
         with self.lock:
@@ -107,12 +109,12 @@ class WellArchive:
                 if f.get('checksum',{}).get('type')!='MD5' or not re.fullmatch('[0-9a-f]{32}',f['checksum']['value']) or not isinstance(f.get('size'),int) or not 0<f['size']<=MAX_FILE:raise ValueError('Invalid well source checksum or size')
                 allowed(f['url']);return f
             source=file(f'NWWDB_State_{state}.gpkg');dictionary=file(f'NWWDB_State_{state}_Data_Dictionary.csv');previous=self.receipts.get(state)
-            if previous and previous['publisher_md5']==source['checksum']['value'] and previous['dictionary_md5']==dictionary['checksum']['value']:return previous
+            if previous and previous['schema']==VERSION and previous['publisher_md5']==source['checksum']['value'] and previous['dictionary_md5']==dictionary['checksum']['value']:return previous
             if shutil.disk_usage(work).free<source['size']+1_000_000_000:raise ValueError('Insufficient temporary disk for state well archive')
             raw=work/'original.gpkg';contract=work/'dictionary.csv';index=work/'index.sqlite'
             self.downloader(dictionary['url'],contract,1_000_000,dictionary['size'],dictionary['checksum']['value']);dictionary_contract(contract)
             provenance=self.downloader(source['url'],raw,MAX_FILE,source['size'],source['checksum']['value'])
-            counts=make_index(raw,contract,index);base=f'{PREFIX}/data/{state}/{provenance["sha256"]}'
+            counts=make_index(raw,contract,index);base=f'wells/v2/data/{state}/{provenance["sha256"]}'
             receipt={'schema':VERSION,'state':state,'item_id':item_id,'source_url':url,'source_file_url':source['url'],'source_uploaded_at':source.get('dateUploaded'),'publisher_md5':source['checksum']['value'],'dictionary_md5':dictionary['checksum']['value'],'retrieved_at':provenance['retrieved_at'],'sha256':provenance['sha256'],'raw_key':base+'/original.gpkg','index_key':base+'/index.sqlite','dictionary_key':base+'/dictionary.csv','metadata_key':base+'/metadata.json',**counts,'household_safety_assessed':False}
             with self.store.publication_lock():
                 self.store.ensure_capacity(sum(p.stat().st_size for p in (raw,contract,index,meta_path))+2_000_000)
@@ -140,10 +142,15 @@ class WellArchive:
                     if old!=path:old.unlink()
                 self.store.get(receipt['index_key'],path,receipt['index_sha256'])
                 with sqlite3.connect(f'file:{path}?mode=ro&immutable=1',uri=True) as db:
-                    found=db.execute('SELECT record FROM wells WHERE latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ? LIMIT 501',(lat-dy,lat+dy,lon-dx,lon+dx)).fetchall()
+                    db.execute('PRAGMA query_only=ON');db.execute('PRAGMA trusted_schema=OFF')
+                    legacy=receipt['schema']==LEGACY
+                    fields='record' if legacy else 'id,latitude,longitude,depth_ft,aquifer,coordinate_accuracy,location_method,location_date'
+                    found=db.execute('SELECT '+fields+' FROM wells WHERE latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ? LIMIT 501',(lat-dy,lat+dy,lon-dx,lon+dx)).fetchall()
                     truncated |= len(found)>500
-                    for value, in found[:500]:
-                        r=json.loads(value);a,b=map(math.radians,(lat,r['latitude']));dlat=b-a;dlon=math.radians(r['longitude']-lon)
+                    for values in found[:500]:
+                        r=json.loads(values[0]) if legacy else dict(zip(fields.split(','),values))
+                        r.update(name='State well '+r['id'],household_connection_verified=False)
+                        a,b=map(math.radians,(lat,r['latitude']));dlat=b-a;dlon=math.radians(r['longitude']-lon)
                         distance=6371008.8*2*math.asin(min(1,math.sqrt(math.sin(dlat/2)**2+math.cos(a)*math.cos(b)*math.sin(dlon/2)**2)))
                         if distance>5000:continue
                         records.append({**r,'distance_m':round(distance),'state':receipt['state'],'source_url':receipt['source_url'],'source_uploaded_at':receipt['source_uploaded_at'],'retrieved_at':receipt['retrieved_at'],'source_sha256':receipt['sha256']})

@@ -5,7 +5,25 @@ const SCOPE='general-contaminant-information-not-household-risk';
 const PRIMARY={title:'EPA drinking-water contaminant information',url:'https://www.epa.gov/ground-water-and-drinking-water/national-primary-drinking-water-regulations'};
 const PFAS={title:'EPA: what is known about PFAS and health',url:'https://www.epa.gov/pfas/our-current-understanding-human-health-and-environmental-risks-pfas'};
 const UCMR={title:'EPA UCMR 5: lithium and PFAS monitoring',url:'https://www.epa.gov/dwucmr/fifth-unregulated-contaminant-monitoring-rule'};
+const MANGANESE={title:'EPA IRIS manganese assessment',url:'https://iris.epa.gov/static/pdfs/0373_summary.pdf'};
+const DIOXANE={title:'EPA final risk evaluation for 1,4-dioxane',url:'https://www.epa.gov/assessing-and-managing-chemicals-under-tsca/final-risk-evaluation-14-dioxane'};
 const entries=[
+ ['manganese',['manganese','manganese total'],'Manganese','Manganese is an essential nutrient, but excessive exposure can affect the nervous system. Drinking-water exposure needs separate assessment from normal dietary intake; a detected amount alone does not establish harm.',MANGANESE],
+ ['dioxane14',['1,4-dioxane'],'1,4-Dioxane','EPA identifies liver toxicity and cancer among concerns from 1,4-dioxane exposure, including contaminated drinking water. Risk depends on exposure amount and duration.',DIOXANE],
+ ['antimony',['antimony','antimony total'],'Antimony','Long-term elevated exposure can raise cholesterol and lower blood sugar.',PRIMARY],
+ ['beryllium',['beryllium','beryllium total'],'Beryllium','Long-term elevated exposure can damage the intestines.',PRIMARY],
+ ['chromium-total',['chromium total','total chromium'],'Total chromium','Elevated exposure can cause allergic skin inflammation. Different chromium forms require distinct assessments.',PRIMARY],
+ ['fluoride',['fluoride'],'Fluoride','Excessive long-term fluoride exposure can affect bones and cause tooth discoloration in children.',PRIMARY],
+ ['selenium',['selenium','selenium total'],'Selenium','Elevated long-term exposure can affect circulation, hair, nails and sensation in fingers or toes.',PRIMARY],
+ ['thallium',['thallium','thallium total'],'Thallium','Elevated exposure can affect hair, blood, kidneys, intestines and liver.',PRIMARY],
+ ['mercury-inorganic',['mercury inorganic','inorganic mercury'],'Inorganic mercury','Long-term elevated exposure can harm the kidneys.',PRIMARY],
+ ['cyanide-free',['cyanide as free cyanide','free cyanide'],'Free cyanide','Elevated exposure can damage nerves or affect the thyroid.',PRIMARY],
+ ['atrazine',['atrazine'],'Atrazine','Long-term elevated exposure can affect cardiovascular and reproductive health.',PRIMARY],
+ ['benzene',['benzene'],'Benzene','Long-term elevated exposure can affect blood cells and increase cancer risk.',PRIMARY],
+ ['tce',['trichloroethylene','trichloroethene'],'Trichloroethylene','Long-term elevated exposure can harm the liver and increase cancer risk.',PRIMARY],
+ ['pce',['tetrachloroethylene','tetrachloroethene'],'Tetrachloroethylene','Long-term elevated exposure can harm the liver and increase cancer risk.',PRIMARY],
+ ['chlorite',['chlorite'],'Chlorite','Elevated exposure can cause anemia and affect the nervous system in young children.',PRIMARY],
+ ['chlorine',['chlorine','chlorine as cl2'],'Chlorine','Elevated exposure can irritate eyes and the nose and cause stomach discomfort.',PRIMARY],
  ['coliform',['total coliform','total coliforms','coliform (tcr)','coliform, total','coliform'],'Total coliform bacteria','Total coliforms are indicators used to check a water system. Their presence can signal a need to investigate whether harmful germs entered the water; it does not by itself identify those germs.',PRIMARY],
  ['ecoli',['e. coli','escherichia coli','e coli','ecoli'],'E. coli','E. coli can indicate fecal contamination. Certain strains cause gastrointestinal illness. A historical result is not a current advisory; follow current utility or health-department instructions.',PRIMARY],
  ['cadmium',['cadmium','cadmium total'],'Cadmium','Long-term elevated cadmium exposure can damage kidneys.',PRIMARY],
