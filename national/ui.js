@@ -73,7 +73,9 @@ function archiveStatusSummary(archive){
 function formatArchiveSummary(record){
   if(Number(record.invalid_identity_date)>0)return null;
   const value=formatAnalyteSummary({analyte:record.analyte,unit:record.unit,sample_results:record.n,non_detects:record.nondetects,minimum_detected:record.min_detect,maximum_detected:record.max_detect,first_sample:record.first_date,last_sample:record.last_date});
-  return {...value,source:String(record.source_id||'Source ID not supplied'),scope:record.scope==='source-water'?'Source water':record.scope==='system-monitoring'?'System monitoring':'Scope not established',rawScope:String(record.scope||'unspecified'),detects:/^\d+$/.test(String(record.detects))?BigInt(record.detects).toLocaleString('en-US'):'Not supplied'};
+  const count=x=>/^\d+$/.test(String(x))?BigInt(x).toLocaleString('en-US'):'Not supplied';
+  const qualitative=record.result_kind==='presence-absence';
+  return {...value,range:qualitative?'Qualitative presence / absence':value.range,resultCounts:qualitative?count(record.present_results)+' present / '+count(record.absent_results)+' absent':count(record.detects)+' detections / '+value.nonDetects+' non-detections',source:String(record.source_id||'Source ID not supplied'),scope:record.scope==='source-water'?'Source water':record.scope==='system-monitoring'?'System monitoring':'Scope not established',rawScope:String(record.scope||'unspecified'),detects:count(record.detects)};
 }
 function matchedHealthContexts(data){
   if(data.supply?.type==='private-well')return [];
@@ -203,8 +205,8 @@ function nationalClient(){
       const section=node('article',undefined,'system');section.append(node('h3','System '+system.pwsid));
       if(!records.length)paragraph(section,archive.status==='unavailable'?'The historical archive is unavailable for this lookup.':'No eligible historical summary was returned for this system.');
       else {
-        const body=makeTable(section,'Historical records · '+system.pwsid,['Contaminant / source','Sampling scope','Detected range','Source records','Detections / non-detections','Sampling period']);
-        for(const record of records){const row=node('tr'),name=node('td',record.name),scope=node('td',record.scope),detections=node('td',record.detects+' / '+record.nonDetects),period=node('td');name.append(node('p',record.source,'muted'));scope.append(node('p',record.rawScope,'muted'));period.append(node('span',record.first),node('br'),node('span','to '+record.last));row.append(name,scope,node('td',record.range),node('td',record.samples),detections,period);body.append(row);}
+        const body=makeTable(section,'Historical records · '+system.pwsid,['Contaminant / source','Sampling scope','Reported result','Source records','Result counts','Sampling period']);
+        for(const record of records){const row=node('tr'),name=node('td',record.name),scope=node('td',record.scope),detections=node('td',record.resultCounts),period=node('td');name.append(node('p',record.source,'muted'));scope.append(node('p',record.rawScope,'muted'));period.append(node('span',record.first),node('br'),node('span','to '+record.last));row.append(name,scope,node('td',record.range),node('td',record.samples),detections,period);body.append(row);}
         paragraph(section,'Source-water results describe the sampled source, not treated water at your tap. System-monitoring results also do not establish household exposure. Rows with an unspecified scope retain that uncertainty.','muted');
       }
       if((archive.summaries||[]).some(record=>Number(record.invalid_identity_date)>0))paragraph(section,'Summaries containing invalid identity or date records were excluded.','muted');

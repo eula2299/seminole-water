@@ -3,6 +3,12 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const {HTML,CLIENT,safeSourceUrl,readableDate,formatOccurrence,systemFacts,statusSummary,formatAnalyteSummary,archiveStatusSummary,formatArchiveSummary,matchedHealthContexts}=require('../national/ui');
 
+test('bacterial presence and absence remain distinct from concentrations and nondetects',()=>{
+  const row=formatArchiveSummary({analyte:'COLIFORM (TCR)',result_kind:'presence-absence',n:21,present_results:1,absent_results:20,detects:0,nondetects:0,min_detect:null,max_detect:null,first_date:'2014-01-01',last_date:'2014-12-31'});
+  assert.equal(row.range,'Qualitative presence / absence');assert.equal(row.resultCounts,'1 present / 20 absent');assert.equal(row.samples,'21');
+  assert.doesNotMatch(row.range+row.resultCounts,/No quantified|non-detection|safe|mg\/L/);
+});
+
 test('national client compiles without inline event handlers or unsafe HTML insertion',()=>{
   assert.doesNotThrow(()=>new Function(CLIENT));
   assert.doesNotMatch(CLIENT,/innerHTML|insertAdjacentHTML|document\.write/);
