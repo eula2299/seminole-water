@@ -7,12 +7,13 @@ const {createServer}=require('./server');
 const {createArchive}=require('./archive');
 const {createContext}=require('./context');
 const {createPropertyContext}=require('./property');
+const {createAdvisories}=require('./advisories');
 
 // The database is optional for process startup. Its availability is reported separately.
 // No user address is stored in the warehouse or passed to ingestion workers.
 function createNationalRuntime(){
  const warehouse=createWarehouse();
- const engine=createEngine({warehouse,archive:createArchive(),context:createContext(),propertyContext:createPropertyContext()});
+ const engine=createEngine({warehouse,archive:createArchive(),context:createContext(),propertyContext:createPropertyContext(),advisories:createAdvisories()});
  const server=createServer({engine,trustProxy:!!process.env.RAILWAY_ENVIRONMENT_ID});
  let worker=null,closed=false,timer=null;
  async function refresh(){

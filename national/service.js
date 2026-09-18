@@ -34,7 +34,7 @@ function transport({fetchImpl=globalThis.fetch,timeoutMs=6500,maxBytes=2000000}=
  };
 }
 function query(base,params){const u=new URL(base);for(const[k,v]of Object.entries(params))if(v!==''&&v!=null)u.searchParams.set(k,String(v));return u.toString();}
-function createEngine({request=transport(),warehouse=null,archive=null,context=null,propertyContext=null,now=()=>new Date(),deadlineMs=28000}={}){
+function createEngine({request=transport(),warehouse=null,archive=null,context=null,propertyContext=null,advisories=null,now=()=>new Date(),deadlineMs=28000}={}){
  async function lookup(raw){
   const input=validateInput(raw),signal=AbortSignal.timeout(deadlineMs),audit=[];
   async function stage(name,fn){const started=now().toISOString();try{signal.throwIfAborted();const value=await fn();audit.push({agent:name,type:'deterministic',status:'completed',retrieved_at:started});return value;}catch(e){audit.push({agent:name,type:'deterministic',status:'unavailable',retrieved_at:started,error_code:e.code||'SOURCE_UNAVAILABLE'});return null;}}
@@ -63,6 +63,9 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
    if(found&&found.length){const dy=30/111320,dx=dy/Math.max(.01,Math.cos(address.latitude*Math.PI/180));const probe=await stage('boundary-ambiguity-screen',async()=>boundaryCandidates(await get(query(ENDPOINTS.boundaries,{...params,geometryType:'esriGeometryEnvelope',geometry:`${address.longitude-dx},${address.latitude-dy},${address.longitude+dx},${address.latitude+dy}`}))));nearby=probe===null?null:probe;nearbyStatus=probe===null?'unavailable':'completed';}
   }
   const ids=[...new Set(candidates.map(x=>x.pwsid))],selected=input.pwsid?[input.pwsid]:ids,systems=[];
+  // Advisory retrieval overlaps historical retrieval and never substitutes a
+  // compliance violation for an active public notice.
+  const advisoryJob=advisories?stage('current-official-advisories',()=>advisories({address,pwsids:selected.length<=4?selected:[],supplyType:input.supply_type},{signal})):Promise.resolve(null);
   if(input.supply_type!=='private-well'&&selected.length<=4){
    // Two concurrent source jobs; never launch a national fan-out per address.
    for(let i=0;i<selected.length;i+=2)await Promise.all(selected.slice(i,i+2).map(async pwsid=>{
@@ -91,12 +94,15 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
   const environment=await environmentJob||{status:'unavailable',records:[],household_match:false};
   const archived_environment=await archivedEnvironmentJob||{status:'unavailable',records:[],household_sample_verified:false};
   const property=await propertyJob,well_records=await wellArchiveJob;
+  const current_advisories=await advisoryJob||{status:advisories?'unavailable':'not-connected',records:[],checks:[],comprehensive:false};
   const result={schema_version:'national-evidence/2',generated_at:now().toISOString(),release_state:'incomplete-national-coverage',address:address||{status:'unavailable'},supply:{type:input.supply_type,evidence:'user-reported'},provider:{status:boundaryStatus,candidates,user_selected_pwsid:input.pwsid||null,conflict,household_connection_verified:false,nearby_screen:{method:'30m-envelope-not-a-calibrated-geocode-error-bound',status:nearbyStatus,candidates:nearby||[]}},systems,occurrence,environment,archived_environment,property,well_records,next_steps,household_safety:{status:'not-determined',measured_concentrations:[]},gaps,audit,models:{nationally_validated_models:0,predictive_inference_enabled:false},coverage:await status(),sources:SOURCE_DOCS};
+  result.current_advisories=current_advisories;
   result.resident_report=buildResidentReport(result);return result;
  }
  function status(){
   const base={supported_input_regions:REGION_CODES,coverage_verified:false,national_unique_observations_ingested:'0',count_scope:'new national layer only; not the existing county dataset or publisher catalogs',household_laboratory_data:'not-connected',occurrence_database:'not-connected',advisories:'not-connected',lead_line_inventories:'not-connected',well_registries:'not-connected',ucmr:'not-connected-to-serving',wqp:'not-connected-to-serving',usgs:'not-connected-to-serving',billion_row_load_test:'not-run',deployment:'integrated-national-route'};
   if(context)base.usgs='bounded-live-environmental-queries';
+  if(advisories)base.advisories={status:'selected-official-live-sources',sources:['Oregon Drinking Water Services','Cleveland Water'],comprehensive:false};
   if(propertyContext){base.lead_line_inventories='NYC-address-matched-inventory';base.well_registries='USGS-monitoring-well-locations';base.cleanup_sites='bounded-EPA-Superfund-queries';}
   if(!warehouse&&!archive)return base;
   const current=warehouse?warehouse.status().then(data=>({...base,...data,occurrence_database:data.status,datasets:data.sources||[],last_ingested_at:(data.sources||[]).map(s=>s.completed_at?new Date(s.completed_at).toISOString():null).filter(Boolean).sort().at(-1)||null,ucmr:(data.sources||[]).some(s=>s.source==='ucmr5'&&s.run_id)?'connected':'awaiting-import'})).catch(()=>({...base,national_unique_observations_ingested:null,occurrence_database:'unavailable'})):Promise.resolve(base);
