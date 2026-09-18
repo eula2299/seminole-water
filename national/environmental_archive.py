@@ -8,6 +8,7 @@ from __future__ import annotations
 import contextlib, copy, datetime as dt, gzip, hashlib, json, math, os, pathlib, re, shutil, sqlite3, tempfile, threading, time
 from functools import lru_cache
 from . import wqp_backfill as Q
+from .acquisition_scheduler import choose_job, transfer_timeout, retryable_server_error
 
 PREFIX='wqp/v1'
 MAX_CHECKPOINT=100_000_000
@@ -91,6 +92,7 @@ class EnvironmentalArchive:
         self.cache=self.root/'cache';self.cache.mkdir(exist_ok=True)
         self.fetcher=fetcher;self.initial_plan=plan;self.data=None;self.head=None
         self.lock=threading.RLock();self.query_lock=threading.Lock();self.phase='restoring';self.error=None
+        self.current_job=None;self.last_started_at=None;self.last_finished_at=None
         with store.publication_lock():
             self._reload()
             if self.head is None:self._save()
@@ -129,7 +131,7 @@ class EnvironmentalArchive:
             jobs=list((self.data or {}).get('jobs',{}).values());plan=(self.data or {}).get('plan',{})
             counts={s:sum(j['status']==s for j in jobs) for s in ('pending','complete','split','failed')}
             failures=[{'state':j['partition']['state'],'start':j['partition']['start'],'end':j['partition']['end'],'attempts':j['attempts'],'error':j.get('error')} for j in jobs if j['status']=='failed']
-            return {'schema':'wqp-durable/1','status':self.phase,'source':'WQP-WQX3','source_url':Q.ENDPOINT,'plan_id':plan.get('plan_id'),'published_partitions':counts['complete'],'partition_status_counts':counts,'failed_partitions':failures[:12],'failed_partitions_truncated':len(failures)>12,'retained_source_rows':sum(j.get('manifest',{}).get('counts',{}).get('raw_result_rows',0) for j in jobs if j['status']=='complete'),'count_definition':'Acquired environmental result rows; not independent samples or household measurements. Do not add overlapping program totals.','household_safety_assessed':False,'coverage_complete':False,'error':self.error,'last_published_at':(self.head or {}).get('updated_at')}
+            return {'schema':'wqp-durable/1','status':self.phase,'source':'WQP-WQX3','source_url':Q.ENDPOINT,'plan_id':plan.get('plan_id'),'published_partitions':counts['complete'],'partition_status_counts':counts,'failed_partitions':failures[:12],'failed_partitions_truncated':len(failures)>12,'retained_source_rows':sum(j.get('manifest',{}).get('counts',{}).get('raw_result_rows',0) for j in jobs if j['status']=='complete'),'count_definition':'Acquired environmental result rows; not independent samples or household measurements. Do not add overlapping program totals.','household_safety_assessed':False,'coverage_complete':False,'error':self.error,'last_published_at':(self.head or {}).get('updated_at'),'current_job':copy.deepcopy(self.current_job),'last_started_at':self.last_started_at,'last_finished_at':self.last_finished_at,'retry_policy':'one-in-four-slots; at-most-three-attempts; single-day-timeout-ceiling-180s','exhausted_partitions':sum(j['status']=='failed' and j.get('attempts',0)>=3 for j in jobs)}
 
     def _recover_timeouts(self):
         # Earlier releases parked read timeouts behind every unattempted year.
@@ -162,27 +164,30 @@ class EnvironmentalArchive:
     def step(self):
         with self.store.publication_lock():self._reload();self._recover_timeouts()
         with self.lock:
-            pending=[j for j in self.data['jobs'].values() if j['status'] in ('pending','failed') and j['attempts']<3]
-            if not pending:self.phase='complete-with-gaps' if any(j['status']=='failed' for j in self.data['jobs'].values()) else 'plan-acquired';return False
-            job=copy.deepcopy(sorted(pending,key=lambda j:(j['attempts'],-int(j['partition']['start'][:4]),j['partition']['state'],j['partition']['start']))[0])
-            self.phase='acquiring';self.error=None
+            job=choose_job(self.data['jobs'].values(),self.data.get('dispatches',0))
+            if job is None:self.phase='complete-with-gaps' if any(j['status']=='failed' for j in self.data['jobs'].values()) else 'plan-acquired';self.current_job=None;return False
+            self.phase='acquiring';self.error=None;self.last_started_at=Q.now()
+            self.current_job={k:job['partition'][k] for k in ('id','state','start','end')}
         part=job['partition'];ident=part['id'];manifest=None;failure=None;children=[]
         with tempfile.TemporaryDirectory(prefix='partition-',dir=self.root) as temporary:
             work=pathlib.Path(temporary);raw=work/'source.bin'
             try:
                 if shutil.disk_usage(work).free<2_000_000_000:raise ValueError('Insufficient temporary disk for bounded WQP partition')
-                source=self.fetcher(Q.query_url(part),raw,64*1024*1024,45,2)
+                source=self.fetcher(Q.query_url(part),raw,64*1024*1024,transfer_timeout(job),2)
                 counts=Q.normalize(raw,work,part,source,256*1024*1024,250000)
                 artifacts=materialize(work,counts)
                 base=PREFIX+'/data/'+ident+'/'+source['sha256']
                 for item in artifacts['parquet']+[artifacts['index']]:item['key']=base+'/'+item['file']
                 manifest={'schema':'wqp-durable-partition/1','partition':part,'source':source,'counts':{k:v for k,v in counts.items() if k!='parts'},**artifacts,'raw_key':base+'/source.bin','completed_at':Q.now(),'household_sample_verified':False}
             except Q.BudgetExceeded as exc:failure=str(exc)[:500];children=Q.split_partition(part)
-            except Exception as exc:failure=str(exc)[:500]
+            except Exception as exc:
+                failure=str(exc)[:500]
+                if retryable_server_error(failure):children=Q.split_partition(part)
             with self.store.publication_lock():
                 self._reload()
                 current=self.data['jobs'].get(ident)
-                if current and current['status'] in ('complete','split'):return True
+                if current and current['status'] in ('complete','split'):
+                    self.current_job=None;self.last_finished_at=Q.now();return True
                 if manifest:
                     needed=source['bytes']+sum(x['bytes'] for x in artifacts['parquet']+[artifacts['index']])+2_000_000
                     self.store.ensure_capacity(needed)
@@ -191,11 +196,13 @@ class EnvironmentalArchive:
                     self.store.put_json(base+'/manifest.json',manifest)
                 with self.lock:
                     previous=self.data;self.data=copy.deepcopy(previous)
+                    self.data['dispatches']=self.data.get('dispatches',0)+1
                     self.data['jobs'][ident]={**{k:job[k] for k in ('previous_error','previous_attempts') if k in job},'partition':part,'status':'complete' if manifest else 'split' if children else 'failed','attempts':job['attempts']+1,'error':failure,'manifest':manifest,'parser_profile':Q.PARSER_PROFILE}
                     for child in children:self.data['jobs'].setdefault(child['id'],{'partition':child,'status':'pending','attempts':0})
                     try:self._save()
                     except Exception:self.data=previous;raise
-                    self.phase='ready';self.error=failure
+                    self.phase='ready';self.error=failure;self.last_finished_at=Q.now();self.current_job=None
+                    print(Q.canonical({'event':'wqp-partition-finished','time':self.last_finished_at,'state':part['state'],'start':part['start'],'end':part['end'],'status':self.data['jobs'][ident]['status'],'attempts':job['attempts']+1,'retained_rows':manifest['counts']['raw_result_rows'] if manifest else 0,'error':failure}),flush=True)
         return True
 
     def near(self,lat,lon):

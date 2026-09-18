@@ -34,7 +34,9 @@ jobs:
               except Exception as e:
                   results['checks'][path] = {'error':str(e)}
           pathlib.Path('national-production-evidence.json').write_text(json.dumps(results,indent=2))
-          print(json.dumps(results,indent=2))
+          status=results['checks'].get('/api/national/status',{}).get('body',{})
+          archive=status.get('historical_archive',{})
+          print(json.dumps({'checked_at':results['checked_at'],'health':results['checks'].get('/healthz'),'postgres':status.get('counts'),'archive_retained':archive.get('retained_source_records'),'archive_eligible':archive.get('eligible_source_records'),'wqp':archive.get('environmental_archive')},indent=2))
           assert all(c.get('status')==200 for c in results['checks'].values()), 'Production health or evidence unavailable'
           PY
       - uses: actions/upload-artifact@v4
@@ -42,4 +44,19 @@ jobs:
         with:
           name: national-production-evidence
           path: national-production-evidence.json
+          retention-days: 7
+  official-source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python national/coverage_sources_probe.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: national-coverage-source-contract
+          path: national-coverage-source-contract.json
           retention-days: 7
