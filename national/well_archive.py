@@ -73,7 +73,8 @@ def make_index(source,dictionary,target):
 
 class WellArchive:
     def __init__(self,store,root,downloader=download):
-        self.store=store;self.root=pathlib.Path(root);self.root.mkdir(parents=True,exist_ok=True);self.downloader=downloader;self.receipts={};self.errors={};self.checked={};self.lock=threading.RLock();self.query_lock=threading.Lock()
+        self.store=store;self.root=pathlib.Path(root);self.root.mkdir(parents=True,exist_ok=True);self.downloader=downloader;self.receipts={};self.errors={};self.checked={};self.lock=threading.RLock();self.query_lock=threading.BoundedSemaphore(4)
+        self.cache_locks={state:threading.Lock() for state in CATALOG};self.verified={}
         for state in CATALOG:
             receipt=store.json(f'{PREFIX}/latest/{state}.json')
             if receipt:self._activate(state,receipt)
@@ -122,13 +123,26 @@ class WellArchive:
                 self.store.put_json(base+'/receipt.json',receipt);self.store.put_json(f'{PREFIX}/latest/{state}.json',receipt)
             # Keep the verified index warm so the first resident does not wait
             # for a large object download after successful acquisition.
-            with self.query_lock:
-                index.replace(self.root/(state+'-'+receipt['index_sha256']+'.sqlite'))
+            with self.cache_locks[state]:
+                cached=self.root/(state+'-'+receipt['index_sha256']+'.sqlite');index.replace(cached)
+                self._remember(state,cached,receipt['index_sha256'])
                 self._activate(state,receipt)
             return receipt
+    def _remember(self,state,path,checksum):
+        stat=path.stat();self.verified[state]=(checksum,stat.st_size,stat.st_mtime_ns,stat.st_ino)
+    def _index(self,state,receipt):
+        path=self.root/(state+'-'+receipt['index_sha256']+'.sqlite')
+        for old in self.root.glob(state+'-*.sqlite'):
+            if old!=path:old.unlink()
+        stat=path.stat() if path.exists() else None
+        token=(receipt['index_sha256'],stat.st_size,stat.st_mtime_ns,stat.st_ino) if stat else None
+        if token is None or self.verified.get(state)!=token:
+            self.store.get(receipt['index_key'],path,receipt['index_sha256'])
+            self._remember(state,path,receipt['index_sha256'])
+        return path
     def near(self,lat,lon):
         if not all(isinstance(x,(int,float)) and not isinstance(x,bool) and math.isfinite(x) for x in (lat,lon)) or abs(lat)>90 or abs(lon)>180:raise ValueError('Invalid well coordinates')
-        if not self.query_lock.acquire(blocking=False):return {'status':'busy','records':[],'household_connection_verified':False}
+        if not self.query_lock.acquire(timeout=.5):return {'status':'busy','records':[],'household_connection_verified':False}
         try:
             with self.lock:receipts=list(self.receipts.values())
             records=[];dy=5000/111000;dx=dy/max(.01,math.cos(math.radians(lat)));truncated=False
@@ -137,23 +151,25 @@ class WellArchive:
                 # bounds; this only prunes files, never confirms state or parcel.
                 box={'LA':[-95,28,-88,34],'MI':[-91,41,-82,49],'MN':[-98,43,-89,50]}[receipt['state']]
                 if lon+dx<box[0] or lon-dx>box[2] or lat+dy<box[1] or lat-dy>box[3]:continue
-                path=self.root/(receipt['state']+'-'+receipt['index_sha256']+'.sqlite')
-                for old in self.root.glob(receipt['state']+'-*.sqlite'):
-                    if old!=path:old.unlink()
-                self.store.get(receipt['index_key'],path,receipt['index_sha256'])
-                with sqlite3.connect(f'file:{path}?mode=ro&immutable=1',uri=True) as db:
-                    db.execute('PRAGMA query_only=ON');db.execute('PRAGMA trusted_schema=OFF')
-                    legacy=receipt['schema']==LEGACY
-                    fields='record' if legacy else 'id,latitude,longitude,depth_ft,aquifer,coordinate_accuracy,location_method,location_date'
-                    found=db.execute('SELECT '+fields+' FROM wells WHERE latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ? LIMIT 501',(lat-dy,lat+dy,lon-dx,lon+dx)).fetchall()
-                    truncated |= len(found)>500
-                    for values in found[:500]:
-                        r=json.loads(values[0]) if legacy else dict(zip(fields.split(','),values))
-                        r.update(name='State well '+r['id'],household_connection_verified=False)
-                        a,b=map(math.radians,(lat,r['latitude']));dlat=b-a;dlon=math.radians(r['longitude']-lon)
-                        distance=6371008.8*2*math.asin(min(1,math.sqrt(math.sin(dlat/2)**2+math.cos(a)*math.cos(b)*math.sin(dlon/2)**2)))
-                        if distance>5000:continue
-                        records.append({**r,'distance_m':round(distance),'state':receipt['state'],'source_url':receipt['source_url'],'source_uploaded_at':receipt['source_uploaded_at'],'retrieved_at':receipt['retrieved_at'],'source_sha256':receipt['sha256']})
+                state=receipt['state']
+                # Only cache preparation and reads of this state's immutable
+                # file share a lock. Independent states can serve concurrently.
+                with self.cache_locks[state]:
+                    with self.lock:receipt=self.receipts[state]
+                    path=self._index(state,receipt)
+                    with sqlite3.connect(f'file:{path}?mode=ro&immutable=1',uri=True) as db:
+                        db.execute('PRAGMA query_only=ON');db.execute('PRAGMA trusted_schema=OFF')
+                        legacy=receipt['schema']==LEGACY
+                        fields='record' if legacy else 'id,latitude,longitude,depth_ft,aquifer,coordinate_accuracy,location_method,location_date'
+                        found=db.execute('SELECT '+fields+' FROM wells WHERE latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ? LIMIT 501',(lat-dy,lat+dy,lon-dx,lon+dx)).fetchall()
+                truncated |= len(found)>500
+                for values in found[:500]:
+                    r=json.loads(values[0]) if legacy else dict(zip(fields.split(','),values))
+                    r.update(name='State well '+r['id'],household_connection_verified=False)
+                    a,b=map(math.radians,(lat,r['latitude']));dlat=b-a;dlon=math.radians(r['longitude']-lon)
+                    distance=6371008.8*2*math.asin(min(1,math.sqrt(math.sin(dlat/2)**2+math.cos(a)*math.cos(b)*math.sin(dlon/2)**2)))
+                    if distance>5000:continue
+                    records.append({**r,'distance_m':round(distance),'state':receipt['state'],'source_url':receipt['source_url'],'source_uploaded_at':receipt['source_uploaded_at'],'retrieved_at':receipt['retrieved_at'],'source_sha256':receipt['sha256']})
             records.sort(key=lambda r:r['distance_m'])
             return {'schema':VERSION,'status':'records-returned' if records else 'no-records-in-acquired-search','records':records[:20],'truncated':truncated or len(records)>20,'search_radius_m':5000,'states_acquired':[r['state'] for r in receipts],'household_connection_verified':False,'scope':'state-well-construction-records-near-address','current_safety':'not-determined'}
         finally:self.query_lock.release()

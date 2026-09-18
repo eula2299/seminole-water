@@ -19,6 +19,12 @@ JSON field names and generated display labels for every record. It keeps the
 version 2 artifacts use separate object keys so a failed upgrade cannot overwrite
 the active index.
 
+Geographic serving allows four bounded concurrent reads. Per-state cache locks
+prevent competing downloads or deletion of an index in use without blocking a
+request for another state. Immutable cached files are verified when downloaded
+and reverified if their size, modification time or inode changes; unchanged
+files do not require hashing an entire state index for every resident.
+
 The existing object-store publication lease and capacity accounting apply.
 Uploads complete before the per-state receipt changes, so a failed refresh
 preserves the prior active inventory. One state is acquired per worker step,
