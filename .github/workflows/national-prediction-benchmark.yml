@@ -1,0 +1,42 @@
+name: National prediction evaluation
+on:
+  pull_request:
+    paths: ['national/prediction_benchmark.py', 'national/benchmark-requirements.txt', 'tests/test_national_prediction_benchmark.py', 'national/live_acceptance.py', '.github/workflows/national-prediction-benchmark.yml']
+permissions:
+  contents: read
+jobs:
+  real-data-holdout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r national/benchmark-requirements.txt
+      - run: python -m unittest discover -s tests -p test_national_prediction_benchmark.py -v
+      - run: python -m national.prediction_benchmark
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: national-prediction-benchmark
+          path: national-prediction-benchmark.json
+          retention-days: 90
+  deployed-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python national/live_acceptance.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: national-live-acceptance
+          path: national-live-acceptance.json
+          retention-days: 30
