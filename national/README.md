@@ -21,6 +21,11 @@ Private-well requests do not borrow public-system results. They explain the
 missing household evidence and provide official testing and laboratory resources.
 An upstream failure remains unavailable, never a safe or zero-result finding.
 
+[Current notices](ADVISORIES.md) from Oregon Drinking Water Services and Cleveland
+Water are checked when their matching rules apply and appear before historical
+measurements. Their coverage and freshness remain explicit; other local
+advisory sources still need integration.
+
 ## Persistent source ingestion
 
 `national/sync.js` downloads official whole-cycle EPA UCMR5 occurrence data and

@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'national/property.js'
+      - 'national/advisories.js'
       - 'national/resident*.js'
       - 'national/evidence.js'
       - 'national/service.js'
@@ -38,4 +39,26 @@ jobs:
         with:
           name: resident-source-contract
           path: resident-source-contract.json
+          retention-days: 3
+      - name: Verify current-notice source contracts
+        run: |
+          node <<'JS'
+          const fs=require('node:fs');
+          const {createAdvisories,sourceReader}=require('./national/advisories');
+          (async()=>{
+            const get=createAdvisories({request:sourceReader({timeoutMs:25000})});
+            const results=await Promise.all([
+              get({pwsids:['OR4100466'],supplyType:'public'}),
+              get({address:{status:'matched',state:'OH',latitude:41.5043,longitude:-81.6944},supplyType:'public'})
+            ]);
+            fs.writeFileSync('advisory-source-contract.json',JSON.stringify(results,null,2));
+            const checks=results.map(r=>r.checks.length===1&&r.checks.every(c=>['checked','source-not-recent'].includes(c.status))&&r.comprehensive===false);
+            console.log(JSON.stringify({checks}));if(checks.some(x=>!x))process.exitCode=1;
+          })().catch(e=>{console.error(e.name,e.message);process.exitCode=1;});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: advisory-source-contract
+          path: advisory-source-contract.json
           retention-days: 3
