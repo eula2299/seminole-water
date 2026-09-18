@@ -25,6 +25,7 @@ function createArchive({baseUrl=process.env.NATIONAL_ARCHIVE_URL,fetchImpl=fetch
   if(inventory.schema!=='occurrence-warehouse/2')return {status:'validation-update-pending',summaries:[],sources:[],schema:inventory.schema};
   const data=await get('/pws/'+pwsid);
   if(data.pwsid!==pwsid||!Array.isArray(data.summaries)||!Array.isArray(data.sources))throw new Error('ARCHIVE_SCHEMA');
+  if(data.compliance&&(data.compliance.pwsid!==pwsid||!Array.isArray(data.compliance.records)||data.compliance.records.some(r=>String(r.PWSID||'').trim().toUpperCase()!==pwsid)))throw new Error('ARCHIVE_COMPLIANCE_IDENTITY');
   const accepted=data.summaries.filter(r=>Number(r.invalid_identity_date||0)===0&&r.analyte&&r.source_id);
   return {...data,status:accepted.length?'records-returned':data.status,summaries:accepted,quarantined_summaries:data.summaries.length-accepted.length,household_sample:false};
  }
