@@ -44,6 +44,10 @@ ceiling and resume when capacity is available. Existing published evidence remai
 readable; object-store acquisition uses its own budget. This does not hide a failed
 bulk compliance import or treat it as an absence of violations.
 
+The separate [SDWIS compliance archive](COMPLIANCE_ARCHIVE.md) supports complete
+source-file retention and bounded per-system reads in object storage. Its counts
+remain separate from the PostgreSQL snapshot and drinking-water observations.
+
 The application checks for source refreshes on startup and hourly; sources
 checked within seven days are skipped. `NATIONAL_SYNC_ENABLED=false` disables
 background imports. `NATIONAL_MAX_DATABASE_BYTES` defaults to 3,000,000,000 to

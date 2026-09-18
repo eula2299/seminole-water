@@ -26,3 +26,8 @@ test('foreign PWSID, HTTP failures and excessive responses are not empty evidenc
  await assert.rejects(createArchive({baseUrl,fetchImpl:async()=>new Response('unavailable',{status:503})}).status(),/ARCHIVE_HTTP_ERROR/);
  await assert.rejects(createArchive({baseUrl,fetchImpl:async()=>new Response('x'.repeat(2000001))}).status(),/ARCHIVE_TOO_LARGE/);
 });
+
+test('bulk compliance rejects a foreign system even when outer archive identity matches',async()=>{
+ const archive=createArchive({baseUrl:'http://localhost:8080',fetchImpl:async url=>Response.json(url.pathname==='/status'?{schema:'occurrence-warehouse/2'}:{pwsid:'NY0000001',sources:[],summaries:[],compliance:{pwsid:'NY0000001',records:[{PWSID:'CA0000001'}]}})});
+ await assert.rejects(archive.lookupSystem('NY0000001'),/ARCHIVE_COMPLIANCE_IDENTITY/);
+});

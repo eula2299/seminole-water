@@ -24,6 +24,7 @@ STORAGE_RETRY_SECONDS=max(5,int(os.environ.get('WAREHOUSE_RETRY_SECONDS','60')))
 LEASE_SECONDS=1800
 LOCK=threading.RLock()
 ENVIRONMENTAL_ARCHIVE=None
+COMPLIANCE_ARCHIVE=None
 STATE={'schema':VERSION,'sources':{},'errors':{},'ingestion_status':'starting','current_archive':None,'target_minimum_records':200000000,'trained_prediction_models':0,'persistent_storage_bytes':None,'storage_accounting_checked_at':None}
 
 def utc(): return dt.datetime.now(dt.timezone.utc).isoformat()
@@ -346,10 +347,16 @@ def pws_report(pwsid):
     if response_bytes+size>MAX_RESPONSE//2:truncated=True;continue
     response_bytes+=size;summaries.append(item)
   finally:db.close()
- return {'schema':VERSION,'pwsid':pwsid,'status':'records-returned' if summaries else 'response-truncated' if matching else 'qualified-archives-unavailable' if not receipts else 'no-records-in-loaded-archives','summaries':summaries,'sources':sources,'archives_checked':len(receipts),'legacy_archives_excluded':len(loaded)-len(receipts),'matching_summary_groups':matching,'returned_summary_groups':len(summaries),'truncated':truncated or omitted_raw>0,'omitted_large_latest_records':omitted_raw,'maximum_summary_groups':MAX_SUMMARIES,'scope':'public-system-samples-not-household','current_safety':'not-determined','cross_source_sample_independence_certified':False,'historical_data':True,'coverage_complete':False}
+ compliance=None
+ if COMPLIANCE_ARCHIVE:
+  try:compliance=COMPLIANCE_ARCHIVE.system(pwsid)
+  except Exception as e:
+   log('compliance-query-error',error=type(e).__name__)
+   compliance={'pwsid':pwsid,'status':'unavailable','records':[],'current_safety':'not-determined'}
+ return {'schema':VERSION,'pwsid':pwsid,'status':'records-returned' if summaries else 'response-truncated' if matching else 'qualified-archives-unavailable' if not receipts else 'no-records-in-loaded-archives','summaries':summaries,'sources':sources,'compliance':compliance,'archives_checked':len(receipts),'legacy_archives_excluded':len(loaded)-len(receipts),'matching_summary_groups':matching,'returned_summary_groups':len(summaries),'truncated':truncated or omitted_raw>0,'omitted_large_latest_records':omitted_raw,'maximum_summary_groups':MAX_SUMMARIES,'scope':'public-system-samples-not-household','current_safety':'not-determined','cross_source_sample_independence_certified':False,'historical_data':True,'coverage_complete':False}
 
 def loop(stop=None,store_factory=Store,discover_fn=discover):
- global ENVIRONMENTAL_ARCHIVE
+ global ENVIRONMENTAL_ARCHIVE,COMPLIANCE_ARCHIVE
  stop=stop or threading.Event();store=None;next_catalogue=0
  ROOT.mkdir(parents=True,exist_ok=True)
  while not stop.is_set():
@@ -366,7 +373,14 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
    try:
     from .environmental_archive import EnvironmentalArchive
     ENVIRONMENTAL_ARCHIVE=EnvironmentalArchive(store,ROOT/'environmental')
+    with LOCK:STATE['environmental_archive']=ENVIRONMENTAL_ARCHIVE.status()
    except Exception as e:log('environmental-restore-error',error=str(e)[:250])
+  if COMPLIANCE_ARCHIVE is None and os.environ.get('WAREHOUSE_COMPLIANCE_ENABLED')=='true':
+   try:
+    from .compliance_archive import ComplianceArchive
+    COMPLIANCE_ARCHIVE=ComplianceArchive(store,ROOT/'compliance')
+    with LOCK:STATE['compliance_archive']=COMPLIANCE_ARCHIVE.status()
+   except Exception as e:log('compliance-restore-error',error=str(e)[:250])
   if time.monotonic()<next_catalogue:
    if ENVIRONMENTAL_ARCHIVE:
     try:more=ENVIRONMENTAL_ARCHIVE.step()
@@ -391,6 +405,15 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
     except Exception as e:
      with LOCK:STATE['errors'][item['id']]=str(e)[:250]
      log('ingest-error',source=item['id'],error=str(e)[:250])
+   if COMPLIANCE_ARCHIVE and not stop.is_set():
+    try:
+     COMPLIANCE_ARCHIVE.refresh()
+     log('compliance-archive-ready',rows=COMPLIANCE_ARCHIVE.status()['retained_association_rows'])
+     with LOCK:STATE['errors'].pop('compliance',None)
+    except Exception as e:
+     log('compliance-import-error',error=str(e)[:250])
+     with LOCK:STATE['errors']['compliance']=str(e)[:250]
+    with LOCK:STATE['compliance_archive']=COMPLIANCE_ARCHIVE.status()
    with LOCK:STATE['ingestion_status']='cycle-complete-with-gaps' if STATE['errors'] else 'cycle-complete';STATE['current_archive']=None;STATE['last_cycle_at']=utc()
   except Exception as e:
    with LOCK:STATE['ingestion_status']='catalogue-unavailable';STATE['errors']['catalogue']=type(e).__name__

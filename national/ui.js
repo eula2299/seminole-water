@@ -124,6 +124,8 @@ function nationalClient(){
     if(archive){const summary=archiveStatusSummary(archive);document.querySelector('#archive-count').textContent=summary.retained;const detail=node('div',undefined,'dataset');detail.append(node('strong','Historical federal archive'));paragraph(detail,summary.eligible+' source records eligible for summaries · '+summary.published+' published archives','muted');paragraph(detail,'Ingestion status: '+summary.status,'muted');paragraph(detail,'Archive source records may overlap current observations. These counts are not added together and are not a count of independent samples.','muted');container.append(detail);}
     const environmental=archive?.environmental_archive;
     if(environmental){const detail=node('div',undefined,'dataset');detail.append(node('strong','WQP environmental archive'));const count=/^\d+$/.test(String(environmental.retained_source_rows))?BigInt(environmental.retained_source_rows).toLocaleString('en-US'):'Unavailable';paragraph(detail,count+' acquired environmental result rows · '+String(environmental.status||'Unknown status').replaceAll('-',' '),'muted');paragraph(detail,'Environmental monitoring has separate coverage and is not a test of household drinking water.','muted');container.append(detail);}
+    const compliance=archive?.compliance_archive;
+    if(compliance){const detail=node('div',undefined,'dataset');detail.append(node('strong','SDWIS compliance archive'));const count=/^\d+$/.test(String(compliance.retained_association_rows))?BigInt(compliance.retained_association_rows).toLocaleString('en-US'):'Unavailable';paragraph(detail,count+' violation/enforcement association rows · '+String(compliance.status||'Unknown status').replaceAll('-',' '),'muted');paragraph(detail,'A violation may have multiple enforcement rows. These records are not water samples or current advisories.','muted');container.append(detail);}
   }
   async function loadStatus(){
     try{const response=await fetch('/api/national/status',{signal:AbortSignal.timeout(10000),cache:'no-store'});if(!response.ok)throw new Error('Status unavailable');updateStatus(await response.json());}
@@ -217,6 +219,18 @@ function nationalClient(){
       sourceDetails(section,{status:archive.status,sources:archive.sources||[],truncated:archive.truncated},'Archive provenance and retrieval details');box.append(section);
     }
   }
+  function renderCompliance(data){
+    if(data.supply?.type==='private-well')return;
+    const systems=(data.systems||[]).filter(s=>s.archive?.compliance);if(!systems.length)return;
+    const box=card('Reported violations and enforcement','Historical public-system compliance');
+    paragraph(box,'These federal records describe candidate water systems. Confirm your connection with your utility. A historical violation is not a current advisory or a measurement from your home.','muted');
+    for(const system of systems){const c=system.archive.compliance,section=node('article',undefined,'system');section.append(node('h3','System '+system.pwsid));
+      if(c.status!=='records-returned')paragraph(section,c.status==='no-records-in-snapshot'?'No association rows were returned from this acquired snapshot. This does not establish current compliance or household safety.':'The bulk compliance archive is not available for this system right now. No compliance finding was made.');
+      else {paragraph(section,String(c.distinct_violation_ids)+' distinct reported violation IDs across '+String(c.association_rows)+' compliance rows. '+String(c.unlinked_enforcement_rows||0)+' rows have no linked violation ID.');const body=makeTable(section,'Compliance records · '+system.pwsid,['Violation ID','Category / rule','Contaminant','Reported status','Noncompliance period','Enforcement date / action']);for(const r of c.records){const row=node('tr'),label=key=>r.code_descriptions?.[key]?r.code_descriptions[key]+' ('+r[key]+')':r[key];for(const value of [r.VIOLATION_ID||'No linked violation ID',[label('VIOLATION_CATEGORY_CODE'),label('VIOLATION_CODE')].filter(Boolean).join(' / '),label('CONTAMINANT_CODE'),r.VIOLATION_STATUS,[r.NON_COMPL_PER_BEGIN_DATE,r.NON_COMPL_PER_END_DATE].filter(Boolean).join(' to '),[r.ENFORCEMENT_DATE,label('ENFORCEMENT_ACTION_TYPE_CODE')].filter(Boolean).join(' / ')])row.append(node('td',String(value||'Not reported')));body.append(row);}if(c.truncated)paragraph(section,'Showing 100 source rows; additional records exist in this snapshot.','muted');}
+      if(c.submission_periods?.length)paragraph(section,'Reported snapshot: '+c.submission_periods.join(', '),'muted');
+      if(c.source){resource(section,'Official SDWIS data and code definitions',c.source.documentation_url,'Retrieved '+readableDate(c.source.retrieved_at));sourceDetails(section,{...c,records:undefined},'Compliance source and scope');}box.append(section);
+    }
+  }
   function renderEnvironment(data){
     const env=data.environment;if(!env||env.status==='not-requested')return;
     const box=card('Nearby environmental readings','USGS monitoring · separate from drinking water');
@@ -264,7 +278,7 @@ function nationalClient(){
     results.replaceChildren();
     const title=node('h2','Your water records','results-title');title.tabIndex=-1;title.id='results-heading';results.append(title);
     const summary=node('div',undefined,'finding');summary.append(node('strong','Your household water safety is not determined by this lookup.'));paragraph(summary,'Review the provider match, the actual sample dates, and the evidence available for your location. No household water sample was authenticated in this lookup.');results.append(summary);
-    renderAddress(data);renderSystems(data);renderOccurrence(data);renderArchive(data);renderEnvironment(data);renderArchivedEnvironment(data);renderHealthContext(data);renderNextSteps(data);
+    renderAddress(data);renderSystems(data);renderOccurrence(data);renderArchive(data);renderCompliance(data);renderEnvironment(data);renderArchivedEnvironment(data);renderHealthContext(data);renderNextSteps(data);
     const gaps=card('What is still unknown','Evidence gaps');list(gaps,data.gaps||['Source coverage has not been established.']);
     const checks=node('details');checks.append(node('summary','Source checks and report details'));const audit=data.audit||[];for(const item of audit)paragraph(checks,String(item.agent).replaceAll('-',' ')+': '+String(item.status).replaceAll('-',' ')+' · retrieved '+readableDate(item.retrieved_at),'muted');paragraph(checks,'Report generated: '+readableDate(data.generated_at)+'. Retrieval date and sample date are different.','muted');sourceDetails(checks,data,'View complete machine-readable response');gaps.append(checks);
     if(data.coverage)updateStatus(data.coverage);

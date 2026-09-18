@@ -195,7 +195,7 @@ class EnvironmentalArchive:
                         found=db.execute('SELECT latitude,longitude,record FROM readings WHERE longitude BETWEEN ? AND ? AND latitude BETWEEN ? AND ? ORDER BY sample_date DESC LIMIT 101',(box[0],box[2],box[1],box[3])).fetchall()
                         if len(found)>100:omitted+=1
                         for a,b,value in found[:100]:
-                            row=json.loads(value);key=row['raw_file_sha256']+':'+str(row['raw_row_number'])
+                            row=json.loads(value);key=row['raw_file_sha256']+':'+row['raw_table']+':'+str(row['raw_row_number'])
                             if key in seen:continue
                             seen.add(key);row['latitude']=a;row['longitude']=b;records.append(row)
                 sources.append({'url':receipt['source']['url'],'retrieved_at':receipt['source']['retrieved_at'],'sha256':receipt['source']['sha256'],'partition':receipt['partition']})
