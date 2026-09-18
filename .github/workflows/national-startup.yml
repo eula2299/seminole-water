@@ -34,7 +34,7 @@ jobs:
           for path in ['/','/seminole','/api/auth/me','/api/community/config','/api/national/status']:
             with urllib.request.urlopen('http://127.0.0.1:8080'+path,timeout=5) as r:
               body=r.read();assert r.status==200
-              if path=='/':assert b'Check your address' in body
+              if path=='/':assert b'name="address"' in body and b'Check my water' in body
               if path=='/seminole':assert b'Seminole' in body
               if path=='/api/national/status':
                 status=json.loads(body)

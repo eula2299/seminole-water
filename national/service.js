@@ -1,8 +1,10 @@
 'use strict';
 const {EvidenceError,validateInput,fingerprint,censusMatch,boundaryCandidates,echoRows,queryId,REGION_CODES}=require('./evidence');
 const {getHealthContext}=require('./health_context');
+const {buildResidentReport}=require('./resident');
 const ENDPOINTS=Object.freeze({
   census:'https://geocoding.geo.census.gov/geocoder/geographies/address',
+  censusOneLine:'https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress',
   boundaries:'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Water_System_Boundaries/FeatureServer/0/query',
   systems:'https://echodata.epa.gov/echo/sdw_rest_services.get_systems',
   query:'https://echodata.epa.gov/echo/sdw_rest_services.get_qid'
@@ -32,15 +34,27 @@ function transport({fetchImpl=globalThis.fetch,timeoutMs=6500,maxBytes=2000000}=
  };
 }
 function query(base,params){const u=new URL(base);for(const[k,v]of Object.entries(params))if(v!==''&&v!=null)u.searchParams.set(k,String(v));return u.toString();}
-function createEngine({request=transport(),warehouse=null,archive=null,context=null,now=()=>new Date(),deadlineMs=20000}={}){
+function createEngine({request=transport(),warehouse=null,archive=null,context=null,propertyContext=null,now=()=>new Date(),deadlineMs=28000}={}){
  async function lookup(raw){
   const input=validateInput(raw),signal=AbortSignal.timeout(deadlineMs),audit=[];
   async function stage(name,fn){const started=now().toISOString();try{signal.throwIfAborted();const value=await fn();audit.push({agent:name,type:'deterministic',status:'completed',retrieved_at:started});return value;}catch(e){audit.push({agent:name,type:'deterministic',status:'unavailable',retrieved_at:started,error_code:e.code||'SOURCE_UNAVAILABLE'});return null;}}
   const get=url=>request(url,{signal});
-  const hasAddress=input.street&&(input.city||input.zip);
-  const address=hasAddress?await stage('address-resolution',async()=>censusMatch(await get(query(ENDPOINTS.census,{street:input.street,city:input.city,state:input.state,zip:input.zip,benchmark:'Public_AR_Current',vintage:'Current_Current',format:'json'})),input)):{status:'not-requested'};
-  const environmentJob=context&&raw.include_environment===true&&address?.status==='matched'?stage('environmental-context',()=>context(address,{signal})):Promise.resolve({status:'not-requested',records:[],household_match:false});
-  const archivedEnvironmentJob=archive?.lookupEnvironment&&raw.include_environment===true&&address?.status==='matched'?stage('archived-environmental-context',()=>archive.lookupEnvironment(address)):Promise.resolve({status:'not-requested',records:[],household_sample_verified:false});
+  const hasAddress=input.address||input.street&&(input.city||input.zip);
+  const address=hasAddress?await stage('address-resolution',async()=>{
+   const common={benchmark:'Public_AR_Current',vintage:'Current_Current',format:'json'},one=input.address;
+   let match=await get(query(one?ENDPOINTS.censusOneLine:ENDPOINTS.census,one?{...common,address:one}:{...common,street:input.street,city:input.city,state:input.state,zip:input.zip})).then(x=>censusMatch(x,input));
+   // Retry only a unit-stripped street address, keeping city/state/ZIP unchanged.
+   // An ambiguous match always requires the resident to choose an address.
+   if(match.status==='unresolved'){
+    const value=one||input.street,clean=value.replace(/\s+(?:APT|UNIT|SUITE|STE|#)\s*[A-Z0-9-]+(?=,|$)/i,'');
+    if(clean!==value)match=await get(query(one?ENDPOINTS.censusOneLine:ENDPOINTS.census,one?{...common,address:clean}:{...common,street:clean,city:input.city,state:input.state,zip:input.zip})).then(x=>censusMatch(x,input));
+   }return match;
+  }):{status:'not-requested'};
+  const includeEnvironment=raw.include_environment!==false;
+  const environmentJob=context&&includeEnvironment&&address?.status==='matched'?stage('environmental-context',()=>context(address,{signal})):Promise.resolve({status:'not-requested',records:[],household_match:false});
+  const archivedEnvironmentJob=archive?.lookupEnvironment&&includeEnvironment&&address?.status==='matched'?stage('archived-environmental-context',()=>archive.lookupEnvironment(address)):Promise.resolve({status:'not-requested',records:[],household_sample_verified:false});
+  const propertyJob=propertyContext&&address?.status==='matched'?stage('property-and-groundwater-evidence',()=>propertyContext(address,{signal,supplyType:input.supply_type})):Promise.resolve(null);
+  const wellArchiveJob=archive?.lookupWells&&address?.status==='matched'?stage('state-well-records',()=>archive.lookupWells(address)):Promise.resolve(null);
   let candidates=[],boundaryStatus='not-requested',nearby=[],nearbyStatus='not-requested';
   if(address?.status==='matched'&&input.supply_type!=='private-well'){
    const params={f:'json',geometryType:'esriGeometryPoint',geometry:`${address.longitude},${address.latitude}`,inSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'*',returnGeometry:'false'};
@@ -76,7 +90,9 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
   const next_steps=input.supply_type==='private-well'?[{title:'Test your own well',description:'A state-certified laboratory can test a sample from your well. Nearby environmental measurements cannot establish the chemistry of this well.',url:'https://www.cdc.gov/drinking-water/safety/guidelines-for-testing-well-water.html'},{title:'Find a certified drinking-water laboratory',url:'https://www.epa.gov/dwlabcert/contact-information-certification-programs-and-certified-laboratories-drinking-water'}]:[{title:'Confirm the provider on your water bill',description:'Mapped service areas may overlap and include modeled boundaries. Use your full public water system ID to narrow the records.'},{title:'Find your annual water quality report',url:'https://www.epa.gov/ccr'},{title:'Check current notices with your utility',description:'Federal compliance and sampling records are historical and do not replace current boil-water or do-not-drink notices.'}];
   const environment=await environmentJob||{status:'unavailable',records:[],household_match:false};
   const archived_environment=await archivedEnvironmentJob||{status:'unavailable',records:[],household_sample_verified:false};
-  return {schema_version:'national-evidence/2',generated_at:now().toISOString(),release_state:'incomplete-national-coverage',address:address||{status:'unavailable'},supply:{type:input.supply_type,evidence:'user-reported'},provider:{status:boundaryStatus,candidates,user_selected_pwsid:input.pwsid||null,conflict,household_connection_verified:false,nearby_screen:{method:'30m-envelope-not-a-calibrated-geocode-error-bound',status:nearbyStatus,candidates:nearby||[]}},systems,occurrence,environment,archived_environment,next_steps,household_safety:{status:'not-determined',measured_concentrations:[]},gaps,audit,models:{nationally_validated_models:0,predictive_inference_enabled:false},coverage:await status(),sources:SOURCE_DOCS};
+  const property=await propertyJob,well_records=await wellArchiveJob;
+  const result={schema_version:'national-evidence/2',generated_at:now().toISOString(),release_state:'incomplete-national-coverage',address:address||{status:'unavailable'},supply:{type:input.supply_type,evidence:'user-reported'},provider:{status:boundaryStatus,candidates,user_selected_pwsid:input.pwsid||null,conflict,household_connection_verified:false,nearby_screen:{method:'30m-envelope-not-a-calibrated-geocode-error-bound',status:nearbyStatus,candidates:nearby||[]}},systems,occurrence,environment,archived_environment,property,well_records,next_steps,household_safety:{status:'not-determined',measured_concentrations:[]},gaps,audit,models:{nationally_validated_models:0,predictive_inference_enabled:false},coverage:await status(),sources:SOURCE_DOCS};
+  result.resident_report=buildResidentReport(result);return result;
  }
  function status(){
   const base={supported_input_regions:REGION_CODES,coverage_verified:false,national_unique_observations_ingested:'0',count_scope:'new national layer only; not the existing county dataset or publisher catalogs',household_laboratory_data:'not-connected',occurrence_database:'not-connected',advisories:'not-connected',lead_line_inventories:'not-connected',well_registries:'not-connected',ucmr:'not-connected-to-serving',wqp:'not-connected-to-serving',usgs:'not-connected-to-serving',billion_row_load_test:'not-run',deployment:'integrated-national-route'};
