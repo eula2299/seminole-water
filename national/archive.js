@@ -36,6 +36,13 @@ function createArchive({baseUrl=process.env.NATIONAL_ARCHIVE_URL,fetchImpl=fetch
   if(!Array.isArray(data.records)||data.household_sample_verified!==false)throw new Error('ARCHIVE_ENVIRONMENT_SCHEMA');
   return data;
  }
- return {status,lookupSystem,lookupEnvironment};
+ async function lookupWells(address){
+  const {latitude:lat,longitude:lon}=address;
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)throw new Error('Invalid well coordinates');
+  const data=await get('/wells/near?'+new URLSearchParams({lat:String(lat),lon:String(lon)}));
+  if(!Array.isArray(data.records)||data.household_connection_verified!==false)throw new Error('ARCHIVE_WELL_SCHEMA');
+  return data;
+ }
+ return {status,lookupSystem,lookupEnvironment,lookupWells};
 }
 module.exports={createArchive};
