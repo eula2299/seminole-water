@@ -6,6 +6,11 @@ const PRIMARY={title:'EPA drinking-water contaminant information',url:'https://w
 const PFAS={title:'EPA: what is known about PFAS and health',url:'https://www.epa.gov/pfas/our-current-understanding-human-health-and-environmental-risks-pfas'};
 const UCMR={title:'EPA UCMR 5: lithium and PFAS monitoring',url:'https://www.epa.gov/dwucmr/fifth-unregulated-contaminant-monitoring-rule'};
 const entries=[
+ ['coliform',['total coliform','total coliforms','coliform (tcr)','coliform, total','coliform'],'Total coliform bacteria','Total coliforms are indicators used to check a water system. Their presence can signal a need to investigate whether harmful germs entered the water; it does not by itself identify those germs.',PRIMARY],
+ ['ecoli',['e. coli','escherichia coli','e coli','ecoli'],'E. coli','E. coli can indicate fecal contamination. Certain strains cause gastrointestinal illness. A historical result is not a current advisory; follow current utility or health-department instructions.',PRIMARY],
+ ['cadmium',['cadmium','cadmium total'],'Cadmium','Long-term elevated cadmium exposure can damage kidneys.',PRIMARY],
+ ['barium',['barium','barium total'],'Barium','Elevated barium exposure can increase blood pressure.',PRIMARY],
+ ['copper',['copper','copper total'],'Copper','Elevated copper can cause stomach symptoms and, with long-term exposure, liver or kidney problems.',PRIMARY],
  ['arsenic',['arsenic','arsenic total'],'Arsenic','Long-term exposure to elevated arsenic can affect skin and circulation and increase cancer risk.',PRIMARY],
  ['nitrate',['nitrate','nitrate as n','nitrate (as nitrogen)','nitrate (measured as nitrogen)'],'Nitrate','Elevated nitrate can impair oxygen transport, with infants especially vulnerable.',PRIMARY],
  ['nitrite',['nitrite','nitrite as n','nitrite (as nitrogen)','nitrite (measured as nitrogen)'],'Nitrite','Elevated nitrite can impair oxygen transport, with infants especially vulnerable.',PRIMARY],
@@ -13,7 +18,7 @@ const entries=[
  ['uranium',['uranium','uranium total'],'Uranium','Elevated uranium exposure can harm kidneys and increase cancer risk.',PRIMARY],
  ['radium',['radium 226','radium 228','radium 226 and 228','combined radium 226 and 228'],'Radium','Long-term exposure to elevated radium can increase cancer risk.',PRIMARY],
  ['haa5',['haa5','haloacetic acids (haa5)','haloacetic acids five'],'Haloacetic acids','HAA5 are disinfection byproducts. Long-term elevated exposure can increase cancer risk.',PRIMARY],
- ['tthm',['tthm','tthms','total trihalomethanes','trihalomethanes total'],'Total trihalomethanes','These disinfection byproducts can affect organs and increase cancer risk with long-term elevated exposure.',PRIMARY],
+ ['tthm',['tthm','tthms','total trihalomethanes','trihalomethanes total','trihalomethanes (tthms)'],'Total trihalomethanes','These disinfection byproducts can affect organs and increase cancer risk with long-term elevated exposure.',PRIMARY],
  ['bromate',['bromate'],'Bromate','Bromate is a disinfection byproduct associated with increased cancer risk at elevated long-term exposure.',PRIMARY],
  ['lithium',['lithium'],'Lithium','EPA monitors lithium to better understand its occurrence in drinking water. Evidence about risks at typical drinking-water exposures remains limited; a screening reference is not a household safety determination.',UCMR],
  ['pfas',['PFOA','PFOS','PFNA','PFHxS','PFBS','PFBA','PFPeA','PFHxA','PFHpA','PFDA','PFUnA','PFDoA','PFTrDA','PFTeDA','PFPeS','PFHpS','PFNS','PFDS','HFPO-DA','GenX','ADONA','NFDHA','9Cl-PF3ONS','11Cl-PF3OUdS','4:2 FTS','6:2 FTS','8:2 FTS','NMeFOSAA','NEtFOSAA','PFMBA','PFMPA','PFEESA','perfluorooctanoic acid','perfluorooctanesulfonic acid'],'PFAS','Research links exposure to certain PFAS with immune, developmental, liver and other effects, and some cancers. Evidence and toxicity differ among compounds. A finding for one PFAS cannot be applied automatically to another.',PFAS]

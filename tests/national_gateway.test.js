@@ -63,7 +63,7 @@ test('production gateway preserves national, local, and account routes', { timeo
     await t.test('home and national client are served through the real gateway', async () => {
       const home = await fetch(base + '/');
       assert.equal(home.status, 200);
-      assert.match(await home.text(), /Across the United States/);
+      assert.match(await home.text(), /Water answers, close to home/);
       assert.equal(home.headers.get('cache-control'), 'no-store');
       const client = await fetch(base + '/national-client.js');
       assert.equal(client.status, 200);

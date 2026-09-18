@@ -6,9 +6,11 @@ class EvidenceError extends Error { constructor(code,message,status=422){super(m
 function validateInput(raw){
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new EvidenceError('BAD_INPUT','A JSON object is required.');
   const str=(key,max)=>{const value=raw[key]??'';if(typeof value!=='string'||value.length>max||/[\x00-\x1f\x7f]/.test(value))throw new EvidenceError('BAD_INPUT',`Invalid ${key}.`);return value.normalize('NFKC').trim();};
-  const x={street:str('street',180),city:str('city',100),state:str('state',2).toUpperCase(),zip:str('zip',10),pwsid:str('pwsid',9).toUpperCase(),supply_type:str('supply_type',12)||'unknown'};
-  if(!REGION_CODES.includes(x.state))throw new EvidenceError('BAD_REGION','Choose a supported US state, district, or territory.');
-  if(!x.pwsid&&(!x.street||(!x.city&&!x.zip)))throw new EvidenceError('ADDRESS_REQUIRED','Provide a street and city or ZIP, or a complete PWSID.');
+  const x={address:str('address',300),street:str('street',180),city:str('city',100),state:str('state',2).toUpperCase(),zip:str('zip',10),pwsid:str('pwsid',9).toUpperCase(),supply_type:str('supply_type',12)||'unknown'};
+  if((x.state||!x.address)&&!REGION_CODES.includes(x.state))throw new EvidenceError('BAD_REGION','Include a US state or territory with your address.');
+  if(!x.address&&!x.pwsid&&(!x.street||(!x.city&&!x.zip)))throw new EvidenceError('ADDRESS_REQUIRED','Enter your street address, city and state or ZIP code.');
+  if(x.address&&x.address.length<8)throw new EvidenceError('ADDRESS_REQUIRED','Add the street number, street name and city or ZIP code.');
+  if(raw.include_environment!==undefined&&typeof raw.include_environment!=='boolean')throw new EvidenceError('BAD_INPUT','Invalid environmental search choice.');
   if(x.zip&&!/^\d{5}(-\d{4})?$/.test(x.zip))throw new EvidenceError('BAD_ZIP','Use a five-digit ZIP or ZIP+4.');
   if(x.pwsid&&!validPwsid(x.pwsid))throw new EvidenceError('BAD_PWSID','Use the complete nine-character federal PWSID.');
   if(!['unknown','public','private-well'].includes(x.supply_type))throw new EvidenceError('BAD_SUPPLY','Supply must be unknown, public, or private-well.');
@@ -57,9 +59,11 @@ function normalizeMeasurement(raw,asOf=new Date().toISOString().slice(0,10)){
 }
 function censusMatch(payload,input){
   const rows=payload?.result?.addressMatches;if(!Array.isArray(rows))throw new EvidenceError('CENSUS_SCHEMA','Census did not return an address-match list.',502);
-  const hits=rows.filter(x=>x?.addressComponents?.state?.toUpperCase()===input.state&&typeof x.coordinates?.x==='number'&&typeof x.coordinates?.y==='number'&&Number.isFinite(x.coordinates.x)&&Number.isFinite(x.coordinates.y)&&Math.abs(x.coordinates.x)<=180&&Math.abs(x.coordinates.y)<=90);
-  if(hits.length!==1)return {status:hits.length?'ambiguous':'unresolved',candidate_count:hits.length};
-  return {status:'matched',longitude:hits[0].coordinates.x,latitude:hits[0].coordinates.y,matched_address:hits[0].matchedAddress,precision:'address-range-interpolation-not-rooftop',household_connection_verified:false};
+  const hits=rows.filter(x=>REGION_CODES.includes(x?.addressComponents?.state?.toUpperCase())&&(!input.state||x.addressComponents.state.toUpperCase()===input.state)&&typeof x.coordinates?.x==='number'&&typeof x.coordinates?.y==='number'&&Number.isFinite(x.coordinates.x)&&Number.isFinite(x.coordinates.y)&&Math.abs(x.coordinates.x)<=180&&Math.abs(x.coordinates.y)<=90);
+  if(hits.length!==1)return {status:hits.length?'ambiguous':'unresolved',candidate_count:hits.length,candidates:hits.slice(0,5).map(x=>({address:x.matchedAddress,state:x.addressComponents.state}))};
+  const hit=hits[0],geography={};
+  for(const [key,label]of [['States','state'],['Counties','county'],['Census Tracts','tract'],['Census Blocks','block']]){const list=hit.geographies?.[key];if(Array.isArray(list)&&list.length===1)geography[label]={name:list[0].NAME||null,geoid:list[0].GEOID||null};}
+  return {status:'matched',longitude:hit.coordinates.x,latitude:hit.coordinates.y,matched_address:hit.matchedAddress,state:hit.addressComponents.state.toUpperCase(),components:hit.addressComponents,geography,precision:'address-range-interpolation-not-rooftop',household_connection_verified:false};
 }
 function boundaryCandidates(payload){
   if(!Array.isArray(payload?.features))throw new EvidenceError('BOUNDARY_SCHEMA','Boundary source did not return features.',502);

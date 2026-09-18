@@ -1,0 +1,41 @@
+name: National resident source contracts
+on:
+  pull_request:
+    paths:
+      - 'national/property.js'
+      - 'national/resident*.js'
+      - 'national/evidence.js'
+      - 'national/service.js'
+      - '.github/workflows/national-resident-contract.yml'
+permissions:
+  contents: read
+jobs:
+  official-sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify public civic address and environmental schemas
+        run: |
+          node <<'JS'
+          const fs=require('node:fs');
+          const {createEngine}=require('./national/service');
+          const {createPropertyContext,sourceReader}=require('./national/property');
+          (async()=>{
+            // Public civic buildings only. No resident address is used by CI.
+            const address=await createEngine().lookup({address:'301 W 2nd Street, Austin, TX 78701'});
+            const property=await createPropertyContext({request:sourceReader({timeoutMs:25000})})({state:'NY',latitude:40.7128,longitude:-74.0060,matched_address:'CITY HALL, NEW YORK, NY'},{supplyType:'public'});
+            const checks={one_address:address.address.status==='matched',provider:address.systems.length>0,resident_report:!!address.resident_report?.actions?.length,usgs_wells:property.wells.status!=='unavailable',epa_cleanup:property.cleanup_sites.status!=='unavailable',nyc_inventory:property.service_line.status!=='unavailable',no_household_guarantee:address.resident_report.household_safety==='not-determined'};
+            fs.writeFileSync('resident-source-contract.json',JSON.stringify({checks,address,property},null,2));
+            console.log(JSON.stringify(checks));if(Object.values(checks).some(x=>!x))process.exitCode=1;
+          })().catch(e=>{console.error(e.name,e.message);process.exitCode=1;});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: resident-source-contract
+          path: resident-source-contract.json
+          retention-days: 3
