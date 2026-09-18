@@ -1,5 +1,42 @@
 # WQP environmental acquisition
 
+## Production archive and geographic serving
+
+`environmental_archive.py` connects the validated WQX3 reader to the existing
+Railway object store. `WAREHOUSE_WQP_ENABLED=true` enables it in the warehouse
+service after the drinking-water archive cycle. The initial nationwide plan
+covers 1900 through the activation date and is persisted; restarts do not create
+a new snapshot or count the same partitions again. Newer years are acquired
+first, with serial requests and automatic subdivision of oversized intervals.
+
+Each completed partition retains the original official response, checksummed
+Parquet, a spatial serving index, and provenance. Two alternating compressed
+checkpoint slots and an atomic head pointer preserve the last published state
+if the process stops mid-publication. Storage use shares the warehouse's total
+bucket budget, including old and partial objects. Partitions are counted only
+after the checkpoint head is published. Transfer, decoded-byte, row, memory,
+temporary-disk and response limits remain enforced. Failed partitions remain
+visible; after three attempts they need investigation rather than endless retries.
+
+The private `/environment/near?lat=...&lon=...` endpoint searches at most four
+recent acquired partitions intersecting a 5 km bounding envelope. It returns at
+most 50 latest-per-group source results, with truncation and source dates. Explicit
+WGS84 coordinates are used directly. Explicit NAD83/NAD27 coordinates use a named
+PROJ operation with reported transformation accuracy of 10 metres or better,
+with ballpark operations and network grid downloads disabled. The serving record
+identifies the operation and its accuracy; this does not verify the source's
+positional accuracy. Original coordinates and datums remain unchanged in Parquet.
+Unsupported datums or unavailable operations remain retained but unmapped.
+Indexes are cached within a 256 MB ceiling. No whole national dataset is loaded
+into an address request. These are environmental results, never an authenticated
+sample from the user's home, proof of a hydraulic connection, or a safety finding.
+
+This is a reproducible historical acquisition snapshot, not change-data capture.
+It does not imply that every public source record exists within the plan's state,
+date and physical/chemical filters, and it does not certify independent samples.
+The public status API and UI report environmental acquisition separately from
+drinking-water observations and show only actually published row counts.
+
 `wqp_backfill.py` acquires actual WQP result rows into a persistent directory.
 It uses the current **WQX3** physical/chemical contract, preserves source values
 and qualifiers, and records actual imported row counts. It never promotes

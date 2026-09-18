@@ -180,6 +180,7 @@ def download(url, target, max_bytes, timeout=45, retries=3, opener=None, sleeper
     last = None
     for attempt in range(retries + 1):
         try:
+            started=time.monotonic()
             request = urllib.request.Request(url, headers={
                 'Accept': 'application/zip,text/csv,text/plain', 'Accept-Encoding': 'identity',
                 'User-Agent': 'IsMyWaterOK-WQP-Backfill/1.0 (+https://www.ismywaterok.com)'})
@@ -195,6 +196,7 @@ def download(url, target, max_bytes, timeout=45, retries=3, opener=None, sleeper
                 received = 0
                 with target.open('wb') as output:
                     while True:
+                        if time.monotonic()-started>180:raise TimeoutError('WQP transfer exceeded the total time budget.')
                         block = response.read(min(1024 * 1024, max_bytes - received + 1))
                         if not block:
                             break
@@ -248,6 +250,8 @@ def normalize(raw_path, staging, part, source, max_decoded_bytes, max_rows, batc
                 if count > max_rows or decoded > max_decoded_bytes:
                     raise BudgetExceeded('Decoded row/byte budget exceeded; split the partition.')
                 date = raw['Activity_StartDate']
+                try:dt.date.fromisoformat(date)
+                except (ValueError,TypeError):raise ValueError('Result activity date is not a valid ISO calendar date.')
                 if not date or not part['start'] <= date[:10] <= part['end']:
                     raise ValueError('Result activity date is outside the requested partition.')
                 if not raw['Org_Identifier'] or not raw['Location_Identifier'] or not raw['Activity_ActivityIdentifier']:
