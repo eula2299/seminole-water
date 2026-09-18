@@ -123,6 +123,7 @@ const srv=http.createServer(async(req,res)=>{const _pu=new URL(req.url,'http://l
 });
 srv.on('error',e=>{if(e.code==='EADDRINUSE'){console.error(`Port ${PORT} is already in use. Run with PORT=3001 npm start`);process.exit(1);}throw e;});
 srv.headersTimeout=20000;srv.requestTimeout=45000;srv.keepAliveTimeout=15000;
+srv.on('listening',()=>{if(process.send)process.send({type:'core-ready'});});
 let shuttingDown=false;
 function shutdown(signal){if(shuttingDown)return;shuttingDown=true;console.log(`\n${signal} received: draining connections...`);
   try{impactCounter.flush();}catch(e){console.error('impact flush failed:',e.message);}
