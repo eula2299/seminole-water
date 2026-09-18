@@ -4,6 +4,18 @@ from national import warehouse as W
 from national.warehouse import process_member,canonical_sql,status
 from botocore.exceptions import ClientError
 class WarehouseTests(unittest.TestCase):
+ def test_documented_microbial_presence_is_never_a_numeric_detection(self):
+  with tempfile.TemporaryDirectory() as t:
+   p=pathlib.Path(t);f=p/'input.tsv'
+   header='ANALYTE_CODE\tPWSID\tANALYTE_NAME\tSAMPLE_COLLECTION_DATE\tVALUE\tUNIT\tDETECT\tPRESENCE_INDICATOR_CODE\tSAMPLING_POINT_TYPE\n'
+   rows=['3100\tAK2270312\tCOLIFORM (TCR)\t31-AUG-16\t\t\t\tP\tDS',
+         '3100\tAK2270312\tCOLIFORM (TCR)\t01-SEP-16\t\t\t\tA\tDS',
+         '3100\tAK2270312\tCOLIFORM (TCR)\t02-SEP-16\t\t\t\t?\tDS',
+         '9999\tAK2270312\tUNKNOWN\t01-SEP-16\t\t\t\tP\tDS']
+   f.write_text(header+'\n'.join(rows)+'\n')
+   r=process_member(str(f),p/'x.parquet',p/'s.sqlite','syr4','microbes.txt');self.assertEqual(r['eligible_source_rows'],2)
+   with sqlite3.connect(p/'s.sqlite') as db:row=db.execute('SELECT result_kind,n,detects,nondetects,min_detect,max_detect,present_results,absent_results,unit FROM summaries').fetchone()
+   self.assertEqual(row,('presence-absence',2,0,0,None,None,1,1,'presence/absence'))
  def test_syr4_quoted_fields_short_dates_and_nondetect_units(self):
   import csv,duckdb
   with tempfile.TemporaryDirectory() as t:

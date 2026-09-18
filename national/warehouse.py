@@ -12,7 +12,7 @@ except ImportError:
  from catalog import discover, download
 
 VERSION='occurrence-warehouse/2'
-PARSER_PROFILES={'ucmr':'ucmr-tab-bound-v2','syr3':'syr3-date-bound-v2','syr4':'syr4-quoted-date-bound-v2'}
+PARSER_PROFILES={'ucmr':'ucmr-tab-bound-v2','syr3':'syr3-date-bound-v2','syr4':'syr4-quoted-microbial-v3'}
 ROOT=pathlib.Path(os.environ.get('WAREHOUSE_DIR','/tmp/water-warehouse'))
 MAX_ARCHIVE=int(os.environ.get('WAREHOUSE_MAX_ARCHIVE_BYTES','2000000000'))
 MAX_TOTAL=int(os.environ.get('WAREHOUSE_MAX_TOTAL_BYTES','20000000000'))
@@ -63,14 +63,21 @@ def canonical_sql(columns,family):
  numeric=f"isfinite({value}) AND {value}>=0"
  bound=f"CASE WHEN {m['value']} IS NULL THEN TRY_CAST({m['limit']} AS DOUBLE) ELSE {value} END"
  eligible=f"COALESCE(({valid}) AND ({typed}) AND (({qualifier}='=' AND {numeric}) OR ({qualifier} IN ('<','<=','>','>=') AND isfinite({bound}) AND {bound}>=0)),false)"
+ # EPA's SYR4 dictionary defines P/A only for TC (3100), EC (3014),
+ # and FC (3013). These are qualitative results, never concentrations.
+ # https://www.epa.gov/system/files/documents/2024-11/user-guide-to-downloading-and-using-syr4-data_0.pdf
+ code=column(columns,'analytecode','analyteid')
+ qualitative=f"COALESCE(({valid}) AND {code} IN ('3100','3014','3013') AND {m['presence']} IN ('P','A'),false)" if family=='syr4' else 'false'
  return f"""SELECT UPPER({m['pwsid']}) AS pwsid,{m['name']} AS system_name,{m['analyte']} AS analyte,
  {date} AS sample_date,{m['date']} AS original_date,{m['value']} AS original_value,{m['unit']} AS original_unit,
- {qualifier} AS qualifier,{m['limit']} AS reporting_limit,{m['limit_unit']} AS reporting_limit_unit,{result_unit} AS result_unit,
- CASE WHEN ({eligible}) AND {qualifier}='=' THEN {value} ELSE NULL END AS detected_value,
+ {qualifier} AS qualifier,{m['limit']} AS reporting_limit,{m['limit_unit']} AS reporting_limit_unit,
+ CASE WHEN {qualitative} THEN 'presence/absence' ELSE {result_unit} END AS result_unit,
+ CASE WHEN {qualitative} THEN 'presence-absence' ELSE 'numeric' END AS result_kind,
+ CASE WHEN ({eligible}) AND NOT ({qualitative}) AND {qualifier}='=' THEN {value} ELSE NULL END AS detected_value,
  {m['sample']} AS sample_id,{m['point']} AS point_id,{m['facility']} AS facility_id,
  {m['point_type']} AS point_type,{m['source_type']} AS source_type,{m['origin']} AS origin_id,{m['presence']} AS presence,
  CASE WHEN {m['point_type']} IN ('RW','SR') OR {m['source_type']}='RW' THEN 'source-water' WHEN {m['point_type']} IN ('EP','DS') THEN 'system-monitoring' ELSE 'system-sampling-context-unspecified' END AS evidence_scope,
- {valid} AS identity_date_valid,{eligible} AS summary_eligible,sha256(to_json(r)) AS source_record_sha256,to_json(r) AS original_record
+ {valid} AS identity_date_valid,({eligible}) OR ({qualitative}) AS summary_eligible,sha256(to_json(r)) AS source_record_sha256,to_json(r) AS original_record
  FROM raw_input r"""
 
 def prepare_member(source_file,family,member):
@@ -108,11 +115,11 @@ def process_member(source_file,parquet_path,summary_db,family,member):
   con.execute('CREATE TABLE distinct_rows AS SELECT * FROM normalized QUALIFY ROW_NUMBER() OVER (PARTITION BY source_record_sha256)=1')
   count,invalid,eligible=con.execute('SELECT COUNT(*),COUNT(*) FILTER (WHERE NOT COALESCE(identity_date_valid,false)),COUNT(*) FILTER (WHERE summary_eligible) FROM distinct_rows').fetchone()
   con.execute("COPY (SELECT * FROM distinct_rows ORDER BY pwsid,sample_date DESC) TO "+lit(parquet_path)+" (FORMAT PARQUET, COMPRESSION ZSTD, ROW_GROUP_SIZE 65536)")
-  cursor=con.execute("""SELECT pwsid,analyte,result_unit,evidence_scope,COUNT(*),COUNT(detected_value),COUNT(*) FILTER(WHERE qualifier IN ('<','<=')),MIN(sample_date)::VARCHAR,MAX(sample_date)::VARCHAR,MIN(detected_value),MAX(detected_value),arg_max(original_record,sample_date),0 FROM distinct_rows WHERE summary_eligible GROUP BY 1,2,3,4""")
+  cursor=con.execute("""SELECT pwsid,analyte,result_unit,evidence_scope,COUNT(*),COUNT(detected_value),COUNT(*) FILTER(WHERE result_kind='numeric' AND qualifier IN ('<','<=')),MIN(sample_date)::VARCHAR,MAX(sample_date)::VARCHAR,MIN(detected_value),MAX(detected_value),arg_max(original_record,sample_date),0,COUNT(*) FILTER(WHERE result_kind='presence-absence' AND presence='P'),COUNT(*) FILTER(WHERE result_kind='presence-absence' AND presence='A'),result_kind FROM distinct_rows WHERE summary_eligible GROUP BY 1,2,3,4,16""")
   db=sqlite3.connect(summary_db)
   try:
-   db.execute('CREATE TABLE IF NOT EXISTS summaries (pwsid TEXT,analyte TEXT,unit TEXT,scope TEXT,n INTEGER,detects INTEGER,nondetects INTEGER,first_date TEXT,last_date TEXT,min_detect REAL,max_detect REAL,latest_record TEXT,invalid_identity_date INTEGER,member TEXT)')
-   while rows:=cursor.fetchmany(2000):db.executemany('INSERT INTO summaries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',[tuple(r)+(member,) for r in rows])
+   db.execute('CREATE TABLE IF NOT EXISTS summaries (pwsid TEXT,analyte TEXT,unit TEXT,scope TEXT,n INTEGER,detects INTEGER,nondetects INTEGER,first_date TEXT,last_date TEXT,min_detect REAL,max_detect REAL,latest_record TEXT,invalid_identity_date INTEGER,present_results INTEGER,absent_results INTEGER,result_kind TEXT,member TEXT)')
+   while rows:=cursor.fetchmany(2000):db.executemany('INSERT INTO summaries VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',[tuple(r)+(member,) for r in rows])
    db.commit()
   finally:db.close()
   return {'member':member,'parser_profile':PARSER_PROFILES[family],'trailing_metadata_padding_rows':padded,'raw_rows':raw_count,'distinct_source_rows':count,'eligible_source_rows':eligible,'excluded_from_summary_rows':count-eligible,'invalid_identity_date_rows':invalid,'sha256':digest(parquet_path),'bytes':parquet_path.stat().st_size}
@@ -240,7 +247,7 @@ def status():
  with LOCK:s=json.loads(json.dumps(STATE))
  receipts=distinct_receipts(s['sources'].values());count=sum(x['distinct_source_rows'] for x in receipts)
  eligible=sum(x.get('eligible_source_records',0) for x in receipts if x.get('schema')==VERSION)
- s.update(retained_source_records=count,eligible_source_records=eligible,raw_rows=sum(x['raw_rows'] for x in receipts),published_archives=len(receipts),qualified_archives=sum(x.get('schema')==VERSION for x in receipts),active_archive_bytes=sum(x['stored_bytes'] for x in receipts),stored_bytes=s['persistent_storage_bytes'],storage_budget_bytes=MAX_TOTAL,target_met=eligible>=s['target_minimum_records'],count_definition='retained exact source-field rows deduplicated within each archive member; eligible rows additionally pass identity, date, numeric-result and unit checks; neither count is an independent-observation or household count; cross-source duplication is not resolved',target_count_basis='eligible_source_records',household_safety_certified=False,coverage_complete=False)
+ s.update(retained_source_records=count,eligible_source_records=eligible,raw_rows=sum(x['raw_rows'] for x in receipts),published_archives=len(receipts),qualified_archives=sum(x.get('schema')==VERSION for x in receipts),active_archive_bytes=sum(x['stored_bytes'] for x in receipts),stored_bytes=s['persistent_storage_bytes'],storage_budget_bytes=MAX_TOTAL,target_met=eligible>=s['target_minimum_records'],count_definition='retained exact source-field rows deduplicated within each archive member; eligible rows additionally pass identity, date, and typed numeric or documented qualitative-result checks; neither count is an independent-observation or household count; cross-source duplication is not resolved',target_count_basis='eligible_source_records',household_safety_certified=False,coverage_complete=False)
  s['sources']={key:{k:v for k,v in receipt.items() if k not in ('parts','skipped_members')} for key,receipt in s['sources'].items()}
  return s
 

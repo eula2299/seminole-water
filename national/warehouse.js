@@ -88,10 +88,21 @@ function createWarehouse({connectionString=process.env.DATABASE_URL,pool}={}) {
    const budget=Number(process.env.NATIONAL_MAX_DATABASE_BYTES||3000000000);
    if(!Number.isFinite(budget)||budget<1000000)throw new Error('INVALID_DATABASE_BUDGET');
    let rowsSinceBudget=20000;
-   async function cleanup(runIds){for(const runId of runIds){let deleted;do{const r=await client.query('DELETE FROM national_water.records WHERE ctid IN (SELECT ctid FROM national_water.records WHERE run_id=$1 LIMIT 5000)',[runId]);deleted=r.rowCount;}while(deleted);}}
+   async function cleanup(runIds){
+    // Materialize a bounded TID array first. The previous IN-subquery could
+    // scan the entire multi-million-row table on every deletion batch.
+    for(const runId of runIds){
+     while(true){
+      const batch=await client.query('SELECT ctid::text AS row_location FROM national_water.records WHERE run_id=$1 LIMIT 1000',[runId]);
+      if(!batch.rows.length)break;
+      await client.query('DELETE FROM national_water.records WHERE ctid=ANY($1::tid[]) AND run_id=$2',[batch.rows.map(r=>r.row_location),runId]);
+     }
+    }
+   }
    await client.query(`INSERT INTO national_water.sources(source) VALUES($1) ON CONFLICT DO NOTHING`,[source]);
    // Interrupted imports are invisible; discard their rows before another import starts.
    const old=await client.query(`SELECT id FROM national_water.runs WHERE source=$1 AND id NOT IN (SELECT active_run FROM national_water.sources WHERE active_run IS NOT NULL)`,[source]);
+   await client.query(`UPDATE national_water.runs SET status='failed',completed_at=now(),error_code='INTERRUPTED_IMPORT' WHERE source=$1 AND status='running' AND id NOT IN (SELECT active_run FROM national_water.sources WHERE active_run IS NOT NULL)`,[source]);
    await cleanup(old.rows.map(r=>r.id));
    await client.query(`DELETE FROM national_water.runs WHERE source=$1 AND id NOT IN (SELECT active_run FROM national_water.sources WHERE active_run IS NOT NULL)`,[source]);
    await client.query(`INSERT INTO national_water.runs(id,source,status,source_url) VALUES($1,$2,'running',$3)`,[id,source,sourceUrl]);

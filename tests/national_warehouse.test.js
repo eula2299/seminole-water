@@ -40,6 +40,9 @@ test('Postgres atomic snapshots, idempotency, lock, query, counts and failure re
   const empty=await w.beginImport('ucmr5','https://www.epa.gov/empty.zip');await assert.rejects(empty.publish(),/EMPTY_SOURCE_IMPORT/);
   status=await w.status();assert.equal(status.sources.find(s=>s.source==='ucmr5').latest_attempt.status,'failed');assert.equal(status.sources.find(s=>s.source==='ucmr5').latest_attempt.error_code,'EMPTY_SOURCE_IMPORT');
   assert.equal((await w.lookupSystem('NY0000001')).observations[0].sample_id,'S2');
-  const retry=await w.beginImport('ucmr5','https://www.epa.gov/retry.zip');assert.ok(retry);await retry.fail('END_TEST');
+  const retry=await w.beginImport('ucmr5','https://www.epa.gov/retry.zip');assert.ok(retry);
+  await retry.batch(Array.from({length:1201},(_,i)=>normalize('ucmr5','observation',{...sample,SampleID:'cleanup-'+i})));
+  await retry.fail('END_TEST');assert.equal((await pool.query('SELECT count(*)::int AS n FROM national_water.records WHERE run_id=$1',[retry.id])).rows[0].n,0);
+  assert.equal((await w.lookupSystem('NY0000001')).observations[0].sample_id,'S2');
  }finally{await pool.query('DROP SCHEMA IF EXISTS national_water CASCADE');await pool.end();}
 });
