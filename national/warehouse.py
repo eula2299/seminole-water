@@ -45,7 +45,7 @@ def canonical_sql(columns,family):
  m=mapping(columns,family)
  q=m['qualifier']
  qualifier=(f"CASE {q} WHEN '<' THEN '<' WHEN '=' THEN '=' ELSE {q} END" if family=='ucmr' else f"CASE {q} WHEN '0' THEN '<' WHEN '1' THEN '=' ELSE {q} END")
- date=f"COALESCE(TRY_STRPTIME({m['date']}, ['%m/%d/%Y','%m/%d/%Y %H:%M:%S','%Y-%m-%d %H:%M:%S.%f','%Y-%m-%d %H:%M:%S','%Y-%m-%d'])::DATE, TRY_CAST(SUBSTR({m['date']},1,10) AS DATE))"
+ date=f"COALESCE(TRY_STRPTIME({m['date']}, ['%m/%d/%Y','%m/%d/%Y %H:%M:%S','%Y-%m-%d %H:%M:%S.%f','%Y-%m-%d %H:%M:%S','%Y-%m-%d','%d-%b-%y','%d-%b-%Y'])::DATE, TRY_CAST(SUBSTR({m['date']},1,10) AS DATE))"
  value=f"TRY_CAST({m['value']} AS DOUBLE)"
  valid=f"regexp_full_match(UPPER({m['pwsid']}),'[A-Z0-9]{{9}}') AND {date} IS NOT NULL AND {date}<=CURRENT_DATE AND {m['analyte']} IS NOT NULL"
  return f"""SELECT UPPER({m['pwsid']}) AS pwsid,{m['name']} AS system_name,{m['analyte']} AS analyte,
