@@ -35,6 +35,11 @@ STATES = dict(zip(
     'AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY AS GU MP PR VI'.split(),
     '01 02 04 05 06 08 09 10 11 12 13 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 44 45 46 47 48 49 50 51 53 54 55 56 60 66 69 72 78'.split()))
 SCHEMA = 'wqp-environmental-backfill/1'
+PARSER_PROFILE = 'wqx3-explicit-incomplete-footer-v2'
+# WQP can return HTTP 200 and a CSV prefix followed by this error instead of
+# a complete download. The prefix must never be published as a complete result.
+INCOMPLETE_FOOTER = ('ERROR: INCOMPLETE DATA - THE RESULTS FOR THIS REQUEST ARE NOT COMPLETE '
+                     'AND MORE DATA IS LIKELY AVAILABLE.  PLEASE RETRY THE REQUEST.')
 FIELDS = {
     'organization_id': 'Org_Identifier', 'site_id': 'Location_Identifier',
     'site_type': 'Location_Type', 'activity_id': 'Activity_ActivityIdentifier',
@@ -245,6 +250,9 @@ def normalize(raw_path, staging, part, source, max_decoded_bytes, max_rows, batc
                     or not REQUIRED.issubset(headers)):
                 raise ValueError('Missing/duplicate WQX3 result columns; source contract changed or error body returned.')
             for line, raw in enumerate(reader, 2):
+                if (raw.get(headers[0], '').strip() == INCOMPLETE_FOOTER
+                        and all(raw.get(key) is None for key in headers[1:]) and None not in raw):
+                    raise BudgetExceeded('WQP explicitly marked the response incomplete; split the date interval.')
                 if None in raw or any(value is None for value in raw.values()):
                     raise ValueError(f'Malformed WQX3 CSV row {line}.')
                 text = canonical(raw)

@@ -95,6 +95,22 @@ class EnvironmentalArchiveTests(unittest.TestCase):
   archive.query_lock.acquire()
   try:self.assertEqual(archive.near(44.5,-93.5)['status'],'busy')
   finally:archive.query_lock.release()
+ def test_legacy_malformed_response_retries_new_contract_once_and_preserves_failure_history(self):
+  archive=self.create();ident=self.plan['partitions'][0]['id']
+  with self.store.publication_lock():
+   archive.data['jobs'][ident].update(status='failed',attempts=3,error='Malformed WQX3 CSV row 198.')
+   archive._save()
+  restart=self.create('restart');restart.step()
+  self.assertEqual(restart.status()['retained_source_rows'],1)
+  self.assertEqual(restart.data['jobs'][ident]['previous_attempts'],3)
+  self.assertEqual(restart.data['jobs'][ident]['previous_error'],'Malformed WQX3 CSV row 198.')
+  self.assertEqual(restart.data['jobs'][ident]['parser_profile'],E.Q.PARSER_PROFILE)
+ def test_new_malformed_response_is_not_reset_after_exhausted_retries(self):
+  archive=self.create(fetcher=self.fetch(fixture()+b'bad row\n'))
+  for _ in range(3):archive.step()
+  self.assertFalse(archive.step());self.assertEqual(self.calls,3)
+  self.assertEqual(archive.status()['partition_status_counts']['failed'],1)
+  self.assertEqual(archive.status()['retained_source_rows'],0)
  def test_distinct_tables_with_same_row_number_are_not_collapsed(self):
   body=io.BytesIO()
   with zipfile.ZipFile(body,'w') as z:
