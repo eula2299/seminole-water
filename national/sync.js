@@ -12,6 +12,13 @@ const SOURCES=Object.freeze({
  sdwis:{page:'https://echo.epa.gov/tools/data-downloads/sdwa-download-summary',url:'https://echo.epa.gov/files/echodownloads/SDWA_latest_downloads.zip',maxBytes:750000000,required:['system']},
  'sdwis-violations':{page:'https://echo.epa.gov/tools/data-downloads/sdwa-download-summary',url:'https://echo.epa.gov/files/echodownloads/SDWA_latest_downloads.zip',maxBytes:750000000,required:['violation']}
 });
+function defaultPostgresSources(env=process.env){
+ const sources=['ucmr5','sdwis'];
+ // Full violation/enforcement history is served from the object-store compliance
+ // archive. Keep the duplicate Postgres snapshot opt-in for compatibility only.
+ if(String(env.NATIONAL_POSTGRES_VIOLATIONS_ENABLED||'').toLowerCase()==='true')sources.push('sdwis-violations');
+ return sources;
+}
 function approved(value){const u=new URL(value);if(u.protocol!=='https:'||u.port&&u.port!=='443'||u.username||u.password||!['www.epa.gov','echo.epa.gov'].includes(u.hostname))throw new Error('UNAPPROVED_DOWNLOAD_URL');return u;}
 async function request(url,options={},fetchImpl=fetch){
  let u=approved(url);
@@ -112,7 +119,7 @@ function startBackgroundSync({warehouse=createWarehouse(),log=event=>console.log
   try{
    const status=await warehouse.status();
    if(status.status==='not-connected'){log({event:'not-configured'});return;}
-   for(const source of ['ucmr5','sdwis','sdwis-violations']){
+   for(const source of defaultPostgresSources()){
     if(stopped)break;
     const existing=status.sources.find(s=>s.source===source);
     if(existing?.run_id&&Date.now()-new Date(existing.checked_at||existing.completed_at).getTime()<intervalMs)continue;
@@ -125,7 +132,7 @@ function startBackgroundSync({warehouse=createWarehouse(),log=event=>console.log
 }
 if(require.main===module){
  const args=process.argv.slice(2);const val=k=>{const i=args.indexOf(k);return i>=0?args[i+1]:undefined;};
- if(args.includes('--help')){console.log('node national/sync.js --source ucmr5|sdwis|sdwis-violations|all [--input-file official.zip]\nRequires DATABASE_URL. Imports complete verified snapshots; failed/partial imports are never served.');}
- else (async()=>{const source=val('--source')||'all';for(const s of source==='all'?['ucmr5','sdwis','sdwis-violations']:[source]){try{console.log(JSON.stringify(await syncSource(s,{inputFile:val('--input-file'),force:args.includes('--force'),log:e=>console.log(JSON.stringify(e))})));}catch(e){console.error(JSON.stringify({source:s,status:'failed',error_code:e.code||String(e.message).split(':')[0]}));process.exitCode=1;}}})().catch(e=>{console.error('National import failed:',e.code||'IMPORT_FAILED');process.exitCode=1;});
+ if(args.includes('--help')){console.log('node national/sync.js --source ucmr5|sdwis|sdwis-violations|all [--input-file official.zip]\nDefault all imports UCMR5 + SDWIS system directory. Full violation/enforcement history is served by the object-store compliance archive; set NATIONAL_POSTGRES_VIOLATIONS_ENABLED=true to include the duplicate Postgres snapshot.');}
+ else (async()=>{const source=val('--source')||'all';for(const s of source==='all'?defaultPostgresSources():[source]){try{console.log(JSON.stringify(await syncSource(s,{inputFile:val('--input-file'),force:args.includes('--force'),log:e=>console.log(JSON.stringify(e))})));}catch(e){console.error(JSON.stringify({source:s,status:'failed',error_code:e.code||String(e.message).split(':')[0]}));process.exitCode=1;}}})().catch(e=>{console.error('National import failed:',e.code||'IMPORT_FAILED');process.exitCode=1;});
 }
-module.exports={SOURCES,approved,request,discoverUcmr,download,importArchive,syncSource,startBackgroundSync};
+module.exports={SOURCES,defaultPostgresSources,approved,request,discoverUcmr,download,importArchive,syncSource,startBackgroundSync};

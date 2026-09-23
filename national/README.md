@@ -29,9 +29,11 @@ advisory sources still need integration.
 ## Persistent source ingestion
 
 `national/sync.js` downloads official whole-cycle EPA UCMR5 occurrence data and
-the SDWIS national directory. Violation/enforcement rows are imported as a
-separate snapshot because they have different meaning and storage requirements.
-Sources are discovered/allowlisted, downloaded with byte limits, SHA-256 hashed,
+the SDWIS national system directory into PostgreSQL. Full violation/enforcement
+history is served from the separate object-store compliance archive because it
+has different scale, meaning and storage requirements. A duplicate PostgreSQL
+violation snapshot is compatibility-only and is disabled by default. Sources are
+discovered/allowlisted, downloaded with byte limits, SHA-256 hashed,
 and parsed incrementally by `stream_archive.py` with backpressure. Complete
 PWSIDs, sample identity, dates, chemistry units and non-detection limits are
 retained. Duplicate sample keys do not inflate unique-observation counts.
@@ -44,14 +46,15 @@ previous source active. The status endpoint reports counts from active imports
 and the latest attempt, with source timestamps and archive hashes.
 
 A persisted database-capacity failure is checked before the next automatic
-download. Imports remain paused while allocated database bytes meet the configured
-ceiling and resume when capacity is available. Existing published evidence remains
-readable; object-store acquisition uses its own budget. This does not hide a failed
-bulk compliance import or treat it as an absence of violations.
+download. PostgreSQL imports remain paused while allocated database bytes meet the
+configured ceiling and resume when capacity is available. Existing published
+evidence remains readable; object-store acquisition uses its own budget.
 
-The separate [SDWIS compliance archive](COMPLIANCE_ARCHIVE.md) supports complete
-source-file retention and bounded per-system reads in object storage. Its counts
-remain separate from the PostgreSQL snapshot and drinking-water observations.
+The [SDWIS compliance archive](COMPLIANCE_ARCHIVE.md) is the default national
+violation/enforcement store. It supports complete source-file retention and
+bounded exact-PWSID reads in object storage. Its counts remain separate from
+drinking-water observations. Set `NATIONAL_POSTGRES_VIOLATIONS_ENABLED=true`
+only when an additional duplicate PostgreSQL snapshot is intentionally required.
 
 The application checks for source refreshes on startup and hourly; sources
 checked within seven days are skipped. `NATIONAL_SYNC_ENABLED=false` disables
@@ -66,6 +69,8 @@ npm start
 npm run sync:national
 node national/sync.js --source ucmr5
 node national/sync.js --source sdwis
+NATIONAL_POSTGRES_VIOLATIONS_ENABLED=true node national/sync.js --source all
+# or explicitly, for a compatibility snapshot only:
 node national/sync.js --source sdwis-violations
 ```
 
