@@ -42,13 +42,13 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
   const get=url=>request(url,{signal});
   const hasAddress=input.address||input.street&&(input.city||input.zip);
   const address=hasAddress?await stage('address-resolution',async()=>{
-   const common={benchmark:'Public_AR_Current',vintage:'Current_Current',format:'json'},one=input.address;
-   let match=await get(query(one?ENDPOINTS.censusOneLine:ENDPOINTS.census,one?{...common,address:one}:{...common,street:input.street,city:input.city,state:input.state,zip:input.zip})).then(x=>censusMatch(x,input));
+   const common={benchmark:'Public_AR_Current',vintage:'Current_Current',format:'json'},one=input.address,oneLine=one&&input.state&&!new RegExp('(?:,|\\s)'+input.state+'(?:\\s|$)','i').test(one)?one+', '+input.state:one;
+   let match=await get(query(one?ENDPOINTS.censusOneLine:ENDPOINTS.census,one?{...common,address:oneLine}:{...common,street:input.street,city:input.city,state:input.state,zip:input.zip})).then(x=>censusMatch(x,input));
    // Retry only a unit-stripped street address, keeping city/state/ZIP unchanged.
    // An ambiguous match always requires the resident to choose an address.
    if(match.status==='unresolved'){
     const value=one||input.street,clean=value.replace(/\s+(?:APT|UNIT|SUITE|STE|#)\s*[A-Z0-9-]+(?=,|$)/i,'');
-    if(clean!==value)match=await get(query(one?ENDPOINTS.censusOneLine:ENDPOINTS.census,one?{...common,address:clean}:{...common,street:clean,city:input.city,state:input.state,zip:input.zip})).then(x=>censusMatch(x,input));
+    if(clean!==value){const retryLine=one&&input.state&&!new RegExp('(?:,|\\s)'+input.state+'(?:\\s|$)','i').test(clean)?clean+', '+input.state:clean;match=await get(query(one?ENDPOINTS.censusOneLine:ENDPOINTS.census,one?{...common,address:retryLine}:{...common,street:clean,city:input.city,state:input.state,zip:input.zip})).then(x=>censusMatch(x,input));}
    }return match;
   }):{status:'not-requested'};
   const includeEnvironment=raw.include_environment!==false;
