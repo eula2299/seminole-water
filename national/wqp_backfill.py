@@ -31,6 +31,7 @@ except ImportError:
 
 ENDPOINT = 'https://www.waterqualitydata.us/wqx3/Result/search'
 PROFILES = ('fullPhysChem', 'basicPhysChem', 'narrow')
+PROVIDERS = ('STORET', 'NWIS')
 STATES = dict(zip(
     'AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY AS GU MP PR VI'.split(),
     '01 02 04 05 06 08 09 10 11 12 13 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 44 45 46 47 48 49 50 51 53 54 55 56 60 66 69 72 78'.split()))
@@ -90,9 +91,9 @@ def save_json(path, value):
     os.replace(temporary, path)
 
 
-def partition(state, start, end, profile, site_id=None):
-    if state not in STATES or profile not in PROFILES:
-        raise ValueError('Unsupported state or WQX3 profile.')
+def partition(state, start, end, profile, site_id=None, provider=None):
+    if state not in STATES or profile not in PROFILES or provider not in (None, *PROVIDERS):
+        raise ValueError('Unsupported state, WQX3 profile, or provider.')
     lo, hi = dt.date.fromisoformat(start), dt.date.fromisoformat(end)
     if lo > hi or lo.year < 1800 or hi > dt.date.today():
         raise ValueError('Use a valid historic date range, from 1800 through today.')
@@ -101,6 +102,8 @@ def partition(state, start, end, profile, site_id=None):
         if not isinstance(site_id, str) or not 1 <= len(site_id) <= 200:
             raise ValueError('Invalid monitoring location identifier.')
         part['site_id'] = site_id
+    if provider:
+        part['provider'] = provider
     part['id'] = digest(part)
     return part
 
@@ -144,14 +147,14 @@ def validate_plan(plan):
         raise ValueError('Plan checksum or source contract is invalid.')
     seen = set()
     for part in plan['partitions']:
-        check = partition(part['state'], part['start'], part['end'], part['profile'], part.get('site_id'))
+        check = partition(part['state'], part['start'], part['end'], part['profile'], part.get('site_id'), part.get('provider'))
         if part != check or part['id'] in seen:
             raise ValueError('Invalid or duplicate partition.')
         seen.add(part['id'])
     # Manual plan edits cannot create overlapping date intervals and inflate counts.
     groups = {}
     for part in plan['partitions']:
-        key = (part['state'], part.get('site_id'))
+        key = (part['state'], part.get('site_id'), part.get('provider'))
         groups.setdefault(key, []).append((part['start'], part['end']))
     for ranges in groups.values():
         ranges.sort()
@@ -167,6 +170,8 @@ def query_url(part):
               ('sorted', 'no'), ('dataProfile', part['profile'])]
     if part.get('site_id'):
         params.append(('siteid', part['site_id']))
+    if part.get('provider'):
+        params.append(('providers', part['provider']))
     return ENDPOINT + '?' + urllib.parse.urlencode(params)
 
 
@@ -306,9 +311,16 @@ def normalize(raw_path, staging, part, source, max_decoded_bytes, max_rows, batc
 def split_partition(part):
     lo, hi = dt.date.fromisoformat(part['start']), dt.date.fromisoformat(part['end'])
     if lo == hi:
+        # WQP documents NWIS and STORET as disjoint provider filters. When date
+        # splitting reaches one day, split once more by provider instead of
+        # permanently parking an oversized combined-provider request.
+        if not part.get('provider'):
+            return [partition(part['state'], part['start'], part['end'], part['profile'],
+                              part.get('site_id'), provider)
+                    for provider in PROVIDERS]
         return []
     middle = lo + (hi - lo) // 2
-    return [partition(part['state'], str(a), str(b), part['profile'], part.get('site_id'))
+    return [partition(part['state'], str(a), str(b), part['profile'], part.get('site_id'), part.get('provider'))
             for a, b in [(lo, middle), (middle + dt.timedelta(days=1), hi)]]
 
 
