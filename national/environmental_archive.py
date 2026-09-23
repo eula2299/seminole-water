@@ -130,7 +130,7 @@ class EnvironmentalArchive:
         with self.lock:
             jobs=list((self.data or {}).get('jobs',{}).values());plan=(self.data or {}).get('plan',{})
             counts={s:sum(j['status']==s for j in jobs) for s in ('pending','complete','split','failed')}
-            failures=[{'state':j['partition']['state'],'start':j['partition']['start'],'end':j['partition']['end'],'attempts':j['attempts'],'error':j.get('error')} for j in jobs if j['status']=='failed']
+            failures=[{'state':j['partition']['state'],'start':j['partition']['start'],'end':j['partition']['end'],'provider':j['partition'].get('provider'),'attempts':j['attempts'],'error':j.get('error')} for j in jobs if j['status']=='failed']
             return {'schema':'wqp-durable/1','status':self.phase,'source':'WQP-WQX3','source_url':Q.ENDPOINT,'plan_id':plan.get('plan_id'),'published_partitions':counts['complete'],'partition_status_counts':counts,'failed_partitions':failures[:12],'failed_partitions_truncated':len(failures)>12,'retained_source_rows':sum(j.get('manifest',{}).get('counts',{}).get('raw_result_rows',0) for j in jobs if j['status']=='complete'),'count_definition':'Acquired environmental result rows; not independent samples or household measurements. Do not add overlapping program totals.','household_safety_assessed':False,'coverage_complete':False,'error':self.error,'last_published_at':(self.head or {}).get('updated_at'),'current_job':copy.deepcopy(self.current_job),'last_started_at':self.last_started_at,'last_finished_at':self.last_finished_at,'retry_policy':'one-in-four-slots; at-most-three-attempts; single-day-timeout-ceiling-180s','exhausted_partitions':sum(j['status']=='failed' and j.get('attempts',0)>=3 for j in jobs)}
 
     def _recover_timeouts(self):
@@ -167,7 +167,7 @@ class EnvironmentalArchive:
             job=choose_job(self.data['jobs'].values(),self.data.get('dispatches',0))
             if job is None:self.phase='complete-with-gaps' if any(j['status']=='failed' for j in self.data['jobs'].values()) else 'plan-acquired';self.current_job=None;return False
             self.phase='acquiring';self.error=None;self.last_started_at=Q.now()
-            self.current_job={k:job['partition'][k] for k in ('id','state','start','end')}
+            self.current_job={k:job['partition'].get(k) for k in ('id','state','start','end','provider')}
         part=job['partition'];ident=part['id'];manifest=None;failure=None;children=[]
         with tempfile.TemporaryDirectory(prefix='partition-',dir=self.root) as temporary:
             work=pathlib.Path(temporary);raw=work/'source.bin'
@@ -202,7 +202,7 @@ class EnvironmentalArchive:
                     try:self._save()
                     except Exception:self.data=previous;raise
                     self.phase='ready';self.error=failure;self.last_finished_at=Q.now();self.current_job=None
-                    print(Q.canonical({'event':'wqp-partition-finished','time':self.last_finished_at,'state':part['state'],'start':part['start'],'end':part['end'],'status':self.data['jobs'][ident]['status'],'attempts':job['attempts']+1,'retained_rows':manifest['counts']['raw_result_rows'] if manifest else 0,'error':failure}),flush=True)
+                    print(Q.canonical({'event':'wqp-partition-finished','time':self.last_finished_at,'state':part['state'],'start':part['start'],'end':part['end'],'provider':part.get('provider'),'status':self.data['jobs'][ident]['status'],'attempts':job['attempts']+1,'retained_rows':manifest['counts']['raw_result_rows'] if manifest else 0,'error':failure}),flush=True)
         return True
 
     def near(self,lat,lon):
