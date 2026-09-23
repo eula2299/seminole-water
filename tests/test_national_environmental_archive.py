@@ -81,13 +81,19 @@ class EnvironmentalArchiveTests(unittest.TestCase):
   self.assertEqual(archive.status()['partition_status_counts']['failed'],1)
   restart=self.create('restart');self.assertEqual(restart.status()['partition_status_counts']['failed'],1)
   restart.step();self.assertEqual(restart.status()['retained_source_rows'],1)
- def test_single_day_timeout_remains_visible_and_does_not_create_duplicate_jobs(self):
+ def test_single_day_timeout_recovers_through_provider_split_without_duplicate_jobs(self):
   self.plan=E.Q.make_plan(['MN'],'2020-01-06','2020-01-06')
   def old_timeout(*args):raise RuntimeError('Source transfer failed after 3 attempts: The read operation timed out')
-  archive=self.create(fetcher=old_timeout)
-  for _ in range(3):archive.step()
-  self.assertFalse(archive.step());self.assertEqual(archive.status()['partition_status_counts']['failed'],1)
-  self.assertEqual(len(archive.data['jobs']),1);self.assertEqual(archive.status()['retained_source_rows'],0)
+  archive=self.create(fetcher=old_timeout);archive.step()
+  self.assertEqual(archive.status()['partition_status_counts']['failed'],1)
+  restart=self.create('restart');restart.step();s=restart.status()
+  self.assertEqual(s['partition_status_counts'],{'pending':1,'complete':1,'split':1,'failed':0})
+  parent=self.plan['partitions'][0];children=E.Q.split_partition(parent)
+  self.assertEqual({c['provider'] for c in children},{'STORET','NWIS'})
+  self.assertEqual(len(restart.data['jobs']),3)
+  self.assertEqual(restart.data['jobs'][parent['id']]['status'],'split')
+  self.assertEqual(sum(restart.data['jobs'][c['id']]['status']=='complete' for c in children),1)
+  self.assertEqual(restart.status()['retained_source_rows'],1)
  def test_geographic_reads_reject_bad_coordinates_and_bound_concurrency(self):
   archive=self.create()
   for lat,lon in [(float('nan'),0),(0,float('inf')),(91,0),(0,181),(True,0)]:
