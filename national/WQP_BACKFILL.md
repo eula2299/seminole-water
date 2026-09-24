@@ -86,8 +86,11 @@ workers on one output root. Use disjoint state plans and separate roots for
 independent workers; coordinate source request rates outside this script.
 
 Oversized state/year partitions automatically split into contiguous date
-intervals. A one-day partition that still exceeds a budget remains failed and
-requires a reviewed higher budget or a future county/organization subdivision.
+intervals. If a combined-provider query still exceeds a budget at one day, it is
+split once more into the WQP-documented `STORET` and `NWIS` provider filters.
+Those child partitions keep provider-specific identities and provenance, so their
+date ranges may match without becoming duplicate jobs. A provider-specific
+one-day partition that still exceeds a budget remains failed for investigation.
 Rows are not truncated to fit a budget. No partial partition is published.
 
 ## Output and restart semantics
@@ -153,9 +156,11 @@ python national/wqp_backfill.py run \
 
 Exhausted read timeouts and HTTP 408/504 responses subdivide the requested date
 interval after bounded retries. Existing parked read-timeout jobs are recovered
-as split parents with disjoint child intervals in the durable checkpoint. Failed
-checkpoint publication preserves the previous queue and counts. A single-day
-failure remains visible; it is never published as an empty result.
+as split parents with durable children. Date children are non-overlapping; a
+one-day combined-provider child is subdivided into the disjoint `STORET` and
+`NWIS` provider streams. Failed checkpoint publication preserves the previous
+queue and counts. An exhausted provider-specific one-day failure remains visible;
+it is never published as an empty result.
 
 ## Incomplete-response recovery
 
