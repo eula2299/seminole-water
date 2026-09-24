@@ -27,6 +27,46 @@ function finding(row,provider,source){
  else if(!Number(row.nondetects))result='See the original report for the reported result';
  return {name,provider,scope:row.scope,detected:hasDetection,result,first_sample:row.first_date,last_sample:row.last_date,source_name:source?.label||source?.id||'EPA monitoring records',source_url:sourceLink(source?.catalogue_url||source?.source_url||source?.url),reported_results:Number(row.n)||null,non_detects:Number(row.nondetects)||0,health:health.matched?{title:health.label,text:health.summary,action:health.practical_step,sources:health.sources}:null,comparison:comparison(row)};
 }
+function addressRiskProfile(data,findings,compliance,privateWell){
+ const risks=[];
+ const add=(key,title,level,meaning,action,evidence)=>risks.push({key,title,level,meaning,action,evidence});
+ const notices=privateWell?[]:(data.current_advisories?.records||[]);
+ if(notices.length)add('notice','Current water notice','urgent',notices[0].guidance||'An official drinking-water notice applies to a possible provider or area for this address.','Follow the official notice before using the water.',notices[0].provider||'Official notice');
+ for(const f of findings){
+  if(f.comparison?.above_reference)add('finding:'+f.name,f.name,'elevated',f.health?.text||'A reported water-system result exceeded the displayed federal comparison value.',f.health?.action||'Ask the provider about the latest follow-up result and whether a tap test is appropriate.',f.provider);
+  else if(f.detected)add('finding:'+f.name,f.name,'watch',f.health?.text||'This substance has been reported in water records connected to the address.',f.health?.action||'Review the latest provider report and test at the tap if this is a concern.',f.provider);
+  else add('finding:'+f.name,f.name,'screened','Connected monitoring records include this substance without a quantified detection in the summarized results.','Keep it in the address record; no special action is suggested by this result alone.',f.provider);
+ }
+ const line=data.property?.service_line;
+ if(line?.status==='address-record-match'){
+  const material=String(line.records?.[0]?.material||'').toLowerCase();
+  if(/lead|galvanized/.test(material))add('service-line','Service line','elevated','The property inventory identifies a service-line material associated with lead exposure risk.','Confirm the current line material with the utility and use a certified lead-at-the-tap test.',line.records?.[0]?.material||'Property inventory');
+  else if(/unknown|unverified|not known/.test(material))add('service-line','Service line','watch','The service-line material is not established in the available property inventory.','Ask the utility to identify the service line and consider lead testing at the tap.','Property inventory');
+ }
+ for(const group of compliance){
+  const open=(group.issues||[]).filter(x=>x.health_based&&String(x.status||'').toLowerCase()!=='resolved');
+  if(open.length)add('compliance:'+group.provider,'Health-related system issue','elevated',group.provider+' has a health-related compliance issue shown without a resolved status in the acquired history.','Ask the provider for the current status and any follow-up sampling.',group.provider);
+ }
+ const env=[...(data.environment?.records||[]),...(data.archived_environment?.records||[])];
+ const seen=new Set(risks.map(x=>x.key));
+ for(const row of env){
+  const name=String(row.parameter||row.characteristic||row.analyte||'').trim();if(!name)continue;
+  const key='environment:'+name.toLowerCase();if(seen.has(key))continue;seen.add(key);
+  add(key,name,'context','This substance appears in environmental monitoring near the address.','Use this as a reason to ask whether it should be included in a local tap or well test.','Nearby environmental monitoring');
+ }
+ if(privateWell){
+  for(const [key,title,meaning,action] of [
+   ['well-bacteria','Bacteria','Private wells can be affected by microbial contamination that utility records do not cover.','Include total coliform and E. coli in routine well testing.'],
+   ['well-nitrate','Nitrate','Nitrate can enter groundwater from septic systems, fertilizer, agriculture and other sources.','Include nitrate in routine well testing.'],
+   ['well-metals','Metals and minerals','Groundwater chemistry can vary locally and may include naturally occurring metals and minerals.','Ask the local health department or certified lab which metals and minerals are appropriate for this geology.']
+  ])if(!seen.has(key))add(key,title,'verify',meaning,action,'Address + private-well context');
+ }
+ for(const site of data.property?.cleanup_sites?.records||[]){const name=String(site.name||'EPA cleanup site');add('cleanup:'+String(site.id||site.name||risks.length),name,'context','A federal cleanup site is recorded near the address. This is a location signal used to broaden the screening plan, not a contaminant result by itself.','Review the site record and include relevant contaminants in local testing if the site history indicates a plausible water pathway.','EPA cleanup-site record');}
+ const rank={urgent:5,elevated:4,watch:3,context:2,verify:2,screened:1};
+ risks.sort((a,b)=>(rank[b.level]||0)-(rank[a.level]||0)||a.title.localeCompare(b.title));
+ const overall=risks.some(x=>x.level==='urgent')?'urgent':risks.some(x=>x.level==='elevated')?'elevated':risks.some(x=>x.level==='watch')?'watch':'screened';
+ return {overall,risks,signals_evaluated:{water_records:findings.length,compliance_groups:compliance.length,nearby_environmental_records:env.length,cleanup_sites:Number(data.property?.cleanup_sites?.records?.length||0),well_records:Number(data.well_records?.records?.length||0)+Number(data.property?.wells?.records?.length||0),service_line_match:line?.status==='address-record-match'}};
+}
 function buildResidentReport(data){
  const privateWell=data.supply?.type==='private-well',candidates=data.provider?.candidates||[],findings=[],providers=[];
  if(!privateWell)for(const system of data.systems||[]){
@@ -49,9 +89,9 @@ function buildResidentReport(data){
  const service=data.property?.service_line,lead=service?.status==='address-record-match'?service.records?.[0]:null;
  const detectedNames=new Set(findings.filter(x=>x.detected&&x.scope==='system-monitoring').map(x=>x.name.toLowerCase()));
  const hasRecords=findings.length||compliance.length,matched=data.address?.status==='matched';
- let headline=privateWell?'Your well needs its own water test':hasRecords?'Here’s what the records show':'Your next step is to confirm your water source';
- let summary=privateWell?'A well’s construction and nearby monitoring help explain the setting. Only a sample from your well can establish what is in the water you drink.':hasRecords?'We found water-system records for the service area around this address. The findings below explain the reported substances and past issues. They describe utility samples, not a test of your tap.':'Public records alone have not identified a reliable utility connection for this address. You can still check the local setting and follow the steps below to get a home-specific answer.';
- if(!matched&&!data.provider?.user_selected_pwsid){headline=data.address?.status==='ambiguous'?'Choose the address you meant':'Add a little more detail to your address';summary='Use the street number, street name, city and state or ZIP code. That lets us connect the report to the right place instead of guessing a nearby home.';}
+ let headline=privateWell?'Address water-risk profile':'Your address water-risk profile';
+ let summary=privateWell?'We combined the address, well context, nearby environmental monitoring and known local hazards into one screening profile.':'We combined the address, mapped water system, infrastructure, historical testing, compliance, nearby environmental records and current notices into one screening profile.';
+ if(!matched&&!data.provider?.user_selected_pwsid){headline=data.address?.status==='ambiguous'?'Choose the address you meant':'Add a little more detail to your address';summary='Use the street number, street name, city and state or ZIP code so the address-level screening can resolve the correct place.';}
  const actions=[];
  const notices=privateWell?{status:'not-applicable-private-well',records:[],checks:[],comprehensive:false}:data.current_advisories||{status:'not-connected',records:[],checks:[],comprehensive:false};
  if(notices.records?.length){headline='A water notice needs your attention';summary='An official source lists a notice for a possible provider or an area near this address. Check whether your home is affected and follow the notice before using the water. The historical results below do not override it.';}
@@ -61,6 +101,6 @@ function buildResidentReport(data){
  if(privateWell)actions.push({title:'Arrange a well-water test',text:'CDC recommends annual checks for total coliform bacteria, nitrate, total dissolved solids and pH. Ask your health department which additional tests matter locally.',url:WELL});
  else actions.push({title:providers.length?'Check today’s notices with your utility':'Confirm who supplies your home',text:providers.length?'Use the provider name on your water bill. Ask about current advisories and the latest water-quality report; historical records do not establish today’s conditions.':'Your water bill or local water department can confirm the provider. A property outside a mapped service area is not automatically on a private well.',url:'https://www.epa.gov/ccr'});
  actions.push({title:privateWell?'Use a certified laboratory':'Check what reaches your own tap',text:privateWell?'A certified laboratory can explain sampling instructions and the tests appropriate for your well.':'Home plumbing can change water quality. For lead concerns, ask your utility about your service line and a certified laboratory about testing your tap.',url:privateWell?LAB:LEAD});
- return {version:'resident-report/1',headline,summary,address:data.address?.matched_address||null,address_choices:data.address?.candidates||[],providers,provider_ambiguity:candidates.length>1||data.provider?.conflict===true,private_well:privateWell,findings,detected_substances:detectedNames.size,compliance,actions,service_line:service||null,location:data.address?.geography||{},scope_note:'Historical water-system and nearby environmental records help you decide what to check. They cannot certify the water at a particular tap today.',advisories:notices,current_advisories_checked:(notices.checks||[]).some(c=>c.status==='checked'),advisories_comprehensive:false,household_safety:'not-determined',generated_at:data.generated_at};
+ const risk_profile=addressRiskProfile(data,findings,compliance,privateWell);return {version:'resident-report/2',headline,summary,address:data.address?.matched_address||null,address_choices:data.address?.candidates||[],providers,provider_ambiguity:candidates.length>1||data.provider?.conflict===true,private_well:privateWell,findings,detected_substances:detectedNames.size,compliance,actions,service_line:service||null,location:data.address?.geography||{},scope_note:'This address screening combines all evidence available to the lookup and labels each signal by what produced it. Use the detailed records below to inspect the evidence behind each tile.',advisories:notices,current_advisories_checked:(notices.checks||[]).some(c=>c.status==='checked'),advisories_comprehensive:false,household_safety:'not-determined',address_risk_level:risk_profile.overall,risk_profile,generated_at:data.generated_at};
 }
-module.exports={buildResidentReport,comparison,sourceLink};
+module.exports={buildResidentReport,comparison,sourceLink,addressRiskProfile};
