@@ -12,7 +12,7 @@ function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false}=
  const server=http.createServer(async(req,res)=>{
   try{
    const u=new URL(req.url,'http://localhost');
-   if(req.method==='GET'&&['/','/national','/national/'].includes(u.pathname))return send(res,200,HTML,'text/html; charset=utf-8');
+   if(req.method==='GET'&&['/','/national','/national/','/water-details'].includes(u.pathname))return send(res,200,HTML,'text/html; charset=utf-8');
    if(req.method==='GET'&&u.pathname==='/national-client.js')return send(res,200,CLIENT,'application/javascript; charset=utf-8');
    if(req.method==='GET'&&u.pathname==='/healthz')return send(res,200,{process:'up',national_data_ready:false});
    if(req.method==='GET'&&u.pathname==='/api/national/status')return send(res,200,await engine.status());
