@@ -31,17 +31,18 @@ function addressRiskProfile(data,findings,compliance,privateWell){
  const risks=[];
  const add=(key,title,level,meaning,action,evidence)=>risks.push({key,title,level,meaning,action,evidence});
  const notices=privateWell?[]:(data.current_advisories?.records||[]);
- if(notices.length)add('notice','Current water notice','urgent',notices[0].guidance||'An official drinking-water notice applies to a possible provider or area for this address.','Follow the official notice before using the water.',notices[0].provider||'Official notice');
+ if(notices.length){const n=notices[0];add('notice','Current water notice','urgent',n.guidance||'An official drinking-water notice applies to a possible provider or area for this address.','Follow the official notice before using the water.',n.provider||'Official notice');risks[risks.length-1].result=n.type?String(n.type).replaceAll('-',' '):'Active notice';}
  for(const f of findings){
-  if(f.comparison?.above_reference)add('finding:'+f.name,f.name,'elevated',f.health?.text||'A reported water-system result exceeded the displayed federal comparison value.',f.health?.action||'Ask the provider about the latest follow-up result and whether a tap test is appropriate.',f.provider);
-  else if(f.detected)add('finding:'+f.name,f.name,'watch',f.health?.text||'This substance has been reported in water records connected to the address.',f.health?.action||'Review the latest provider report and test at the tap if this is a concern.',f.provider);
-  else add('finding:'+f.name,f.name,'screened','Connected monitoring records include this substance without a quantified detection in the summarized results.','Keep it in the address record; no special action is suggested by this result alone.',f.provider);
+  if(f.comparison?.above_reference)add('finding:'+f.name,f.name,'elevated',f.health?.text||'A reported water result was above the displayed federal comparison value.',f.health?.action||'Ask the water provider about the latest follow-up result and whether a home test is appropriate.',f.provider);
+  else if(f.detected)add('finding:'+f.name,f.name,'watch',f.health?.text||'This substance has appeared in water records connected to this address.',f.health?.action||'Review the latest provider result and test at home if this is a concern.',f.provider);
+  else add('finding:'+f.name,f.name,'screened',f.health?.text||'This substance was included in connected testing records without a quantified detection in the summary.','No special action is suggested by this result alone.',f.provider);
+  const last=risks[risks.length-1];last.result=f.result;last.health=f.health?.text||null;last.reference=f.comparison?.reference_text||null;last.above_reference=f.comparison?.above_reference===true;last.first_sample=f.first_sample||null;last.last_sample=f.last_sample||null;
  }
  const line=data.property?.service_line;
  if(line?.status==='address-record-match'){
   const material=String(line.records?.[0]?.material||'').toLowerCase();
-  if(/lead|galvanized/.test(material))add('service-line','Service line','elevated','The property inventory identifies a service-line material associated with lead exposure risk.','Confirm the current line material with the utility and use a certified lead-at-the-tap test.',line.records?.[0]?.material||'Property inventory');
-  else if(/unknown|unverified|not known/.test(material))add('service-line','Service line','watch','The service-line material is not established in the available property inventory.','Ask the utility to identify the service line and consider lead testing at the tap.','Property inventory');
+  if(/lead|galvanized/.test(material)){add('service-line','Service line','elevated','The property record identifies a pipe material associated with higher lead risk.','Confirm the current line material with the utility and consider a certified lead-at-the-tap test.','Property record');risks[risks.length-1].result=line.records?.[0]?.material||'Lead-related material';}
+  else if(/unknown|unverified|not known/.test(material)){add('service-line','Service line','watch','The pipe material serving the property is not established in the available record.','Ask the utility to identify the line and consider lead testing at the tap.','Property record');risks[risks.length-1].result='Material unknown';}
  }
  for(const group of compliance){
   const open=(group.issues||[]).filter(x=>x.health_based&&String(x.status||'').toLowerCase()!=='resolved');
@@ -65,7 +66,7 @@ function addressRiskProfile(data,findings,compliance,privateWell){
  const rank={urgent:5,elevated:4,watch:3,context:2,verify:2,screened:1};
  risks.sort((a,b)=>(rank[b.level]||0)-(rank[a.level]||0)||a.title.localeCompare(b.title));
  const overall=risks.some(x=>x.level==='urgent')?'urgent':risks.some(x=>x.level==='elevated')?'elevated':risks.some(x=>x.level==='watch')?'watch':'screened';
- return {overall,risks,signals_evaluated:{water_records:findings.length,compliance_groups:compliance.length,nearby_environmental_records:env.length,cleanup_sites:Number(data.property?.cleanup_sites?.records?.length||0),well_records:Number(data.well_records?.records?.length||0)+Number(data.property?.wells?.records?.length||0),service_line_match:line?.status==='address-record-match'}};
+ return {overall,risks,priority_risks:risks.slice(0,4),signals_evaluated:{water_records:findings.length,compliance_groups:compliance.length,nearby_environmental_records:env.length,cleanup_sites:Number(data.property?.cleanup_sites?.records?.length||0),well_records:Number(data.well_records?.records?.length||0)+Number(data.property?.wells?.records?.length||0),service_line_match:line?.status==='address-record-match'}};
 }
 function buildResidentReport(data){
  const privateWell=data.supply?.type==='private-well',candidates=data.provider?.candidates||[],findings=[],providers=[];
