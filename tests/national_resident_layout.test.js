@@ -15,5 +15,5 @@ async function render(privateWell){
  nodes['lookup-form'].listeners.submit({preventDefault(){}});for(let i=0;i<5;i++)await new Promise(setImmediate);
  assert.equal(nodes.message.textContent,'Your report is ready.');return nodes.results.children.map(x=>x.children[0]?.textContent);
 }
-test('address profile appears before detailed chemistry',async()=>{const headings=await render(false);assert.match(headings[0],/YOUR ADDRESS WATER PROFILE/);const chemistry=headings.indexOf('What the water tests found');assert.ok(chemistry>0);assert.ok(!headings.includes('What to do next'));});
-test('private-well address profile comes first',async()=>{const headings=await render(true);assert.match(headings[0],/YOUR ADDRESS WATER PROFILE/);const well=headings.indexOf('What to test in your well');assert.ok(well>0);assert.ok(!headings.includes('Water notices to check now'));});
+test('main result is limited to the resident summary instead of the detailed report',async()=>{const headings=await render(false);assert.match(headings[0],/YOUR WATER RESULTS/);assert.ok(!headings.includes('What the water tests found'));assert.ok(!headings.includes('Evidence behind this address profile'));});
+test('private-well main result stays concise',async()=>{const headings=await render(true);assert.match(headings[0],/YOUR WATER RESULTS/);assert.ok(!headings.includes('What to test in your well'));assert.ok(!headings.includes('Water notices to check now'));});
