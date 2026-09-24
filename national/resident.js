@@ -27,6 +27,26 @@ function finding(row,provider,source){
  else if(!Number(row.nondetects))result='See the original report for the reported result';
  return {name,provider,scope:row.scope,detected:hasDetection,result,first_sample:row.first_date,last_sample:row.last_date,source_name:source?.label||source?.id||'EPA monitoring records',source_url:sourceLink(source?.catalogue_url||source?.source_url||source?.url),reported_results:Number(row.n)||null,non_detects:Number(row.nondetects)||0,health:health.matched?{title:health.label,text:health.summary,action:health.practical_step,sources:health.sources}:null,comparison:comparison(row)};
 }
+function addressQuality(data,findings,compliance){
+ const candidates=data.provider?.candidates||[],families={
+  water_testing:findings.length>0,
+  compliance:compliance.length>0,
+  infrastructure:data.property?.service_line?.status==='address-record-match',
+  environment:(data.environment?.records||[]).length+(data.archived_environment?.records||[]).length>0,
+  wells:(data.well_records?.records||[]).length+(data.property?.wells?.records||[]).length>0,
+  notices:(data.current_advisories?.checks||[]).length>0
+ };
+ let score=0;const notes=[];
+ if(data.address?.status==='matched')score+=25;else notes.push('address-not-fully-resolved');
+ if(candidates.length===1){score+=20;if(candidates[0].provenance==='state-or-system-sourced')score+=10;else if(candidates[0].provenance==='modeled')score+=5;}
+ else if(candidates.length>1)notes.push('multiple-water-providers');
+ else notes.push('water-provider-not-resolved');
+ const familyCount=Object.values(families).filter(Boolean).length;score+=Math.min(36,familyCount*6);
+ if(data.provider?.conflict){score-=15;notes.push('provider-conflict');}
+ if(data.address?.status==='ambiguous'){score-=20;notes.push('address-ambiguous');}
+ score=Math.max(0,Math.min(100,score));
+ return {score,label:score>=75?'strong':score>=50?'moderate':'developing',evidence_families:families,evidence_family_count:familyCount,notes};
+}
 function addressRiskProfile(data,findings,compliance,privateWell){
  const risks=[];
  const add=(key,title,level,meaning,action,evidence)=>risks.push({key,title,level,meaning,action,evidence});
@@ -65,6 +85,13 @@ function addressRiskProfile(data,findings,compliance,privateWell){
  for(const site of data.property?.cleanup_sites?.records||[]){const name=String(site.name||'EPA cleanup site');add('cleanup:'+String(site.id||site.name||risks.length),name,'context','A federal cleanup site is recorded near the address. This is a location signal used to broaden the screening plan, not a contaminant result by itself.','Review the site record and include relevant contaminants in local testing if the site history indicates a plausible water pathway.','EPA cleanup-site record');}
  const rank={urgent:5,elevated:4,watch:3,context:2,verify:2,screened:1};
  risks.sort((a,b)=>(rank[b.level]||0)-(rank[a.level]||0)||a.title.localeCompare(b.title));
+ const hasKey=prefix=>risks.some(x=>x.key.startsWith(prefix));
+ const provider=(data.provider?.candidates||[])[0]?.name||'Your water source';
+ if(risks.length<4&&!hasKey('history:'))add('history:records','Water history','screened',findings.length?'The available water history was reviewed for this address.':'No elevated chemical signal surfaced in the connected water history.','Keep current notices and future test results in mind.',provider);
+ if(risks.length<4&&!hasKey('plumbing:')&&!hasKey('service-line'))add('plumbing:screen','Pipes and plumbing','screened','No lead-related pipe signal rose to the top from the connected property and water records.','If the home is older or plumbing is unknown, a lead-at-the-tap test is still the clearest check.','Address and infrastructure records');
+ if(risks.length<4&&!hasKey('local:')&&!hasKey('environment:')&&!hasKey('cleanup:'))add('local:environment','Nearby environment','screened','No nearby environmental signal rose to the top from the records checked around this address.','Use local testing if there is a spill, flood, unusual taste, color, or odor.','Nearby environmental records');
+ if(risks.length<4&&!hasKey('notice'))add('notice:screen','Current water notices','screened','No active notice surfaced from the connected notice sources for this lookup.','If water suddenly changes in smell, color, taste, or pressure, check the water provider directly.','Current notice checks');
+ risks.sort((a,b)=>(rank[b.level]||0)-(rank[a.level]||0)||a.title.localeCompare(b.title));
  const overall=risks.some(x=>x.level==='urgent')?'urgent':risks.some(x=>x.level==='elevated')?'elevated':risks.some(x=>x.level==='watch')?'watch':'screened';
  return {overall,risks,priority_risks:risks.slice(0,4),signals_evaluated:{water_records:findings.length,compliance_groups:compliance.length,nearby_environmental_records:env.length,cleanup_sites:Number(data.property?.cleanup_sites?.records?.length||0),well_records:Number(data.well_records?.records?.length||0)+Number(data.property?.wells?.records?.length||0),service_line_match:line?.status==='address-record-match'}};
 }
@@ -102,6 +129,6 @@ function buildResidentReport(data){
  if(privateWell)actions.push({title:'Arrange a well-water test',text:'CDC recommends annual checks for total coliform bacteria, nitrate, total dissolved solids and pH. Ask your health department which additional tests matter locally.',url:WELL});
  else actions.push({title:providers.length?'Check today’s water notices':'Confirm who supplies your home',text:providers.length?'Use the name on your water bill to check current notices and the latest water-quality report.':'Your water bill or local water department can confirm who supplies the home.',url:'https://www.epa.gov/ccr'});
  actions.push({title:privateWell?'Use a certified laboratory':'Check what reaches your own tap',text:privateWell?'A certified laboratory can explain sampling instructions and the tests appropriate for your well.':'Home plumbing can change water quality. For lead concerns, ask the water provider about the pipe serving your home and a certified lab about testing your tap.',url:privateWell?LAB:LEAD});
- const risk_profile=addressRiskProfile(data,findings,compliance,privateWell);return {version:'resident-report/2',headline,summary,address:data.address?.matched_address||null,address_choices:data.address?.candidates||[],providers,provider_ambiguity:candidates.length>1||data.provider?.conflict===true,private_well:privateWell,findings,detected_substances:detectedNames.size,compliance,actions,service_line:service||null,location:data.address?.geography||{},scope_note:'This address screening combines all evidence available to the lookup and labels each signal by what produced it. Use the detailed records below to inspect the evidence behind each tile.',advisories:notices,current_advisories_checked:(notices.checks||[]).some(c=>c.status==='checked'),advisories_comprehensive:false,household_safety:'not-determined',address_risk_level:risk_profile.overall,risk_profile,generated_at:data.generated_at};
+ const risk_profile=addressRiskProfile(data,findings,compliance,privateWell),accuracy_check=addressQuality(data,findings,compliance);return {version:'resident-report/3',headline,summary,address:data.address?.matched_address||null,address_choices:data.address?.candidates||[],providers,provider_ambiguity:candidates.length>1||data.provider?.conflict===true,private_well:privateWell,findings,detected_substances:detectedNames.size,compliance,actions,service_line:service||null,location:data.address?.geography||{},scope_note:'This address screening combines all evidence available to the lookup and labels each signal by what produced it. Use the detailed records below to inspect the evidence behind each tile.',advisories:notices,current_advisories_checked:(notices.checks||[]).some(c=>c.status==='checked'),advisories_comprehensive:false,household_safety:'not-determined',address_risk_level:risk_profile.overall,risk_profile,accuracy_check,generated_at:data.generated_at};
 }
-module.exports={buildResidentReport,comparison,sourceLink,addressRiskProfile};
+module.exports={buildResidentReport,comparison,sourceLink,addressRiskProfile,addressQuality};
