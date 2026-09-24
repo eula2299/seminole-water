@@ -30,7 +30,7 @@ function finding(row,provider,source){
 function addressRiskProfile(data,findings,compliance,privateWell){
  const risks=[];
  const add=(key,title,level,meaning,action,evidence)=>risks.push({key,title,level,meaning,action,evidence});
- const notices=data.current_advisories?.records||[];
+ const notices=privateWell?[]:(data.current_advisories?.records||[]);
  if(notices.length)add('notice','Current water notice','urgent',notices[0].guidance||'An official drinking-water notice applies to a possible provider or area for this address.','Follow the official notice before using the water.',notices[0].provider||'Official notice');
  for(const f of findings){
   if(f.comparison?.above_reference)add('finding:'+f.name,f.name,'elevated',f.health?.text||'A reported water-system result exceeded the displayed federal comparison value.',f.health?.action||'Ask the provider about the latest follow-up result and whether a tap test is appropriate.',f.provider);
@@ -57,7 +57,7 @@ function addressRiskProfile(data,findings,compliance,privateWell){
   for(const [key,title,meaning,action] of [
    ['well-bacteria','Bacteria','Private wells can be affected by microbial contamination that utility records do not cover.','Include total coliform and E. coli in routine well testing.'],
    ['well-nitrate','Nitrate','Nitrate can enter groundwater from septic systems, fertilizer, agriculture and other sources.','Include nitrate in routine well testing.'],
-   ['well-metals','Arsenic + metals','Groundwater chemistry can vary locally and may include naturally occurring metals.','Ask the local health department or certified lab which metals are appropriate for this geology.']
+   ['well-metals','Metals and minerals','Groundwater chemistry can vary locally and may include naturally occurring metals and minerals.','Ask the local health department or certified lab which metals and minerals are appropriate for this geology.']
   ])if(!seen.has(key))add(key,title,'verify',meaning,action,'Address + private-well context');
  }
  const rank={urgent:4,elevated:3,watch:2,context:1,verify:1};
@@ -100,6 +100,6 @@ function buildResidentReport(data){
  if(privateWell)actions.push({title:'Arrange a well-water test',text:'CDC recommends annual checks for total coliform bacteria, nitrate, total dissolved solids and pH. Ask your health department which additional tests matter locally.',url:WELL});
  else actions.push({title:providers.length?'Check today’s notices with your utility':'Confirm who supplies your home',text:providers.length?'Use the provider name on your water bill. Ask about current advisories and the latest water-quality report; historical records do not establish today’s conditions.':'Your water bill or local water department can confirm the provider. A property outside a mapped service area is not automatically on a private well.',url:'https://www.epa.gov/ccr'});
  actions.push({title:privateWell?'Use a certified laboratory':'Check what reaches your own tap',text:privateWell?'A certified laboratory can explain sampling instructions and the tests appropriate for your well.':'Home plumbing can change water quality. For lead concerns, ask your utility about your service line and a certified laboratory about testing your tap.',url:privateWell?LAB:LEAD});
- const risk_profile=addressRiskProfile(data,findings,compliance,privateWell);return {version:'resident-report/2',headline,summary,address:data.address?.matched_address||null,address_choices:data.address?.candidates||[],providers,provider_ambiguity:candidates.length>1||data.provider?.conflict===true,private_well:privateWell,findings,detected_substances:detectedNames.size,compliance,actions,service_line:service||null,location:data.address?.geography||{},scope_note:'This address screening combines all evidence available to the lookup and labels each signal by what produced it. Use the detailed records below to inspect the evidence behind each tile.',advisories:notices,current_advisories_checked:(notices.checks||[]).some(c=>c.status==='checked'),advisories_comprehensive:false,household_safety:risk_profile.overall,risk_profile,generated_at:data.generated_at};
+ const risk_profile=addressRiskProfile(data,findings,compliance,privateWell);return {version:'resident-report/2',headline,summary,address:data.address?.matched_address||null,address_choices:data.address?.candidates||[],providers,provider_ambiguity:candidates.length>1||data.provider?.conflict===true,private_well:privateWell,findings,detected_substances:detectedNames.size,compliance,actions,service_line:service||null,location:data.address?.geography||{},scope_note:'This address screening combines all evidence available to the lookup and labels each signal by what produced it. Use the detailed records below to inspect the evidence behind each tile.',advisories:notices,current_advisories_checked:(notices.checks||[]).some(c=>c.status==='checked'),advisories_comprehensive:false,household_safety:'not-determined',address_risk_level:risk_profile.overall,risk_profile,generated_at:data.generated_at};
 }
 module.exports={buildResidentReport,comparison,sourceLink,addressRiskProfile};
