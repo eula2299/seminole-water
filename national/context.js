@@ -6,7 +6,8 @@ function normalizeFeature(raw,retrievedAt){
  const p=raw?.properties;
  if(!p||typeof p.monitoring_location_id!=='string'||typeof p.time!=='string'||!Number.isFinite(Date.parse(p.time)))throw new Error('USGS observation schema changed');
  const value=finiteNumber(p.value),date=Date.parse(p.time),age=Math.floor((Date.parse(retrievedAt)-date)/86400000);
- return {id:raw.id,station:p.monitoring_location_id,parameter_code:p.parameter_code,parameter:PARAMETERS[p.parameter_code]||p.parameter_code,original_value:p.value,value,unit:p.unit_of_measure||null,sampled_at:p.time,source_modified_at:p.last_modified,approval_status:p.approval_status,qualifier:p.qualifier,age_days:age,not_recent:age>30,scope:'environmental-telemetry-not-household',household_match:false,raw,sha256:fingerprint(raw)};
+ const coords=raw?.geometry?.type==='Point'&&Array.isArray(raw.geometry.coordinates)&&raw.geometry.coordinates.length>=2&&raw.geometry.coordinates.every(Number.isFinite)?raw.geometry.coordinates:null;
+ return {id:raw.id,station:p.monitoring_location_id,parameter_code:p.parameter_code,parameter:PARAMETERS[p.parameter_code]||p.parameter_code,original_value:p.value,value,unit:p.unit_of_measure||null,sampled_at:p.time,source_modified_at:p.last_modified,approval_status:p.approval_status,qualifier:p.qualifier,age_days:age,not_recent:age>30,latitude:coords?coords[1]:null,longitude:coords?coords[0]:null,scope:'environmental-telemetry-not-household',household_match:false,raw,sha256:fingerprint(raw)};
 }
 function createContext({fetchImpl=globalThis.fetch,now=()=>new Date()}={}){
  return async (address,{signal}={})=>{
