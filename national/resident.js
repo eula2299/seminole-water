@@ -35,6 +35,7 @@ function addressRiskProfile(data,findings,compliance,privateWell){
  for(const f of findings){
   if(f.comparison?.above_reference)add('finding:'+f.name,f.name,'elevated',f.health?.text||'A reported water-system result exceeded the displayed federal comparison value.',f.health?.action||'Ask the provider about the latest follow-up result and whether a tap test is appropriate.',f.provider);
   else if(f.detected)add('finding:'+f.name,f.name,'watch',f.health?.text||'This substance has been reported in water records connected to the address.',f.health?.action||'Review the latest provider report and test at the tap if this is a concern.',f.provider);
+  else add('finding:'+f.name,f.name,'screened','Connected monitoring records include this substance without a quantified detection in the summarized results.','Keep it in the address record; no special action is suggested by this result alone.',f.provider);
  }
  const line=data.property?.service_line;
  if(line?.status==='address-record-match'){
@@ -48,7 +49,7 @@ function addressRiskProfile(data,findings,compliance,privateWell){
  }
  const env=[...(data.environment?.records||[]),...(data.archived_environment?.records||[])];
  const seen=new Set(risks.map(x=>x.key));
- for(const row of env.slice(0,80)){
+ for(const row of env){
   const name=String(row.parameter||row.characteristic||row.analyte||'').trim();if(!name)continue;
   const key='environment:'+name.toLowerCase();if(seen.has(key))continue;seen.add(key);
   add(key,name,'context','This substance appears in environmental monitoring near the address.','Use this as a reason to ask whether it should be included in a local tap or well test.','Nearby environmental monitoring');
@@ -60,11 +61,11 @@ function addressRiskProfile(data,findings,compliance,privateWell){
    ['well-metals','Metals and minerals','Groundwater chemistry can vary locally and may include naturally occurring metals and minerals.','Ask the local health department or certified lab which metals and minerals are appropriate for this geology.']
   ])if(!seen.has(key))add(key,title,'verify',meaning,action,'Address + private-well context');
  }
- const rank={urgent:4,elevated:3,watch:2,context:1,verify:1};
+ for(const site of data.property?.cleanup_sites?.records||[]){const name=String(site.name||'EPA cleanup site');add('cleanup:'+String(site.id||site.name||risks.length),name,'context','A federal cleanup site is recorded near the address. This is a location signal used to broaden the screening plan, not a contaminant result by itself.','Review the site record and include relevant contaminants in local testing if the site history indicates a plausible water pathway.','EPA cleanup-site record');}
+ const rank={urgent:5,elevated:4,watch:3,context:2,verify:2,screened:1};
  risks.sort((a,b)=>(rank[b.level]||0)-(rank[a.level]||0)||a.title.localeCompare(b.title));
- const top=risks.slice(0,12);
- const overall=top.some(x=>x.level==='urgent')?'urgent':top.some(x=>x.level==='elevated')?'elevated':top.some(x=>x.level==='watch')?'watch':'screened';
- return {overall,risks:top,signals_evaluated:{water_records:findings.length,compliance_groups:compliance.length,nearby_environmental_records:env.length,cleanup_sites:Number(data.property?.cleanup_sites?.records?.length||0),well_records:Number(data.well_records?.records?.length||0)+Number(data.property?.wells?.records?.length||0),service_line_match:line?.status==='address-record-match'}};
+ const overall=risks.some(x=>x.level==='urgent')?'urgent':risks.some(x=>x.level==='elevated')?'elevated':risks.some(x=>x.level==='watch')?'watch':'screened';
+ return {overall,risks,signals_evaluated:{water_records:findings.length,compliance_groups:compliance.length,nearby_environmental_records:env.length,cleanup_sites:Number(data.property?.cleanup_sites?.records?.length||0),well_records:Number(data.well_records?.records?.length||0)+Number(data.property?.wells?.records?.length||0),service_line_match:line?.status==='address-record-match'}};
 }
 function buildResidentReport(data){
  const privateWell=data.supply?.type==='private-well',candidates=data.provider?.candidates||[],findings=[],providers=[];
