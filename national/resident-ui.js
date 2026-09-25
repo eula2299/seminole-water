@@ -169,7 +169,7 @@ module.exports={HTML,bundle};
   if(plan.targeted_tests?.length){
    const tests=n('div',undefined,'target-tests');tests.append(n('h3','If you still pay for testing, make the quote specific'));
    p(tests,'Ask certified labs to itemize these tests first instead of automatically buying the largest panel.','muted');
-   const list=n('ul');for(const item of plan.targeted_tests){const li=n('li');li.append(n('strong',item.name));if(item.why)li.append(document.createTextNode(' — '+item.why));list.append(li);}tests.append(list);
+   const list=n('ul');for(const item of plan.targeted_tests){const li=n('li');li.append(n('strong',item.name));if(item.why)li.append(n('span',' — '+item.why));list.append(li);}tests.append(list);
    for(const item of plan.paid_if_needed||[]){const row=n('div',undefined,'paid-path');row.append(n('strong',item.title),n('span',item.cost_label||'Price varies','cost-chip neutral'));p(row,item.text,'muted');if(item.url)row.append(a('Find certified options',item.url));tests.append(row);}
    section.append(tests);
   }
