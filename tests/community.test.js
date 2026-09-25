@@ -127,5 +127,7 @@ test('Water Access impact tracking is aggregate and rejects household identifier
   assert.match(store, /water_access_events/);
   assert.match(store, /access_plans_generated/);
   assert.match(platform, /must not include household identifiers/);
-  assert.doesNotMatch(store, /water_access_events[\s\S]{0,700}(street_address|latitude|longitude|email)/i);
+  const accessTable = store.match(/CREATE TABLE IF NOT EXISTS water_access_events \(([\s\S]*?)\);/)?.[1] || '';
+  assert.ok(accessTable);
+  assert.doesNotMatch(accessTable, /(street_address|latitude|longitude|email)/i);
 });
