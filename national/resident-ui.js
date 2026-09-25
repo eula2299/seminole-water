@@ -158,6 +158,7 @@ function residentClient(){
   const near='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('drinking water laboratory near '+(r.address||input.value));
   const lab=n('div',undefined,'next-action');lab.append(n('strong','Need a water lab?'),a('Find nearby labs',near));actionList.append(lab);
   now.append(actionList);main.append(now);
+  renderAccessPlan(r,data,main);
 
   const help=n('section',undefined,'household-help');
   help.append(n('p','WHY THIS MATTERS','mini-kicker'),n('h2','Water information should not depend on money, housing, or ZIP code'));
