@@ -50,7 +50,6 @@
     const name = $('#feedback-name').value.trim();
     const email = $('#feedback-email').value.trim();
     const reply = $('#feedback-reply').checked;
-    const honeypot = $('#feedback-company').value;
     const context = safeContext();
 
     if (!type || rating < 1 || rating > 5 || rawMessage.length < 5) {
@@ -85,7 +84,6 @@
           email,
           subject: `Website feedback — ${typeLabels[type] || type} — ${rating}/5`,
           message: details,
-          website: honeypot,
           newsletter: false
         })
       });
