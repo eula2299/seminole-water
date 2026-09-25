@@ -3,6 +3,7 @@ const {EvidenceError,validateInput,fingerprint,censusMatch,boundaryCandidates,ec
 const {getHealthContext}=require('./health_context');
 const {buildResidentReport}=require('./resident');
 const {modelReadiness}=require('./model_readiness');
+const {parseAcsContext}=require('./access_plan');
 const ENDPOINTS=Object.freeze({
   census:'https://geocoding.geo.census.gov/geocoder/geographies/address',
   censusOneLine:'https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress',
@@ -16,7 +17,8 @@ const SOURCE_DOCS=Object.freeze({
   systems:'https://echo.epa.gov/tools/web-services/facility-search-drinking-water',
   ucmr:'https://www.epa.gov/dwucmr/occurrence-data-unregulated-contaminant-monitoring-rule',
   wqp:'https://www.waterqualitydata.us/beta/webservices_documentation/',
-  usgs:'https://api.waterdata.usgs.gov/ogcapi/v1/'
+  usgs:'https://api.waterdata.usgs.gov/ogcapi/v1/',
+  acs:'https://api.census.gov/data/2024/acs/acs5'
 });
 function safeTarget(value){const u=new URL(value);if(u.username||u.password||u.hash||u.protocol!=='https:'||u.port&&u.port!=='443'||!Object.values(ENDPOINTS).some(v=>{const a=new URL(v);return a.host===u.host&&a.pathname===u.pathname;}))throw new EvidenceError('UNAPPROVED_SOURCE','Upstream source not allowed.',502);return u;}
 function transport({fetchImpl=globalThis.fetch,timeoutMs=6500,maxBytes=2000000}={}){
@@ -61,6 +63,11 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
   const archivedEnvironmentJob=archive?.lookupEnvironment&&includeEnvironment&&address?.status==='matched'?stage('archived-environmental-context',()=>archive.lookupEnvironment(address)):Promise.resolve({status:'not-requested',records:[],household_sample_verified:false});
   const propertyJob=propertyContext&&address?.status==='matched'?stage('property-and-groundwater-evidence',()=>propertyContext(address,{signal,supplyType:input.supply_type})):Promise.resolve(null);
   const wellArchiveJob=archive?.lookupWells&&address?.status==='matched'?stage('state-well-records',()=>archive.lookupWells(address)):Promise.resolve(null);
+  const equityJob=address?.status==='matched'&&address.geography?.tract?.geoid&&address.geography?.county?.geoid?stage('census-access-context',async()=>{
+   const tract=String(address.geography.tract.geoid),county=String(address.geography.county.geoid);
+   const params={get:'NAME,B19013_001E,B17001_001E,B17001_002E,B25003_001E,B25003_003E,B25034_001E,B25034_007E,B25034_008E,B25034_009E,B25034_010E,B25034_011E',for:'tract:'+tract.slice(-6),in:'state:'+tract.slice(0,2)+' county:'+county.slice(-3)};
+   return parseAcsContext(await get(query(ENDPOINTS.acs,params)),address);
+  }):Promise.resolve(null);
   let candidates=[],boundaryStatus='not-requested',nearby=[],nearbyStatus='not-requested';
   if(address?.status==='matched'&&input.supply_type!=='private-well'){
    const params={f:'json',geometryType:'esriGeometryPoint',geometry:`${address.longitude},${address.latitude}`,inSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'*',returnGeometry:'false'};
@@ -99,9 +106,9 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
   const next_steps=input.supply_type==='private-well'?[{title:'Test your own well',description:'A state-certified laboratory can test a sample from your well. Nearby environmental measurements cannot establish the chemistry of this well.',url:'https://www.cdc.gov/drinking-water/safety/guidelines-for-testing-well-water.html'},{title:'Find a certified drinking-water laboratory',url:'https://www.epa.gov/dwlabcert/contact-information-certification-programs-and-certified-laboratories-drinking-water'}]:[{title:'Confirm the provider on your water bill',description:'Mapped service areas may overlap and include modeled boundaries. Use your full public water system ID to narrow the records.'},{title:'Find your annual water quality report',url:'https://www.epa.gov/ccr'},{title:'Check current notices with your utility',description:'Federal compliance and sampling records are historical and do not replace current boil-water or do-not-drink notices.'}];
   const environment=await environmentJob||{status:'unavailable',records:[],household_match:false};
   const archived_environment=await archivedEnvironmentJob||{status:'unavailable',records:[],household_sample_verified:false};
-  const property=await propertyJob,well_records=await wellArchiveJob;
+  const property=await propertyJob,well_records=await wellArchiveJob,equity_context=await equityJob;
   const current_advisories=await advisoryJob||{status:advisories?'unavailable':'not-connected',records:[],checks:[],comprehensive:false};
-  const result={schema_version:'national-evidence/2',generated_at:now().toISOString(),release_state:'incomplete-national-coverage',address:address||{status:'unavailable'},supply:{type:input.supply_type,evidence:'user-reported'},provider:{status:boundaryStatus,candidates,user_selected_pwsid:input.pwsid||null,conflict,household_connection_verified:false,nearby_screen:{method:'30m-envelope-not-a-calibrated-geocode-error-bound',status:nearbyStatus,candidates:nearby||[]}},systems,occurrence,environment,archived_environment,property,well_records,next_steps,household_safety:{status:'not-determined',measured_concentrations:[]},gaps,audit,models:modelReadiness(),coverage:await status(),sources:SOURCE_DOCS};
+  const result={schema_version:'national-evidence/2',generated_at:now().toISOString(),release_state:'incomplete-national-coverage',address:address||{status:'unavailable'},supply:{type:input.supply_type,evidence:'user-reported'},provider:{status:boundaryStatus,candidates,user_selected_pwsid:input.pwsid||null,conflict,household_connection_verified:false,nearby_screen:{method:'30m-envelope-not-a-calibrated-geocode-error-bound',status:nearbyStatus,candidates:nearby||[]}},systems,occurrence,environment,archived_environment,property,well_records,equity_context,next_steps,household_safety:{status:'not-determined',measured_concentrations:[]},gaps,audit,models:modelReadiness(),coverage:await status(),sources:SOURCE_DOCS};
   result.current_advisories=current_advisories;
   result.resident_report=buildResidentReport(result);return result;
  }

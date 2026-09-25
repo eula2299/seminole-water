@@ -447,6 +447,28 @@ const server = http.createServer(async (req, res) => {
     } catch (error) { return json(res, error.statusCode || 500, { error: error.message || 'Could not record the report.' }); }
   }
 
+  if (pathname === '/api/access-impact' && req.method === 'POST') {
+    if (!sameOrigin(req)) return json(res, 403, { error: 'Request blocked.' });
+    if (!rateAllowed(req, 'access-impact', 20, 10 * 60000)) return json(res, 429, { error: 'Too many requests.' });
+    try {
+      const body = await readJson(req, 4096);
+      if ('address' in body || 'street' in body || 'latitude' in body || 'longitude' in body || 'email' in body) {
+        return json(res, 400, { error: 'Access impact events must not include household identifiers.' });
+      }
+      await store.addAccessEvent({
+        state: body.state,
+        county: body.county,
+        higherBarrierContext: body.higher_barrier_context,
+        freeOptions: body.free_options,
+        recordsTranslated: body.records_translated,
+        gapsIdentified: body.gaps_identified
+      });
+      return json(res, 200, { ok: true });
+    } catch (error) {
+      return json(res, error.statusCode || 500, { error: error.message || 'Could not record access impact.' });
+    }
+  }
+
   if (pathname === '/api/community/stats' && req.method === 'GET') {
     try {
       const stats = await store.stats();

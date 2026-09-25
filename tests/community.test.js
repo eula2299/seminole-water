@@ -121,3 +121,13 @@ test('anonymous resident reports are persisted without a street-address field', 
   assert.match(community, /anonymous report/);
   assert.doesNotMatch(store, /community_issue_reports[\s\S]{0,500}street_address/i);
 });
+
+test('Water Access impact tracking is aggregate and rejects household identifiers by design', () => {
+  assert.match(platform, /\/api\/access-impact/);
+  assert.match(store, /water_access_events/);
+  assert.match(store, /access_plans_generated/);
+  assert.match(platform, /must not include household identifiers/);
+  const accessTable = store.match(/CREATE TABLE IF NOT EXISTS water_access_events \(([\s\S]*?)\);/)?.[1] || '';
+  assert.ok(accessTable);
+  assert.doesNotMatch(accessTable, /(street_address|latitude|longitude|email)/i);
+});

@@ -24,6 +24,102 @@ function residentClient(){
   if(!r.private_well&&!(out.length))add('Lead if your service line or plumbing is lead/unknown');
   return out.slice(0,5);
  }
+ function renderAccessPlan(r,data,main){
+  const plan=r.access_plan;if(!plan)return;
+  const section=n('section',undefined,'access-plan');
+  section.append(n('p','MAKE THIS EASIER','mini-kicker'),n('h2',plan.headline||'Your Water Access Plan'));
+  p(section,plan.summary,'access-summary');
+
+  const metrics=n('div',undefined,'access-metrics');
+  const metric=(value,label)=>{const box=n('article');box.append(n('strong',value),n('span',label));metrics.append(box);};
+  metric(plan.verified_zero_cost_options||0,'verified $0 starting points');
+  metric(plan.impact?.records_translated||0,'records translated for you');
+  metric(plan.impact?.gaps_identified||0,'information gaps identified');
+  metric(plan.money?.verified_potential_savings==null?'Never guessed':'Verified','savings');
+  section.append(metrics);
+
+  const profile=n('div',undefined,'access-profile');
+  profile.append(n('h3','Your household water profile'));
+  const profileGrid=n('div',undefined,'profile-grid');
+  for(const [label,value] of [
+   ['Water source',plan.home_profile?.water_source],
+   ['Service line',plan.home_profile?.service_line],
+   ['County',plan.home_profile?.county],
+   ['State',plan.home_profile?.state]
+  ]){const box=n('article');box.append(n('span',label),n('strong',value||'Not resolved'));profileGrid.append(box);}
+  profile.append(profileGrid);section.append(profile);
+
+  const freeBox=n('div',undefined,'free-first');
+  freeBox.append(n('h3','Start with the $0 options before paying'));
+  p(freeBox,'These steps use official records or official guidance. A $0 information step is not a substitute for a household laboratory test when one is needed.','muted');
+  for(const item of plan.free_first||[]){
+   const row=n('article',undefined,'access-step');
+   const top=n('div');top.append(n('strong',item.title),n('span',item.cost_label||'$0','cost-chip'));row.append(top);
+   p(row,item.text,'muted');if(item.url)row.append(a('Open official resource',item.url));freeBox.append(row);
+  }
+  section.append(freeBox);
+
+  if(plan.targeted_tests?.length){
+   const tests=n('div',undefined,'target-tests');tests.append(n('h3','If you still pay for testing, make the quote specific'));
+   p(tests,'Ask certified labs to itemize these tests first instead of automatically buying the largest panel.','muted');
+   const list=n('ul');for(const item of plan.targeted_tests){const li=n('li');li.append(n('strong',item.name));if(item.why)li.append(n('span',' — '+item.why));list.append(li);}tests.append(list);
+   for(const item of plan.paid_if_needed||[]){const row=n('div',undefined,'paid-path');row.append(n('strong',item.title),n('span',item.cost_label||'Price varies','cost-chip neutral'));p(row,item.text,'muted');if(item.url)row.append(a('Find certified options',item.url));tests.append(row);}
+   section.append(tests);
+  }
+
+  const contact=(plan.provider_contacts||[])[0];
+  if(contact&&(contact.phone||contact.email)){
+   const provider=n('div',undefined,'provider-help');provider.append(n('h3','Ask what is already available before you pay'));
+   p(provider,contact.name+(contact.pwsid?' · '+contact.pwsid:''),'muted');
+   if(contact.phone)p(provider,'Phone: '+contact.phone);
+   if(contact.email)p(provider,'Email: '+contact.email);
+   p(provider,'Ask whether current sampling, service-line information, or a local testing-assistance program already covers what you need.','muted');
+   section.append(provider);
+  }
+
+  if(plan.neighborhood_context){
+   const e=plan.neighborhood_context,ctx=n('details',undefined,'equity-context');ctx.append(n('summary','Why a free-first plan matters in this area'));
+   p(ctx,'These are Census-tract estimates, not assumptions about your household.','muted');
+   const pieces=[];
+   if(e.poverty_percent!=null)pieces.push(e.poverty_percent+'% of residents are below the poverty line');
+   if(e.renter_percent!=null)pieces.push(e.renter_percent+'% of occupied homes are renter-occupied');
+   if(e.pre_1980_housing_percent!=null)pieces.push(e.pre_1980_housing_percent+'% of housing was built before 1980');
+   if(e.median_household_income!=null)pieces.push('tract median household income is $'+Number(e.median_household_income).toLocaleString('en-US'));
+   if(pieces.length)p(ctx,pieces.join(' · ')+'.');
+   p(ctx,'IsMyWaterOK never infers your income or race from your address and never restricts help based on neighborhood demographics.','muted');section.append(ctx);
+  }
+
+  const quote=n('div',undefined,'quote-check');quote.append(n('h3','Already have a quote? Check it before you pay'));
+  p(quote,'We only call something potential savings when the lower-cost option answers the same question. Your quote stays in this browser and is not submitted.','muted');
+  const controls=n('div',undefined,'quote-controls');
+  const amount=n('input');amount.type='number';amount.min='0';amount.step='1';amount.placeholder='Quoted price, e.g. 180';amount.setAttribute('aria-label','Quoted price in dollars');
+  const purpose=n('select');purpose.setAttribute('aria-label','What the quote is for');
+  for(const [value,label] of [['water-test','Water laboratory testing'],['service-line','Identifying service-line material'],['other','Something else']]){const option=n('option',label);option.value=value;purpose.append(option);}
+  const check=n('button','Check this quote','secondary');check.type='button';const output=n('p',undefined,'quote-output');
+  check.addEventListener('click',()=>{
+   const dollars=Number(amount.value);
+   if(!Number.isFinite(dollars)||dollars<=0){output.textContent='Enter the quoted amount first.';return;}
+   if(purpose.value==='service-line'&&plan.quote_check?.service_line_free_record_available){
+    output.textContent='Potential cost you may be able to avoid: up to $'+Math.round(dollars).toLocaleString('en-US')+' if the $0 public service-line record answers the same identification question. Confirm the record is current before skipping any professional verification.';
+   }else if(purpose.value==='water-test'){
+    output.textContent='We are not calling $'+Math.round(dollars).toLocaleString('en-US')+' savings because public records are not equivalent to a household lab test. Use the targeted list above and ask certified labs for itemized prices before buying a broad panel.';
+   }else{
+    output.textContent='No comparable $0 option is verified for that quote yet, so we are not inventing a savings number.';
+   }
+  });
+  controls.append(amount,purpose,check);quote.append(controls,output);section.append(quote);
+
+  const justice=n('div',undefined,'justice-note');
+  justice.append(n('strong','The social-justice goal:'));p(justice,'Give every household the research and cost-navigation advantage that usually requires time, technical knowledge, or money—without asking anyone to prove income, race, or hardship.');
+  section.append(justice);
+  main.append(section);
+
+  fetch('/api/access-impact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+   state:plan.state||'',county:plan.county||'',free_options:plan.impact?.free_options_identified||0,
+   records_translated:plan.impact?.records_translated||0,gaps_identified:plan.impact?.gaps_identified||0,
+   higher_barrier_context:!!plan.barrier_context
+  })}).catch(()=>{});
+ }
  function renderSnapshot(r,data){
   const main=n('section',undefined,'snapshot-main simple-results');
   const label={urgent:'Act now',elevated:'Needs attention',watch:'Worth checking',screened:'No major signal surfaced'}[r.risk_profile?.overall]||'Your water results';
@@ -62,6 +158,7 @@ function residentClient(){
   const near='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('drinking water laboratory near '+(r.address||input.value));
   const lab=n('div',undefined,'next-action');lab.append(n('strong','Need a water lab?'),a('Find nearby labs',near));actionList.append(lab);
   now.append(actionList);main.append(now);
+  renderAccessPlan(r,data,main);
 
   const help=n('section',undefined,'household-help');
   help.append(n('p','WHY THIS MATTERS','mini-kicker'),n('h2','Water information should not depend on money, housing, or ZIP code'));
@@ -124,9 +221,9 @@ const HTML=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta nam
 
 .who-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}.who-chips span{font-size:12px;font-weight:650;color:#285f59;background:#e8f4ef;border:1px solid #cee3dc;border-radius:999px;padding:6px 10px}
 .address-state-row{display:grid!important;grid-template-columns:minmax(0,1.4fr) minmax(150px,.7fr) 135px auto}.address-state-row select{min-width:0}.mission{padding:18px 0 54px}.mission-head{max-width:760px}.mission-head h2{font-size:30px;max-width:700px}.mission-head>p:last-child{color:var(--muted);max-width:700px}.mission-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:24px}.mission-grid article{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}.mission-grid article>span{font-size:11px;font-weight:800;color:var(--teal)}.mission-grid h3{margin-top:10px}.mission-grid p{font-size:13px;color:var(--muted);margin:0}
-.snapshot-main{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px;margin:20px 0;box-shadow:0 14px 42px #183d3310}.mini-kicker{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--teal);margin:0 0 6px}.snapshot-main>h2,.next-panel>h2{font-size:28px;margin-bottom:8px}.snapshot-intro,.next-intro{color:var(--muted);font-size:14px;max-width:720px}.risk-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}.risk-tile{border:1px solid var(--line);border-radius:13px;padding:17px;background:#fbfdfc}.risk-tile.urgent{background:#fff4e8;border-color:#e9bb88}.risk-tile.attention-tile{background:#fff9ee;border-color:#ead2a4}.risk-tile.home-status{background:#edf6f4}.tile-label{font-size:10px;font-weight:850;letter-spacing:.12em;color:#56716a}.risk-tile h3{font-size:18px;margin:7px 0}.tile-result{font-weight:700;color:#244e49}.tile-copy{font-size:13px;color:var(--muted);margin:6px 0 0}.tile-action{font-size:13px;margin:10px 0 0}.see-all-box{margin-top:16px;padding:16px 18px;border:1px solid #cfe0da;border-radius:11px;background:#f5faf7}.see-all-box h3{font-size:15px;margin:0 0 4px}.see-all-box p{margin-bottom:8px}.what-now{margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}.household-help{margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}.help-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.help-grid article{border:1px solid var(--line);border-radius:10px;padding:14px;background:#f8fbf9}.help-grid h3{font-size:14px}.see-more{display:inline-block;margin-top:22px;font-weight:700;text-decoration:none}.test-plan{border-radius:12px;background:#fff;padding:16px;margin:15px 0}.test-plan h3{font-size:15px}.test-plan ul{margin:8px 0 0;padding-left:19px;font-size:13px}.next-actions{display:grid;gap:10px}.next-action{background:#fff;border:1px solid #d9e7df;border-radius:11px;padding:13px}.next-action strong{display:block;font-size:14px}.next-action p{margin:4px 0}.next-action a,.lab-box a{font-size:12px}.lab-box{margin-top:12px;background:#fff;border:1px solid #d9e7df;border-radius:11px;padding:14px}.lab-box h3{font-size:15px}.impact-form{margin-top:12px;border-top:1px solid #cbded5;padding-top:14px}.impact-form h3{font-size:15px}.impact-form label{display:block;font-size:12px;font-weight:650;margin-top:9px}.impact-form select,.impact-form textarea{width:100%;margin-top:4px;border:1px solid #adc4bc;border-radius:8px;background:#fff;padding:9px;font:inherit}.impact-form textarea{min-height:72px;resize:vertical}.impact-form button{width:100%;margin-top:10px;font-size:13px;min-height:42px}.impact-status{font-size:12px;color:var(--teal);margin:8px 0 0}
+.snapshot-main{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px;margin:20px 0;box-shadow:0 14px 42px #183d3310}.mini-kicker{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--teal);margin:0 0 6px}.snapshot-main>h2,.next-panel>h2{font-size:28px;margin-bottom:8px}.snapshot-intro,.next-intro{color:var(--muted);font-size:14px;max-width:720px}.risk-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}.risk-tile{border:1px solid var(--line);border-radius:13px;padding:17px;background:#fbfdfc}.risk-tile.urgent{background:#fff4e8;border-color:#e9bb88}.risk-tile.attention-tile{background:#fff9ee;border-color:#ead2a4}.risk-tile.home-status{background:#edf6f4}.tile-label{font-size:10px;font-weight:850;letter-spacing:.12em;color:#56716a}.risk-tile h3{font-size:18px;margin:7px 0}.tile-result{font-weight:700;color:#244e49}.tile-copy{font-size:13px;color:var(--muted);margin:6px 0 0}.tile-action{font-size:13px;margin:10px 0 0}.see-all-box{margin-top:16px;padding:16px 18px;border:1px solid #cfe0da;border-radius:11px;background:#f5faf7}.see-all-box h3{font-size:15px;margin:0 0 4px}.see-all-box p{margin-bottom:8px}.what-now{margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}.access-plan{margin-top:28px;padding:24px;border:1px solid #c9ded6;border-radius:14px;background:linear-gradient(180deg,#f4faf7,#fff)}.access-plan>h2{font-size:27px;margin-bottom:7px}.access-summary{max-width:780px;color:var(--muted);font-size:14px}.access-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:18px 0}.access-metrics article{border:1px solid #d7e7e0;background:#fff;border-radius:10px;padding:13px}.access-metrics strong{display:block;font-size:20px;color:#155f58}.access-metrics span{display:block;font-size:11px;color:var(--muted);margin-top:3px}.access-profile,.free-first,.target-tests,.provider-help,.quote-check{margin-top:20px}.profile-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.profile-grid article{background:#fff;border:1px solid #dce9e4;border-radius:9px;padding:12px}.profile-grid span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.profile-grid strong{display:block;margin-top:3px;font-size:13px}.access-step{padding:13px 0;border-top:1px solid #d8e7e1}.access-step>div{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.cost-chip{font-size:10px;font-weight:800;color:#176354;background:#e4f3ed;border-radius:999px;padding:4px 8px;white-space:nowrap}.cost-chip.neutral{color:#5d665f;background:#eef1ef}.access-step p,.paid-path p{margin:4px 0}.access-step a,.paid-path a{font-size:12px}.target-tests ul{margin:8px 0 14px;padding-left:20px;font-size:13px}.target-tests li{margin:6px 0}.paid-path{display:block;background:#fff;border:1px solid #dce9e4;border-radius:9px;padding:12px}.provider-help{background:#fff;border:1px solid #dce9e4;border-radius:10px;padding:14px}.provider-help p{margin:4px 0}.equity-context{margin-top:18px}.quote-check{border-top:1px solid #d4e4dd;padding-top:18px}.quote-controls{display:grid;grid-template-columns:1fr 1.3fr auto;gap:8px;align-items:end}.quote-controls input,.quote-controls select{min-height:44px;margin:0}.quote-controls button{min-height:44px}.quote-output{font-size:13px;margin-top:9px;color:#285f59}.justice-note{margin-top:18px;border-left:3px solid var(--teal);padding:10px 0 2px 13px}.justice-note p{font-size:13px;color:var(--muted);margin:3px 0}.household-help{margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}.help-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.help-grid article{border:1px solid var(--line);border-radius:10px;padding:14px;background:#f8fbf9}.help-grid h3{font-size:14px}.see-more{display:inline-block;margin-top:22px;font-weight:700;text-decoration:none}.test-plan{border-radius:12px;background:#fff;padding:16px;margin:15px 0}.test-plan h3{font-size:15px}.test-plan ul{margin:8px 0 0;padding-left:19px;font-size:13px}.next-actions{display:grid;gap:10px}.next-action{background:#fff;border:1px solid #d9e7df;border-radius:11px;padding:13px}.next-action strong{display:block;font-size:14px}.next-action p{margin:4px 0}.next-action a,.lab-box a{font-size:12px}.lab-box{margin-top:12px;background:#fff;border:1px solid #d9e7df;border-radius:11px;padding:14px}.lab-box h3{font-size:15px}.impact-form{margin-top:12px;border-top:1px solid #cbded5;padding-top:14px}.impact-form h3{font-size:15px}.impact-form label{display:block;font-size:12px;font-weight:650;margin-top:9px}.impact-form select,.impact-form textarea{width:100%;margin-top:4px;border:1px solid #adc4bc;border-radius:8px;background:#fff;padding:9px;font:inherit}.impact-form textarea{min-height:72px;resize:vertical}.impact-form button{width:100%;margin-top:10px;font-size:13px;min-height:42px}.impact-status{font-size:12px;color:var(--teal);margin:8px 0 0}
 @media(max-width:900px){.mission-grid{grid-template-columns:repeat(2,1fr)}.address-state-row{grid-template-columns:1fr 1fr}.address-state-row button{width:100%}}
-@media(max-width:620px){.risk-tiles,.mission-grid,.help-grid{grid-template-columns:1fr}.address-state-row{grid-template-columns:1fr}.snapshot-main{padding:20px}.snapshot-main>h2{font-size:24px}}
+@media(max-width:620px){.risk-tiles,.mission-grid,.help-grid,.access-metrics,.profile-grid{grid-template-columns:1fr}.quote-controls{grid-template-columns:1fr}.address-state-row{grid-template-columns:1fr}.snapshot-main{padding:20px}.snapshot-main>h2{font-size:24px}}
 </style><script defer src="/national-client.js"></script></head><body><a class="skip-link" href="#lookup-form">Skip to address lookup</a><div class="shell"><header class="topbar"><a href="/" class="brand"><span class="drop" aria-hidden="true"></span>IsMyWaterOK</a><nav aria-label="Main navigation"><a class="county-link" href="/seminole">Seminole County</a><a href="/account.html">My account</a></nav></header><main><section class="hero"><div><p class="eyebrow">Water answers, close to home · nationwide</p><h1>Know what matters in your water,<br><span>at your address.</span></h1><p class="intro">Enter your street address, city and state. We combine water-system records, infrastructure, wells, cleanup sites, environmental monitoring and health context into one address-level water profile: what stands out, what it could mean, and what to do next.</p><div class="who-chips" aria-label="Who this is for"><span>Parents</span><span>Renters</span><span>Private wells</span><span>Older homes</span><span>Anyone unsure what to test</span></div></div><div class="water-art" aria-hidden="true"><span class="drop"></span></div></section><form id="lookup-form" class="search-card"><div class="search-top"><label for="address">Where do you live?</label><span class="free">Free · No account needed</span></div><div class="address-row address-state-row"><input id="address" name="address" type="text" autocomplete="street-address" placeholder="Street address" required minlength="3" maxlength="300" aria-describedby="address-help"><input id="city" name="city" type="text" autocomplete="address-level2" placeholder="City" maxlength="100" aria-label="City"><select id="state" autocomplete="address-level1" required aria-label="State or territory"><option value="">State</option><option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option><option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option><option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="DC">District of Columbia</option><option value="FL">Florida</option><option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option><option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option><option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option><option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option><option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option><option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option><option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option><option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option><option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option><option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option><option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option><option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option><option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option><option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="AS">American Samoa</option><option value="GU">Guam</option><option value="MP">Northern Mariana Islands</option><option value="PR">Puerto Rico</option><option value="VI">U.S. Virgin Islands</option></select><button id="lookup-button" type="submit">Check my water <span aria-hidden="true">→</span></button></div><p id="address-help" class="search-note">Type the street and city normally. If the first match is imperfect, we’ll retry a few safe address formats automatically.</p><details class="options"><summary>Have a private well or know your water source?</summary><label for="supply">Water source<select id="supply" name="supply_type"><option value="unknown">Check automatically</option><option value="public">Public water utility</option><option value="private-well">Private well</option></select></label></details><div id="progress" class="progress" aria-hidden="true" hidden></div><p id="message" class="message" role="status" aria-live="polite"></p><p class="hero-small">Your address is used to find public records. This lookup does not save it.</p></form><noscript><p>Turn on JavaScript to use the address lookup, or <a href="https://www.epa.gov/ground-water-and-drinking-water/local-drinking-water-information">find local drinking-water information through EPA</a>.</p></noscript><div id="results" tabindex="-1" aria-busy="false" aria-live="polite"></div><section id="how-it-works" class="mission"><div class="mission-head"><p class="eyebrow">WHY THIS EXISTS</p><h2>Everyone deserves understandable water information.</h2><p>Testing can be expensive, renters may never see a water bill, and older infrastructure is not distributed evenly. IsMyWaterOK brings scattered public information together so a household can see what matters without needing money, technical expertise, or ownership of the property.</p></div><div class="mission-grid"><article><span>01</span><h3>Free first look</h3><p>Start with what matters instead of paying for a huge testing panel blindly.</p></article><article><span>02</span><h3>Works for renters</h3><p>The address matters even when you do not own the pipes or receive the water bill.</p></article><article><span>03</span><h3>Expose infrastructure gaps</h3><p>Bring pipe, well and nearby environmental information together instead of hiding it across agencies.</p></article><article><span>04</span><h3>Make health information usable</h3><p>Put results, health meaning and the next step together in language a household can actually use.</p></article></div></section></main><footer><p>Independent water information, backed by public sources. For current drinking-water instructions, follow your utility or local health department.</p><nav aria-label="Footer links"><a href="/contact.html">Contact</a><a href="/feedback.html">Feedback</a></nav></footer></div></body></html>`;
 function bundle(helpers){return "'use strict';\n"+helpers.map(fn=>fn.toString()).join('\n')+'\n('+residentClient.toString()+')();\n';}
 module.exports={HTML,bundle};
