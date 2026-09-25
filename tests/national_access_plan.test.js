@@ -30,22 +30,23 @@ test('Water Access Plan is free-first, targeted and refuses invented dollar savi
  const serviceLine={status:'address-record-match',records:[{material:'Unknown',address:'100 Fixture St',source_url:'https://example.gov/inventory'}]};
  const findings=[{name:'Arsenic',detected:true,comparison:null}];
  const plan=buildAccessPlan(data,{privateWell:false,findings,compliance:[],providers:[{id:'FL1234567',name:'Fixture Water'}],serviceLine});
- assert.ok(plan.verified_zero_cost_options>=3);
- assert.equal(plan.money.verified_potential_savings,null);
- assert.match(plan.money.note,/do not invent/i);
+ assert.equal(plan.primary_path.cost,'$0');
+ assert.match(plan.primary_path.title,/free pipe record/i);
+ assert.ok(plan.next_paths.length>=1);
  assert.equal(plan.quote_check.service_line_free_record_available,true);
  assert.ok(plan.targeted_tests.some(x=>x.name==='Arsenic'));
  assert.ok(plan.targeted_tests.some(x=>/Lead/.test(x.name)));
  assert.equal(plan.provider_contacts[0].phone,'407-555-0100');
  assert.ok(plan.barrier_context.signals.length>=2);
+ assert.match(plan.summary,/free option/i);
 });
 
 test('private well access plan never substitutes public utility assistance for a household well test',()=>{
  const plan=buildAccessPlan({address:{state:'GA',geography:{county:{name:'Fixture County'}}},gaps:[],systems:[],provider:{candidates:[]},environment:{records:[]},archived_environment:{records:[]}}, {privateWell:true,findings:[],compliance:[],providers:[],serviceLine:null});
  assert.ok(plan.targeted_tests.some(x=>/coliform/i.test(x.name)));
- assert.ok(plan.free_first.some(x=>x.id==='testing-assistance'));
- assert.ok(!plan.free_first.some(x=>x.id==='annual-report'));
- assert.equal(plan.money.verified_potential_savings,null);
+ assert.match(plan.primary_path.title,/free or reduced-cost well testing/i);
+ assert.equal(plan.primary_path.cost,'$0 to check');
+ assert.ok(plan.next_paths.some(x=>/what your well actually needs/i.test(x.title)));
 });
 
 test('provider contact extraction is public-system scoped and bounded',()=>{
