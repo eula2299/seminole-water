@@ -49,6 +49,17 @@ Do not put the address in HTML, JavaScript, documentation screenshots, or public
 
 ## 5. Outgoing email
 
+### Resend setup (recommended)
+
+Set the transactional-email API key on the web service:
+
+```text
+RESEND_API_KEY=YOUR_RESEND_API_KEY
+MAIL_FROM=IsMyWaterOK <onboarding@resend.dev>
+```
+
+For initial testing, Resend's `onboarding@resend.dev` sender can be used subject to Resend's account restrictions. After a custom sending domain is verified, replace `MAIL_FROM` with the verified address.
+
 ### Quick Gmail setup
 
 Use a Gmail account with 2-Step Verification and an app password:
