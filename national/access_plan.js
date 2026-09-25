@@ -76,45 +76,42 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
   const contacts=providerContacts(data),state=data.address?.state||data.address?.components?.state||'',county=data.address?.geography?.county?.name||null;
   const exactLine=serviceLine?.status==='address-record-match'&&serviceLine.records?.[0];
   const tests=targetedTests(privateWell,findings,serviceLine);
-  const free=[];
-  free.push({
-    id:'records-first',title:'Use the public evidence already assembled here',cost_label:'$0',verified_zero_cost:true,
-    text:'Review the connected water-system, infrastructure and environmental records before paying for a broad test that may include things you do not need.'
-  });
-  if(!privateWell){
-    free.push({
-      id:'service-line-inventory',title:exactLine?'Review the service-line record already found':'Check the public service-line inventory first',cost_label:'$0',verified_zero_cost:true,
-      text:exactLine?'A public address-level service-line record was found. Review it before paying only to identify the recorded pipe material.':'Public water systems are required to maintain a service-line inventory. Check that record before paying only to identify whether the line is lead, galvanized, non-lead, or unknown.',
-      url:exactLine?.source_url||SERVICE_LINES,category:'service-line-information',comparable_to_paid_identification:!!exactLine
-    });
-    free.push({
-      id:'annual-report',title:'Read the annual water-quality report',cost_label:'$0',verified_zero_cost:true,
-      text:'Use the provider report and current notices to narrow what deserves attention before buying household testing.',
-      url:CCR,category:'water-system-information'
-    });
+  const currentNotice=(data.current_advisories?.records||[])[0]||null;
+  const provider=contacts[0]||null;
+  const issues=(compliance||[]).flatMap(x=>x.issues||[]);
+  const elevated=findings.find(x=>x.comparison?.above_reference)||findings.find(x=>x.detected)||null;
+  const localSearch=(q)=>'https://www.google.com/search?q='+encodeURIComponent([q,county,state].filter(Boolean).join(' '));
+
+  const steps=[];
+  const add=(title,cost,why,url,kind='official')=>steps.push({title,cost,why,url,kind});
+
+  if(currentNotice){
+    add('Follow the current water notice','$0','This matters before anything else. Follow the issuing utility or health department instructions first.',currentNotice.source_url||LOCAL);
+  }else if(privateWell){
+    add('Check for free or reduced-cost well testing','$0 to check','Your local health department is the best first place to ask about free, subsidized, or community well-testing programs.',localSearch('free private well water testing health department'),'local-search');
+    add('Ask what your well actually needs tested','$0','CDC recommends a basic yearly well panel and your local health department can add tests based on local risks.',WELL);
+  }else if(exactLine){
+    add('Use the free pipe record we already found','$0','You already have a public record for the pipe serving this property, so do not pay just to learn the recorded material.',exactLine.source_url||SERVICE_LINES);
+    if(provider) add('Ask your water provider what they will check for free','$0 to ask','Utilities may already have current sampling, pipe information, or local assistance that can answer part of the question before you pay.',LOCAL);
+  }else if(elevated){
+    if(provider) add('Ask your water provider for the latest follow-up result','$0','Because something relevant appeared in connected records, first ask for the newest result and whether they offer household sampling or assistance.',LOCAL);
+    else add('Check your provider’s latest water report','$0','Start with the newest official report before buying a household test.',CCR);
   }else{
-    free.push({
-      id:'testing-assistance',title:'Ask about local testing assistance before paying',cost_label:'$0 to check',verified_zero_cost:true,
-      text:'EPA directs households seeking possible testing assistance to their local health department or water program. Availability varies by location; the request itself does not commit you to a paid test.',
-      url:TESTING_HELP,category:'testing-assistance'
-    });
-    free.push({
-      id:'well-guidance',title:'Build the well test around the risks that matter',cost_label:'$0 guidance',verified_zero_cost:true,
-      text:'Use CDC well-testing guidance plus the address profile to ask labs for the specific tests you need instead of automatically buying the largest panel.',
-      url:WELL,category:'testing-plan'
-    });
+    add('Use the free records already checked for you','$0','You already have a first-pass water picture. Do not buy a broad test panel just because one is available.',CCR);
+    if(provider) add('Ask your water provider what they can check for free','$0 to ask','Ask whether they offer sampling, pipe checks, or local assistance before paying a private company.',LOCAL);
   }
-  if(!privateWell&&contacts.length)free.push({
-    id:'provider-contact',title:'Ask the water provider what is already available',cost_label:'$0 to ask',verified_zero_cost:true,
-    text:'Before paying for testing or pipe identification, ask whether the provider has current sampling, service-line information, or a local assistance program.',
-    url:LOCAL,category:'provider-assistance'
-  });
-  const priced=[{
-    id:'certified-labs',title:'If you still need a household test, compare certified labs',cost_label:'Price varies',
-    text:'Ask for the targeted tests below and compare itemized prices. EPA recommends using a state-certified drinking-water laboratory for independent testing.',
-    url:LABS,verified_zero_cost:false
-  }];
-  const issueCount=(compliance||[]).reduce((sum,g)=>sum+(g.issues?.length||0),0);
+
+  if(!privateWell&&!exactLine){
+    add('Check the public lead-pipe record','$0','Water systems maintain public service-line inventories. Check that before paying anyone just to identify the outside pipe.',SERVICE_LINES);
+  }
+
+  if(privateWell||elevated||!exactLine){
+    add('If you still need a home test, compare only the specific tests below','Price varies','At this point a household sample may add evidence that public records cannot. Ask certified labs for itemized prices for only the tests listed below.',LABS,'paid');
+  }
+
+  const primary=steps[0]||{title:'Start with the free information already available',cost:'$0',why:'Use the public records first.',url:LOCAL};
+  const fallback=steps.slice(1,3);
+  const issueCount=issues.length;
   const recordsTranslated=(findings?.length||0)+issueCount+(data.current_advisories?.records?.length||0)+(exactLine?1:0)+(data.environment?.records?.length||0)+(data.archived_environment?.records?.length||0);
   const gaps=(data.gaps||[]).length;
   const equity=data.equity_context||null;
@@ -122,37 +119,33 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
   if(equity?.poverty_percent!=null&&equity.poverty_percent>=20)barrierSignals.push('higher neighborhood poverty');
   if(equity?.renter_percent!=null&&equity.renter_percent>=50)barrierSignals.push('many renter-occupied homes');
   if(equity?.pre_1980_housing_percent!=null&&equity.pre_1980_housing_percent>=50)barrierSignals.push('a large share of older housing');
+
   return {
-    version:'water-access-plan/1',
+    version:'water-access-plan/2',
     state,county,
-    headline:'Make protecting your water easier',
-    summary:'Start with the useful $0 steps, then spend only where a household-specific test or professional check adds evidence that public records cannot.',
-    free_first:free,
-    paid_if_needed:priced,
-    verified_zero_cost_options:free.filter(x=>x.verified_zero_cost).length,
+    headline:'Cheapest path for your home',
+    summary:'We start with the free option most likely to answer your question. Only move to paid testing if the free steps still leave something important unknown.',
+    primary_path:primary,
+    next_paths:fallback,
     targeted_tests:tests,
     provider_contacts:contacts,
-    home_profile:{
-      water_source:privateWell?'Private well':providers.length===1?providers[0].name:providers.length>1?'Multiple possible public water providers':'Water source not fully resolved',
-      service_line:exactLine?String(exactLine.material||'Recorded material available'):'No address-level material confirmed in the connected inventory',
-      county:county||'County not resolved',
-      state:state||'State not resolved',
-      records_translated:recordsTranslated,
-      information_gaps:gaps
+    home_summary:{
+      water_source:privateWell?'Private well':providers.length===1?providers[0].name:providers.length>1?'More than one possible water provider':'Water provider not fully confirmed',
+      pipe_record:exactLine?String(exactLine.material||'Public pipe record found'):'No exact pipe record found yet'
     },
+    can_avoid_broad_panel:tests.length>0,
+    broad_panel_message:tests.length?'You do not need to start with a huge “test everything” package. Ask for these specific tests first.':'There is no reason from the current records alone to start with an expensive broad panel.',
     neighborhood_context:equity,
-    barrier_context:barrierSignals.length?{signals:barrierSignals,note:'These are census-tract conditions, not assumptions about the household. They are used to explain why free-first access matters, never to restrict help.'}:null,
-    money:{
-      verified_potential_savings:null,
-      status:'needs-comparable-price',
-      note:'Dollar savings are shown only when a paid quote and a genuinely comparable lower-cost option can be established. We do not invent a savings number.'
-    },
+    barrier_context:barrierSignals.length?{signals:barrierSignals}:null,
     quote_check:{
       service_line_free_record_available:!!exactLine,
-      target_tests:tests.map(x=>x.name),
-      note:'A quote can be checked against the plan without saving the quote or address.'
+      target_tests:tests.map(x=>x.name)
     },
-    impact:{free_options_identified:free.filter(x=>x.verified_zero_cost).length,records_translated:recordsTranslated,gaps_identified:gaps},
+    impact:{
+      free_options_identified:steps.filter(x=>String(x.cost).startsWith('$0')).length,
+      records_translated:recordsTranslated,
+      gaps_identified:gaps
+    },
     sources:{certified_labs:LABS,service_line_inventory:SERVICE_LINES,local_help:TESTING_HELP}
   };
 }
