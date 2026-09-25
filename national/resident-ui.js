@@ -35,7 +35,7 @@ function residentClient(){
   metric(plan.verified_zero_cost_options||0,'verified $0 starting points');
   metric(plan.impact?.records_translated||0,'records translated for you');
   metric(plan.impact?.gaps_identified||0,'information gaps identified');
-  metric(plan.money?.verified_potential_savings==null?'No made-up savings':'verified savings only','savings integrity');
+  metric(plan.money?.verified_potential_savings==null?'Never guessed':'Verified','savings');
   section.append(metrics);
 
   const profile=n('div',undefined,'access-profile');
