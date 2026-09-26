@@ -26,58 +26,61 @@ function residentClient(){
  }
  function renderAccessPlan(r,data,main){
   const plan=r.access_plan;if(!plan)return;
-  const finder=plan.price_finder||{},bestMatch=(plan.verified_options||[])[0]||null;
-  const found=finder.status==='published-options-found',primaryVerified=plan.primary_path?.verified_option===true;
-  const section=n('section',undefined,'access-plan simple-access');
-  section.append(n('p','SAVE MONEY & TIME','mini-kicker'),n('h2','Cheapest path for your home'));
-  p(section,'We put the lowest-cost useful step first. When we can verify published prices for the exact test, we compare them for you.','access-summary');
+  const personal=plan.personalized||{},finder=plan.price_finder||{},bestMatch=(plan.verified_options||[])[0]||null;
+  const found=finder.status==='published-options-found';
+  const section=n('section',undefined,'access-plan concierge-plan');
+  section.append(n('p','FOR THIS HOME','mini-kicker'),n('h2','We already did the research for you'));
+  p(section,personal.why_this_is_for_you||'We used this address to narrow the next step.','concierge-intro');
 
-  const first=n('article',undefined,'best-path');
-  first.append(n('span',primaryVerified?'CHEAPEST PUBLISHED MATCH':'BEST FIRST STEP','best-label'));
-  const head=n('div',undefined,'best-head');head.append(n('h3',plan.primary_path?.title||'Start free'),n('span',plan.primary_path?.cost||'$0','best-cost'));first.append(head);
-  if(plan.primary_path?.test)p(first,'For: '+plan.primary_path.test,'match-for');
-  p(first,plan.primary_path?.why,'best-copy');
+  const why=n('div',undefined,'plain-summary');
+  const water=n('article');water.append(n('span','Your water source'),n('strong',personal.provider||'Not fully confirmed'));
+  const concern=n('article');concern.append(n('span','What we are focusing on'),n('strong',personal.concern||'Your tap water'));
+  const area=n('article');area.append(n('span','Area used to find help'),n('strong',[personal.county,personal.state].filter(Boolean).join(', ')||'Your local area'));
+  why.append(water,concern,area);section.append(why);
+
+  const how=n('details',undefined,'plain-details how-this-works');how.append(n('summary','How this works — in plain English'));
+  const ol=n('ol');for(const step of personal.how_it_works||[]){const li=n('li',step);ol.append(li);}how.append(ol);section.append(how);
+
+  const first=n('article',undefined,'concierge-step primary-step');
+  first.append(n('span','1 · START HERE','step-label'));
+  const firstHead=n('div',undefined,'step-head');firstHead.append(n('h3',plan.primary_path?.title||'Start here'),n('span',plan.primary_path?.cost||'$0','step-cost'));first.append(firstHead);
+  p(first,plan.primary_path?.why,'step-copy');
   if(plan.primary_path?.phone)p(first,'Call: '+plan.primary_path.phone,'option-phone');
-  if(plan.primary_path?.verified_at)p(first,'Published price checked '+plan.primary_path.verified_at+'.','verified-date');
-  if(plan.primary_path?.url)first.append(a('Go to this option →',plan.primary_path.url));
+  if(plan.primary_path?.url)first.append(a('Open this exact option →',plan.primary_path.url));
   section.append(first);
 
-  if(found&&!primaryVerified&&bestMatch){
-   const paid=n('article',undefined,'best-path paid-match');
-   paid.append(n('span','IF YOU NEED TO PAY FOR A TEST','best-label'));
-   const ph=n('div',undefined,'best-head');ph.append(n('h3',bestMatch.best.provider),n('span',bestMatch.best.price_label,'best-cost'));paid.append(ph);
-   p(paid,'Cheapest published price we verified for '+bestMatch.test+'.','match-for');
-   p(paid,bestMatch.best.note,'best-copy');
+  if(personal.call_script){const script=n('div',undefined,'call-script');script.append(n('span','WHAT TO SAY','step-label'));p(script,personal.call_script,'script-text');section.append(script);}
+
+  if(found&&bestMatch){
+   const paid=n('article',undefined,'concierge-step paid-step');
+   paid.append(n('span','2 · IF YOU STILL NEED A LAB TEST','step-label'));
+   const ph=n('div',undefined,'step-head');ph.append(n('h3',bestMatch.best.provider),n('span',bestMatch.best.price_label,'step-cost'));paid.append(ph);
+   p(paid,'For '+bestMatch.test+'. This is the lowest published price we could verify for this exact test in the options we have checked.','step-copy');
+   p(paid,bestMatch.best.note,'muted');
    if(bestMatch.best.phone)p(paid,'Call: '+bestMatch.best.phone,'option-phone');
-   p(paid,'Published price checked '+bestMatch.best.verified_at+'.','verified-date');
-   if(bestMatch.best.url)paid.append(a('Open this test →',bestMatch.best.url));section.append(paid);
+   if(bestMatch.best.verified_at)p(paid,'Price checked '+bestMatch.best.verified_at+'.','verified-date');
+   if(bestMatch.best.url)paid.append(a('Open this test →',bestMatch.best.url));
+   section.append(paid);
+  }else if(plan.targeted_tests?.length){
+   const noPrice=n('article',undefined,'concierge-step paid-step');noPrice.append(n('span','2 · IF YOU STILL NEED A LAB TEST','step-label'),n('h3','We could not verify a reliable posted price nearby'));
+   p(noPrice,'We are not going to guess. Search only for the exact tests below in your area, then compare those prices.','step-copy');
+   if(personal.local_lab_search)noPrice.append(a('Search certified labs for these exact tests →',personal.local_lab_search));section.append(noPrice);
   }
 
   if(found&&(finder.potential_savings!=null||finder.potential_savings_range)){
-   const savings=n('div',undefined,'auto-savings');
-   if(finder.potential_savings!=null){savings.append(n('strong','$'+Number(finder.potential_savings).toLocaleString('en-US')+' less'));p(savings,'than the next comparable published option we verified ('+finder.comparison_provider+' at $'+Number(finder.comparison_price).toLocaleString('en-US')+').','muted');}
-   else{const range=finder.potential_savings_range;savings.append(n('strong','$'+Number(range[0]).toLocaleString('en-US')+'–$'+Number(range[1]).toLocaleString('en-US')+' less'));p(savings,'based on the published local price range compared with '+finder.comparison_provider+' at $'+Number(finder.comparison_price).toLocaleString('en-US')+'. Confirm the local charge before sampling.','muted');}
+   const savings=n('div',undefined,'money-saved');savings.append(n('span','POTENTIAL SAVINGS','step-label'));
+   if(finder.potential_savings!=null){savings.append(n('strong','$'+Number(finder.potential_savings).toLocaleString('en-US')));p(savings,'difference versus the next comparable published option we verified.','muted');}
+   else{const range=finder.potential_savings_range;savings.append(n('strong','$'+Number(range[0]).toLocaleString('en-US')+'–$'+Number(range[1]).toLocaleString('en-US'));p(savings,'possible difference based on the local published price range. Confirm the final local charge first.','muted');}
    section.append(savings);
   }
 
-  if((plan.verified_options||[]).length>1){
-   const exact=n('div',undefined,'verified-test-prices');exact.append(n('h3','Lowest published price we found for each test'));
-   for(const match of plan.verified_options){const row=n('article',undefined,'price-row');const left=n('div');left.append(n('strong',match.test),n('span',match.best.provider,'price-provider'));const right=n('div',undefined,'price-right');right.append(n('strong',match.best.price_label));if(match.best.url)right.append(a('Open',match.best.url));row.append(left,right);exact.append(row);}section.append(exact);
-  }
+  const avoid=n('div',undefined,'avoid-box');avoid.append(n('h3','What you probably do NOT need to buy first'));p(avoid,plan.broad_panel_message||'Do not start with the biggest test package just because it is available.','muted');section.append(avoid);
 
-  if(!found){const note=n('div',undefined,'price-not-found');note.append(n('strong','No exact published price found yet'));p(note,'We could not verify a comparable published price for the exact test this address needs, so we are not labeling a random lab “cheapest.”','muted');section.append(note);}
+  if(plan.targeted_tests?.length){const tests=n('div',undefined,'picked-tests');tests.append(n('h3','If you pay for testing, ask for these first'));const list=n('ul');for(const item of plan.targeted_tests){const li=n('li');li.append(n('strong',item.name));if(item.why)li.append(n('span',' — '+item.why));list.append(li);}tests.append(list);section.append(tests);}
 
-  if(plan.next_paths?.length){
-   const next=n('div',undefined,'fallback-paths');next.append(n('h3','Other useful options'));
-   for(const item of plan.next_paths){const row=n('article',undefined,'fallback-row');const top=n('div');top.append(n('strong',item.title),n('span',item.cost||'$0','cost-chip'));row.append(top);p(row,item.why,'muted');if(item.phone)p(row,'Call: '+item.phone,'option-phone');if(item.url)row.append(a('Open option',item.url));next.append(row);}section.append(next);
-  }
+  if(plan.next_paths?.length){const more=n('details',undefined,'plain-details');more.append(n('summary','Other options we checked'));for(const item of plan.next_paths){const row=n('article',undefined,'fallback-row');const top=n('div');top.append(n('strong',item.title),n('span',item.cost||'$0','cost-chip'));row.append(top);p(row,item.why,'muted');if(item.phone)p(row,'Call: '+item.phone,'option-phone');if(item.url)row.append(a('Open option',item.url));more.append(row);}section.append(more);}
 
-  const skip=n('div',undefined,'skip-spend');skip.append(n('h3','Do not overpay for testing'));p(skip,plan.broad_panel_message||'Start with the cheapest exact option above before buying a large test package.','muted');section.append(skip);
-  if(plan.targeted_tests?.length){const tests=n('details',undefined,'plain-details');tests.append(n('summary','Why these are the tests we picked for your address'));const list=n('ul');for(const item of plan.targeted_tests){const li=n('li');li.append(n('strong',item.name));if(item.why)li.append(n('span',' — '+item.why));list.append(li);}tests.append(list);section.append(tests);}
-
-  const contact=(plan.provider_contacts||[])[0];
-  if(contact&&(contact.phone||contact.email)){const provider=n('details',undefined,'plain-details');provider.append(n('summary','Your water provider contact'));p(provider,contact.name+(contact.pwsid?' · '+contact.pwsid:''),'muted');if(contact.phone)p(provider,contact.phone);if(contact.email)p(provider,contact.email);section.append(provider);}
-  const why=n('details',undefined,'plain-details subtle');why.append(n('summary','How we choose the option'));p(why,found?'We only compare published options that answer the same question. Free records, utility help, and laboratory tests are not treated as interchangeable.':'When there is no comparable published price, we show the best official starting point instead of inventing a cheapest price.','muted');p(why,'The social-impact goal is simple: reduce unnecessary spending and make the lowest-cost legitimate path obvious.','muted');section.append(why);
+  const sources=n('details',undefined,'plain-details subtle');sources.append(n('summary','What we checked behind the scenes'));const ul=n('ul');for(const item of personal.checked_for_you||[]){ul.append(n('li',item));}sources.append(ul);p(sources,'We keep the technical sources here so you do not have to read them to understand what to do.','muted');section.append(sources);
 
   main.append(section);
   fetch('/api/access-impact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:plan.state||'',county:plan.county||'',free_options:plan.impact?.free_options_identified||0,records_translated:plan.impact?.records_translated||0,gaps_identified:plan.impact?.gaps_identified||0,higher_barrier_context:!!plan.barrier_context})}).catch(()=>{});
@@ -199,7 +202,17 @@ const HTML=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta nam
 .match-for{font-size:12px;font-weight:700;color:#285f59;margin:4px 0}.option-phone{font-size:13px;font-weight:700;color:#244e49}.verified-date{font-size:11px;color:var(--muted);margin:4px 0 8px}
 .auto-savings{margin-top:12px;border-radius:10px;background:#eaf6ef;border:1px solid #c6e3d2;padding:14px}.auto-savings strong{font-size:22px;color:#176354;display:block}.auto-savings p{margin:3px 0}
 .verified-test-prices{margin-top:20px}.price-row{display:flex;justify-content:space-between;gap:15px;padding:12px 0;border-top:1px solid #d9e7e1}.price-row>div:first-child{display:grid}.price-provider{font-size:12px;color:var(--muted)}.price-right{text-align:right}.price-right strong{display:block;color:#176354}.price-right a{font-size:12px}
-.paid-match{border-color:#b9cddf;background:#fbfdff}.price-not-found{margin-top:14px;padding:13px;border:1px solid #e2e7e4;border-radius:10px;background:#fff}.price-not-found strong{display:block;margin-bottom:3px}@media(max-width:900px){.mission-grid{grid-template-columns:repeat(2,1fr)}.address-state-row{grid-template-columns:1fr 1fr}.address-state-row button{width:100%}}
+.paid-match{border-color:#b9cddf;background:#fbfdff}.price-not-found{margin-top:14px;padding:13px;border:1px solid #e2e7e4;border-radius:10px;background:#fff}.price-not-found strong{display:block;margin-bottom:3px}
+.concierge-plan{margin-top:28px;padding:26px;border:1px solid #cfe0da;border-radius:16px;background:#f8fbf9}
+.concierge-plan>h2{font-size:29px;margin-bottom:7px}.concierge-intro{font-size:15px;max-width:780px;color:#3f5e57}
+.plain-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0}.plain-summary article{background:#fff;border:1px solid #dbe8e3;border-radius:10px;padding:13px}.plain-summary span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.plain-summary strong{display:block;margin-top:4px;font-size:14px}
+.how-this-works ol{margin:10px 0 0;padding-left:22px}.how-this-works li{margin:8px 0;color:#405d56}
+.concierge-step{margin-top:18px;border-radius:13px;background:#fff;padding:18px;border:1px solid #d6e6df}.primary-step{border:2px solid #8fc6b6}.paid-step{border-color:#cbd9e6}.step-label{font-size:10px;font-weight:850;letter-spacing:.12em;color:var(--teal)}.step-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-top:6px}.step-head h3{font-size:20px;margin:0}.step-cost{font-size:13px;font-weight:800;color:#176354;background:#e4f3ed;border-radius:999px;padding:5px 9px;white-space:nowrap}.step-copy{font-size:14px;color:#405d56;margin:8px 0 10px}
+.call-script{margin-top:12px;background:#fff8e8;border:1px solid #ead8aa;border-radius:11px;padding:14px}.script-text{font-size:14px;margin:5px 0 0;color:#55451f}
+.money-saved{margin-top:14px;background:#eaf6ef;border:1px solid #c6e3d2;border-radius:11px;padding:14px}.money-saved strong{font-size:26px;color:#176354;display:block;margin-top:3px}.money-saved p{margin:3px 0}
+.avoid-box{margin-top:18px;background:#fff;border:1px solid #dce8e3;border-radius:10px;padding:15px}.avoid-box h3{font-size:16px}.picked-tests{margin-top:18px}.picked-tests h3{font-size:16px}.picked-tests ul{margin:8px 0;padding-left:20px}.picked-tests li{margin:6px 0;font-size:13px}
+@media(max-width:700px){.plain-summary{grid-template-columns:1fr}.step-head{flex-direction:column}.concierge-plan{padding:20px}}
+@media(max-width:900px){.mission-grid{grid-template-columns:repeat(2,1fr)}.address-state-row{grid-template-columns:1fr 1fr}.address-state-row button{width:100%}}
 @media(max-width:620px){.risk-tiles,.mission-grid,.help-grid{grid-template-columns:1fr}.quote-controls{grid-template-columns:1fr}.best-head{flex-direction:column}.address-state-row{grid-template-columns:1fr}.snapshot-main{padding:20px}.snapshot-main>h2{font-size:24px}}
 </style><script defer src="/national-client.js"></script></head><body><a class="skip-link" href="#lookup-form">Skip to address lookup</a><div class="shell"><header class="topbar"><a href="/" class="brand"><span class="drop" aria-hidden="true"></span>IsMyWaterOK</a><nav aria-label="Main navigation"><a class="county-link" href="/seminole">Seminole County</a><a href="/account.html">My account</a></nav></header><main><section class="hero"><div><p class="eyebrow">Water answers, close to home · nationwide</p><h1>Know what matters in your water,<br><span>at your address.</span></h1><p class="intro">Enter your street address, city and state. We combine water-system records, infrastructure, wells, cleanup sites, environmental monitoring and health context into one address-level water profile: what stands out, what it could mean, and what to do next.</p><div class="who-chips" aria-label="Who this is for"><span>Parents</span><span>Renters</span><span>Private wells</span><span>Older homes</span><span>Anyone unsure what to test</span></div></div><div class="water-art" aria-hidden="true"><span class="drop"></span></div></section><form id="lookup-form" class="search-card"><div class="search-top"><label for="address">Where do you live?</label><span class="free">Free · No account needed</span></div><div class="address-row address-state-row"><input id="address" name="address" type="text" autocomplete="street-address" placeholder="Street address" required minlength="3" maxlength="300" aria-describedby="address-help"><input id="city" name="city" type="text" autocomplete="address-level2" placeholder="City" maxlength="100" aria-label="City"><select id="state" autocomplete="address-level1" required aria-label="State or territory"><option value="">State</option><option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option><option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option><option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="DC">District of Columbia</option><option value="FL">Florida</option><option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option><option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option><option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option><option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option><option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option><option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option><option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option><option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option><option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option><option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option><option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option><option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option><option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option><option value="WI">Wisconsin</option><option value="WY">Wyoming</option><option value="AS">American Samoa</option><option value="GU">Guam</option><option value="MP">Northern Mariana Islands</option><option value="PR">Puerto Rico</option><option value="VI">U.S. Virgin Islands</option></select><button id="lookup-button" type="submit">Check my water <span aria-hidden="true">→</span></button></div><p id="address-help" class="search-note">Type the street and city normally. If the first match is imperfect, we’ll retry a few safe address formats automatically.</p><details class="options"><summary>Have a private well or know your water source?</summary><label for="supply">Water source<select id="supply" name="supply_type"><option value="unknown">Check automatically</option><option value="public">Public water utility</option><option value="private-well">Private well</option></select></label></details><div id="progress" class="progress" aria-hidden="true" hidden></div><p id="message" class="message" role="status" aria-live="polite"></p><p class="hero-small">Your address is used to find public records. This lookup does not save it.</p></form><noscript><p>Turn on JavaScript to use the address lookup, or <a href="https://www.epa.gov/ground-water-and-drinking-water/local-drinking-water-information">find local drinking-water information through EPA</a>.</p></noscript><div id="results" tabindex="-1" aria-busy="false" aria-live="polite"></div><section id="how-it-works" class="mission"><div class="mission-head"><p class="eyebrow">WHY THIS EXISTS</p><h2>Everyone deserves understandable water information.</h2><p>Testing can be expensive, renters may never see a water bill, and older infrastructure is not distributed evenly. IsMyWaterOK brings scattered public information together so a household can see what matters without needing money, technical expertise, or ownership of the property.</p></div><div class="mission-grid"><article><span>01</span><h3>Free first look</h3><p>Start with what matters instead of paying for a huge testing panel blindly.</p></article><article><span>02</span><h3>Works for renters</h3><p>The address matters even when you do not own the pipes or receive the water bill.</p></article><article><span>03</span><h3>Expose infrastructure gaps</h3><p>Bring pipe, well and nearby environmental information together instead of hiding it across agencies.</p></article><article><span>04</span><h3>Make health information usable</h3><p>Put results, health meaning and the next step together in language a household can actually use.</p></article></div></section></main><footer><p>Independent water information, backed by public sources. For current drinking-water instructions, follow your utility or local health department.</p><nav aria-label="Footer links"><a href="/contact.html">Contact</a><a href="/feedback.html">Feedback</a></nav></footer></div></body></html>`;
 function bundle(helpers){return "'use strict';\n"+helpers.map(fn=>fn.toString()).join('\n')+'\n('+residentClient.toString()+')();\n';}
