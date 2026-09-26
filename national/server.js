@@ -4,6 +4,7 @@ const {createEngine}=require('./service');
 const {EvidenceError,REGION_CODES}=require('./evidence');
 const {HTML,CLIENT}=require('./ui');
 const {clientKey,readJson,HttpInputError}=require('./http_safety');
+const seo=require('./seo');
 function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false}={}){
  const buckets=new Map();let active=0;
  const security={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",'Permissions-Policy':'geolocation=(), camera=(), microphone=()'};
@@ -12,7 +13,12 @@ function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false}=
  const server=http.createServer(async(req,res)=>{
   try{
    const u=new URL(req.url,'http://localhost');
-   if(req.method==='GET'&&['/','/national','/national/','/water-details'].includes(u.pathname))return send(res,200,HTML,'text/html; charset=utf-8');
+   if(req.method==='GET'&&(u.pathname==='/national'||u.pathname==='/national/')){res.writeHead(301,{Location:'/',...security});return res.end();}
+   if(req.method==='GET'&&u.pathname==='/'){return send(res,200,HTML,'text/html; charset=utf-8');}
+   if(req.method==='GET'&&u.pathname==='/water-details'){res.setHeader('X-Robots-Tag','noindex, nofollow');return send(res,200,HTML,'text/html; charset=utf-8');}
+   if(req.method==='GET'&&u.pathname==='/robots.txt')return send(res,200,seo.robots(),'text/plain; charset=utf-8');
+   if(req.method==='GET'&&u.pathname==='/sitemap.xml')return send(res,200,seo.sitemap(),'application/xml; charset=utf-8');
+   if(req.method==='GET'&&seo.GUIDES[u.pathname])return send(res,200,seo.guideHtml(u.pathname),'text/html; charset=utf-8');
    if(req.method==='GET'&&u.pathname==='/national-client.js')return send(res,200,CLIENT,'application/javascript; charset=utf-8');
    if(req.method==='GET'&&u.pathname==='/healthz')return send(res,200,{process:'up',national_data_ready:false});
    if(req.method==='GET'&&u.pathname==='/api/national/status')return send(res,200,await engine.status());
