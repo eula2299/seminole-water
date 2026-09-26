@@ -221,6 +221,8 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
       concern,
       why_this_is_for_you:personalizedWhy,
       call_script:callScript,
+      local_lab_search:webSearch('state certified drinking water laboratory '+countyLabel+' '+state+' '+(tests.map(x=>x.name).slice(0,3).join(' ')||concern)),
+      local_help_search:privateWell?countyWellSearch:providerOfficialSearch,
       how_it_works:[
         'We use your address to identify your water source, provider and local public records.',
         'We narrow the problem to the tests or checks that actually make sense for this home.',
