@@ -69,8 +69,14 @@ function residentClient(){
 
   if(found&&(finder.potential_savings!=null||finder.potential_savings_range)){
    const savings=n('div',undefined,'money-saved');savings.append(n('span','POTENTIAL SAVINGS','step-label'));
-   if(finder.potential_savings!=null){savings.append(n('strong','$'+Number(finder.potential_savings).toLocaleString('en-US')));p(savings,'difference versus the next comparable published option we verified.','muted');}
-   else{const range=finder.potential_savings_range;savings.append(n('strong','
+   if(finder.potential_savings!=null){
+    savings.append(n('strong','$'+Number(finder.potential_savings).toLocaleString('en-US')));
+    p(savings,'difference versus the next comparable published option we verified.','muted');
+   }else{
+    const range=finder.potential_savings_range;
+    savings.append(n('strong','$'+Number(range[0]).toLocaleString('en-US')+'–$'+Number(range[1]).toLocaleString('en-US')));
+    p(savings,'possible difference based on the local published price range. Confirm the final local charge first.','muted');
+   }
    section.append(savings);
   }
 
