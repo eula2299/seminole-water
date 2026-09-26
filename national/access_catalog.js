@@ -18,6 +18,23 @@ const OFFERS = Object.freeze([
     verified_at:'2026-09-25'
   },
   {
+    id:'fl-county-routine-nitrate',
+    state:'FL',
+    counties:['*'],
+    supply:['private-well'],
+    tests:['Nitrate'],
+    provider:'Florida county health department',
+    price:20,
+    price_max:30,
+    price_label:'usually $20–$30 per sample',
+    price_kind:'published-range',
+    scope:'routine-private-well',
+    url:'https://www.floridahealth.gov/community-environmental-public-health/environmental-public-health/water-quality/drinking-water/private-wells/',
+    phone:null,
+    note:'Florida DOH says county health department private-well testing is usually $20–$30 per sample and recommends annual nitrate testing. Confirm the exact local charge before collecting the sample.',
+    verified_at:'2026-09-25'
+  },
+  {
     id:'fl-seminole-water-sample',
     state:'FL',
     counties:['Seminole County','Seminole'],
@@ -190,11 +207,15 @@ function chooseCheapest({state,county,supply,provider,tests=[]}){
     const options=matches.filter(o=>testMatches(o,test)).sort((a,b)=>a.price-b.price||a.provider.localeCompare(b.provider));
     if(!options.length)continue;
     const best=options[0],privatePaid=options.find(o=>o.price_kind==='published'&&o.price>best.price);
+    const bestMax=Number.isFinite(Number(best.price_max))?Number(best.price_max):best.price;
+    const savingLow=privatePaid?Math.max(0,privatePaid.price-bestMax):null;
+    const savingHigh=privatePaid?Math.max(0,privatePaid.price-best.price):null;
     byTest.push({
       test,
       best,
       alternatives:options.slice(1,3),
-      potential_savings:privatePaid?Math.max(0,privatePaid.price-best.price):null,
+      potential_savings:savingLow!==null&&savingLow===savingHigh?savingLow:null,
+      potential_savings_range:savingLow!==null&&savingLow!==savingHigh?[savingLow,savingHigh]:null,
       comparison_provider:privatePaid?.provider||null,
       comparison_price:privatePaid?.price??null
     });
