@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const {parseAcsContext,buildAccessPlan,providerContacts,targetedTests}=require('../national/access_plan');
+const {chooseCheapest}=require('../national/access_catalog');
 
 test('ACS access context stays tract-level and never claims household demographics',()=>{
  const payload=[
@@ -58,4 +59,29 @@ test('targeted test list is bounded and deduplicated',()=>{
  const items=targetedTests(false,[{name:'PFOA',detected:true},{name:'PFOS',detected:true},{name:'Arsenic',detected:true},{name:'Nitrate as N',detected:true},{name:'Cadmium',detected:true}],{status:'address-record-match',records:[{material:'Lead'}]});
  assert.ok(items.length<=6);
  assert.equal(new Set(items.map(x=>x.name)).size,items.length);
+});
+
+test('Florida private-well bacteria returns an actual cheapest published option and savings',()=>{
+ const found=chooseCheapest({state:'FL',county:'Seminole County',supply:'private-well',provider:'',tests:['Total coliform and E. coli']});
+ assert.equal(found.length,1);
+ assert.equal(found[0].best.provider,'Florida Department of Health — county health department');
+ assert.equal(found[0].best.price,17);
+ assert.equal(found[0].comparison_provider,'Advanced Environmental Laboratories (AEL)');
+ assert.equal(found[0].comparison_price,120);
+ assert.equal(found[0].potential_savings,103);
+});
+
+test('Florida private-well nitrate returns the published county price range before private lab pricing',()=>{
+ const found=chooseCheapest({state:'FL',county:'Seminole County',supply:'private-well',provider:'',tests:['Nitrate']});
+ assert.equal(found[0].best.provider,'Florida county health department');
+ assert.equal(found[0].best.price_label,'usually $20–$30 per sample');
+ assert.deepEqual(found[0].potential_savings_range,[90,100]);
+ assert.equal(found[0].comparison_price,120);
+});
+
+test('Seminole public-water service line lookup returns the named free utility inventory',()=>{
+ const found=chooseCheapest({state:'FL',county:'Seminole County',supply:'public',provider:'Seminole County Utilities',tests:['Service line material']});
+ assert.equal(found[0].best.provider,'Seminole County Utilities — Service Line Inventory');
+ assert.equal(found[0].best.price,0);
+ assert.match(found[0].best.url,/seminolecountyfl\.gov/);
 });

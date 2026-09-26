@@ -6,6 +6,7 @@ const LOCAL='https://www.epa.gov/ground-water-and-drinking-water/local-drinking-
 const TESTING_HELP='https://www.epa.gov/ground-water-and-drinking-water/forms/contact-us-about-ground-water-and-drinking-water-0';
 const SERVICE_LINES='https://www.epa.gov/ground-water-and-drinking-water/planning-and-developing-service-line-inventory';
 const WELL='https://www.cdc.gov/drinking-water/safety/guidelines-for-testing-well-water.html';
+const {chooseCheapest}=require('./access_catalog');
 
 function finite(value){
   if(value===null||value===undefined||String(value).trim()==='')return null;
@@ -76,6 +77,19 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
   const contacts=providerContacts(data),state=data.address?.state||data.address?.components?.state||'',county=data.address?.geography?.county?.name||null;
   const exactLine=serviceLine?.status==='address-record-match'&&serviceLine.records?.[0];
   const tests=targetedTests(privateWell,findings,serviceLine);
+  const servingProvider=providers.length===1?providers[0].name:(contacts[0]?.name||'');
+  const accessTargets=[
+    ...(!privateWell&&!exactLine?['Service line material']:[]),
+    ...tests.map(x=>x.name)
+  ];
+  const verifiedOptions=chooseCheapest({
+    state,
+    county,
+    supply:privateWell?'private-well':'public',
+    provider:servingProvider,
+    tests:accessTargets
+  });
+  const bestVerified=verifiedOptions[0]||null;
   const currentNotice=(data.current_advisories?.records||[])[0]||null;
   const provider=contacts[0]||null;
   const issues=(compliance||[]).flatMap(x=>x.issues||[]);
@@ -109,8 +123,35 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
     add('If you still need a home test, compare only the specific tests below','Price varies','At this point a household sample may add evidence that public records cannot. Ask certified labs for itemized prices for only the tests listed below.',LABS,'paid');
   }
 
-  const primary=steps[0]||{title:'Start with the free information already available',cost:'$0',why:'Use the public records first.',url:LOCAL};
-  const fallback=steps.slice(1,3);
+  let primary=steps[0]||{title:'Start with the free information already available',cost:'$0',why:'Use the public records first.',url:LOCAL};
+  let fallback=steps.slice(1,3);
+  if(!currentNotice&&bestVerified&&(privateWell||bestVerified.best.price===0)){
+    const b=bestVerified.best;
+    primary={
+      title:b.provider,
+      cost:b.price_label,
+      why:'For '+bestVerified.test+': '+b.note,
+      url:b.url,
+      phone:b.phone||null,
+      verified_option:true,
+      test:bestVerified.test,
+      verified_at:b.verified_at
+    };
+    const alt=bestVerified.alternatives?.[0];
+    fallback=[
+      ...(alt?[{
+        title:alt.provider,
+        cost:alt.price_label,
+        why:'Also verified for '+bestVerified.test+'. '+alt.note,
+        url:alt.url,
+        phone:alt.phone||null,
+        verified_option:true,
+        test:bestVerified.test,
+        verified_at:alt.verified_at
+      }]:[]),
+      ...steps.filter(x=>x.url!==b.url&&(!alt||x.url!==alt.url)).slice(0,2-(alt?1:0))
+    ];
+  }
   const issueCount=issues.length;
   const recordsTranslated=(findings?.length||0)+issueCount+(data.current_advisories?.records?.length||0)+(exactLine?1:0)+(data.environment?.records?.length||0)+(data.archived_environment?.records?.length||0);
   const gaps=(data.gaps||[]).length;
@@ -127,6 +168,21 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
     summary:'We start with the free option most likely to answer your question. Only move to paid testing if the free steps still leave something important unknown.',
     primary_path:primary,
     next_paths:fallback,
+    verified_options:verifiedOptions,
+    price_finder:{
+      status:verifiedOptions.length?'published-options-found':'no-comparable-published-price-found',
+      checked_targets:accessTargets,
+      published_matches:verifiedOptions.length,
+      best_test:bestVerified?.test||null,
+      best_price:bestVerified?.best?.price??null,
+      best_price_label:bestVerified?.best?.price_label||null,
+      best_provider:bestVerified?.best?.provider||null,
+      potential_savings:bestVerified?.potential_savings??null,
+      potential_savings_range:bestVerified?.potential_savings_range||null,
+      comparison_provider:bestVerified?.comparison_provider||null,
+      comparison_price:bestVerified?.comparison_price??null,
+      wording:verifiedOptions.length?'Cheapest published option in our verified catalog for this exact test and location.':'We could not verify a comparable published price for the exact test needed, so we will not pretend we found the cheapest option.'
+    },
     targeted_tests:tests,
     provider_contacts:contacts,
     home_summary:{
