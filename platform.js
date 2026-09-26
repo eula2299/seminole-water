@@ -9,6 +9,7 @@ const { CommunityMailer } = require('./lib/community_mailer');
 const {createNationalRuntime}=require('./national/runtime');
 const httpSafety=require('./national/http_safety');
 const national=createNationalRuntime();
+const nationalSeo=require('./national/seo');
 
 let OAuth2Client;
 try { ({ OAuth2Client } = require('google-auth-library')); } catch { OAuth2Client = null; }
@@ -225,7 +226,7 @@ const server = http.createServer(async (req, res) => {
   if(['/api/service-areas/sync','/api/epa/reload','/api/local/reload'].includes(pathname)) return json(res,404,{error:'Not found.'});
   if(pathname==='/api/diagnostics/geocode'&&!rateAllowed(req,'diagnostic-geocode',10,60000))return json(res,429,{error:'Please try again later.'});
   if (pathname === '/healthz' && req.method === 'GET') return json(res,coreReady?200:503,{process:'up',core:coreReady?'ready':'starting',release:'national-integration',commit:process.env.RAILWAY_GIT_COMMIT_SHA||null});
-  if (['/','/national','/national/','/water-details','/national-client.js'].includes(pathname) || pathname.startsWith('/api/national/')) {
+  if (['/','/national','/national/','/water-details','/national-client.js','/robots.txt','/sitemap.xml'].includes(pathname) || nationalSeo.GUIDES[pathname] || pathname.startsWith('/api/national/')) {
     national.server.emit('request',req,res);
     return;
   }
@@ -461,7 +462,12 @@ const server = http.createServer(async (req, res) => {
         higherBarrierContext: body.higher_barrier_context,
         freeOptions: body.free_options,
         recordsTranslated: body.records_translated,
-        gapsIdentified: body.gaps_identified
+        gapsIdentified: body.gaps_identified,
+        verifiedSavings: body.verified_savings,
+        moneyBarrierReduced: body.money_barrier_reduced,
+        informationBarrierReduced: body.information_barrier_reduced,
+        neglectGapExposed: body.neglect_gap_exposed,
+        healthGuidanceDelivered: body.health_guidance_delivered
       });
       return json(res, 200, { ok: true });
     } catch (error) {

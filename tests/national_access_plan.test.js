@@ -115,3 +115,31 @@ test('private-well plan names the county and builds an exact local testing searc
  assert.match(plan.personalized.local_lab_search,/google\.com\/search/);
  assert.match(plan.personalized.why_this_is_for_you,/private well/i);
 });
+
+test('Household Water Passport covers all four social barriers without storing a household profile',()=>{
+ const data={
+  address:{status:'matched',state:'FL',matched_address:'123 TEST ST, SANFORD, FL',geography:{county:{name:'Seminole County'}}},
+  gaps:['household sample missing'],
+  provider:{candidates:[{pwsid:'FL1234567',name:'Seminole County Utilities'}]},
+  systems:[{pwsid:'FL1234567',records:[{data:{PWSName:'Seminole County Utilities',PHONE_NUMBER:'407-665-2110'}}]}],
+  current_advisories:{status:'not-connected',records:[]},
+  environment:{records:[]},archived_environment:{records:[]}
+ };
+ const plan=buildAccessPlan(data,{privateWell:false,findings:[],compliance:[],providers:[{id:'FL1234567',name:'Seminole County Utilities'}],serviceLine:{status:'address-record-needed',records:[]}});
+ assert.ok(plan.passport);
+ assert.deepEqual(Object.keys(plan.passport.pillars).sort(),['health','information','money','neglect']);
+ assert.equal(plan.passport.pillars.money.barrier_reduced,true);
+ assert.equal(plan.passport.pillars.information.barrier_reduced,true);
+ assert.ok(plan.passport.pillars.neglect.gaps.some(x=>/Pipe material/i.test(x.title)));
+ assert.ok(plan.passport.pillars.health.priorities.length>=1);
+ assert.ok(plan.passport.local_only_profiles.some(x=>x.id==='young-child'));
+ assert.match(plan.passport.privacy_note,/stay in the browser/i);
+});
+
+test('private-well Passport exposes missing household evidence and infant-relevant priorities',()=>{
+ const data={address:{status:'matched',state:'FL',matched_address:'55 WELL RD, SANFORD, FL',geography:{county:{name:'Seminole County'}}},gaps:[],systems:[],provider:{candidates:[]},current_advisories:{status:'not-connected',records:[]},environment:{records:[]},archived_environment:{records:[]}};
+ const plan=buildAccessPlan(data,{privateWell:true,findings:[],compliance:[],providers:[],serviceLine:null});
+ assert.ok(plan.passport.pillars.neglect.gaps.some(x=>/well sample/i.test(x.title)));
+ assert.ok(plan.passport.pillars.health.priorities.some(x=>x.id==='nitrate'));
+ assert.ok(plan.passport.pillars.health.priorities.some(x=>x.id==='bacteria'));
+});

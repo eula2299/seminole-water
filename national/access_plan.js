@@ -93,6 +93,49 @@ function plainWhy({privateWell,providerName,county,tests,findings,serviceLine,cu
   return 'We matched this address to '+(providerName||'its likely water provider')+'. Nothing in the connected records says you should immediately buy a large test package, so we start with the free information already available.';
 }
 
+function plainGapList({privateWell,providerName,serviceLine,currentNotice,data}){
+ const gaps=[];
+ const add=(title,why,question)=>{if(!gaps.some(x=>x.title===title))gaps.push({title,why,question});};
+ if(!privateWell&&!providerName)add('Water provider not confirmed','Without the provider, utility-wide records may not match this home.','Who is the water provider for this exact address?');
+ if(!privateWell&&serviceLine?.status!=='address-record-match')add('Pipe material not confirmed','The public records we checked do not confirm the service-line material for this exact address.','What material is the service line serving this property, and when was it last verified?');
+ if(privateWell)add('No household well sample on file here','Nearby wells and environmental records cannot tell us the chemistry of this private well.','Which tests does the county recommend for this well location, and are any free or reduced-cost?');
+ if(!currentNotice&&data.current_advisories?.status!=='checked-sources')add('Today’s notice status not fully confirmed','Historical records do not replace a current boil-water or do-not-drink notice.','Are there any current drinking-water notices for this address today?');
+ if(!(data.address?.status==='matched'))add('Address match needs confirmation','A precise address match is needed before household-level records can be trusted.','Can this exact street address be confirmed?');
+ return gaps.slice(0,4);
+}
+function healthProtectionPlan({privateWell,tests}){
+ const priorities=[];
+ const add=(id,title,plain,when)=>{if(!priorities.some(x=>x.id===id))priorities.push({id,title,plain,when});};
+ const names=tests.map(x=>x.name.toLowerCase());
+ if(names.some(x=>x.includes('lead')))add('lead','Lead','Lead can enter water from service lines or household plumbing. Testing the tap is the clearest way to know what is reaching the home.','Especially useful for homes with young children, pregnancy, or older plumbing.');
+ if(names.some(x=>x.includes('nitrate')))add('nitrate','Nitrate','Nitrate is especially important for private wells and can be harmful to infants at high levels.','Especially useful for homes using infant formula or private wells.');
+ if(names.some(x=>x.includes('coliform')||x.includes('e. coli')))add('bacteria','Bacteria','Private wells can develop microbial contamination that utility testing does not cover.','Especially useful after flooding, repairs, or changes in taste, smell, or color.');
+ if(names.some(x=>x.includes('pfas')))add('pfas','PFAS','The address records point to PFAS as something worth checking more closely rather than buying a broad test blindly.','Useful when connected records show PFAS or when a local source is relevant.');
+ if(names.some(x=>x.includes('arsenic')))add('arsenic','Arsenic','Arsenic can occur naturally in groundwater and may also appear in drinking-water records.','Most useful when records or local geology make arsenic relevant.');
+ if(!priorities.length&&!privateWell)add('baseline','Tap-water baseline','Nothing in the connected records justifies an expensive broad panel as the first move.','Use targeted testing if there is an older home, plumbing concern, active notice, unusual water change, or a specific health concern.');
+ return priorities.slice(0,4);
+}
+function buildPassport({data,privateWell,providerName,tests,serviceLine,currentNotice,verifiedOptions,recordsTranslated,gapsCount,freeOptions}){
+ const price=verifiedOptions[0]||null;
+ const verifiedSaving=price?.potential_savings??null;
+ const range=price?.potential_savings_range||null;
+ const gaps=plainGapList({privateWell,providerName,serviceLine,currentNotice,data});
+ const health=healthProtectionPlan({privateWell,tests});
+ let moneyText='We put free and lower-cost steps before paid testing and only count savings when two options answer the same question.';
+ if(verifiedSaving!=null)moneyText='We found a cheaper comparable published option and verified the price difference.';
+ else if(range)moneyText='We found a lower published local price range and verified the comparison range.';
+ return {version:'household-water-passport/1',promise:'One place to understand your water, avoid unnecessary spending, expose what is still unknown, and protect the people in your home.',pillars:{
+  money:{title:'Save money',status:verifiedOptions.length?'personalized':'guided',plain:moneyText,verified_savings:verifiedSaving,verified_savings_range:range,barrier_reduced:verifiedOptions.length>0||Number(freeOptions)>0},
+  information:{title:'Explain my water',status:'personalized',plain:recordsTranslated>0?'We organized the connected water records into the few things that matter for this home.':'We organize available records into a short household plan instead of making you read agency reports.',records_translated:recordsTranslated,barrier_reduced:true},
+  neglect:{title:'Show what is still unknown',status:gaps.length?'needs-follow-up':'checked',plain:gaps.length?'We found important things that public records still do not confirm for this home.':'The main provider, pipe and notice questions we could check were covered by the connected records.',gaps:gaps,gap_count:Math.max(gaps.length,gapsCount||0),barrier_exposed:gaps.length>0},
+  health:{title:'Protect my household',status:'personalized',plain:'We narrow health-protection steps to the contaminants and infrastructure that are actually relevant here, without diagnosing anyone.',priorities:health,guidance_delivered:health.length>0}
+ },local_only_profiles:[
+  {id:'young-child',label:'Young child in the home',note:'Prioritize lead and nitrate guidance when relevant.'},
+  {id:'pregnancy',label:'Pregnancy',note:'Prioritize lead and other contaminant guidance when relevant.'},
+  {id:'infant',label:'Infant / formula',note:'Prioritize nitrate and microbial guidance when relevant.'},
+  {id:'renter',label:'Renter',note:'Emphasize actions that do not require owning the property.'}
+ ],privacy_note:'These optional household selections stay in the browser and are not sent with the impact event.'};
+}
 function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],providers=[],serviceLine=null}={}){
   const contacts=providerContacts(data),state=data.address?.state||data.address?.components?.state||'',county=data.address?.geography?.county?.name||null;
   const exactLine=serviceLine?.status==='address-record-match'&&serviceLine.records?.[0];
@@ -186,6 +229,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
   const recordsTranslated=(findings?.length||0)+issueCount+(data.current_advisories?.records?.length||0)+(exactLine?1:0)+(data.environment?.records?.length||0)+(data.archived_environment?.records?.length||0);
   const gaps=(data.gaps||[]).length;
   const equity=data.equity_context||null;
+  const passport=buildPassport({data,privateWell,providerName,tests,serviceLine,currentNotice,verifiedOptions,recordsTranslated,gapsCount:gaps,freeOptions:steps.filter(x=>String(x.cost).startsWith('$0')).length});
   const barrierSignals=[];
   if(equity?.poverty_percent!=null&&equity.poverty_percent>=20)barrierSignals.push('higher neighborhood poverty');
   if(equity?.renter_percent!=null&&equity.renter_percent>=50)barrierSignals.push('many renter-occupied homes');
@@ -213,6 +257,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
       comparison_price:bestVerified?.comparison_price??null,
       wording:verifiedOptions.length?'Cheapest published option in our verified catalog for this exact test and location.':'We could not verify a comparable published price for the exact test needed, so we will not pretend we found the cheapest option.'
     },
+    passport,
     personalized:{
       address:addressLabel,
       provider:privateWell?'Private well':providerName,
