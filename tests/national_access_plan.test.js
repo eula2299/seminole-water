@@ -85,3 +85,33 @@ test('Seminole public-water service line lookup returns the named free utility i
  assert.equal(found[0].best.price,0);
  assert.match(found[0].best.url,/seminolecountyfl\.gov/);
 });
+
+test('public-water plan explains why the recommendation is specific to the matched home',()=>{
+ const data={
+  address:{state:'FL',matched_address:'123 TEST ST, SANFORD, FL 32771',geography:{county:{name:'Seminole County'}}},
+  gaps:[],
+  provider:{candidates:[{pwsid:'FL1234567',name:'Seminole County Utilities'}]},
+  systems:[{pwsid:'FL1234567',records:[{data:{PWSName:'Seminole County Utilities',PHONE_NUMBER:'407-665-2110'}}]}],
+  current_advisories:{records:[]},environment:{records:[]},archived_environment:{records:[]}
+ };
+ const serviceLine={status:'address-record-match',records:[{material:'Unknown',address:'123 TEST ST',source_url:'https://example.gov/pipe'}]};
+ const plan=buildAccessPlan(data,{privateWell:false,findings:[],compliance:[],providers:[{id:'FL1234567',name:'Seminole County Utilities'}],serviceLine});
+ assert.equal(plan.personalized.address,'123 TEST ST, SANFORD, FL 32771');
+ assert.equal(plan.personalized.provider,'Seminole County Utilities');
+ assert.equal(plan.personalized.county,'Seminole County');
+ assert.match(plan.personalized.why_this_is_for_you,/Seminole County Utilities/);
+ assert.match(plan.personalized.call_script,/123 TEST ST/);
+ assert.match(plan.personalized.call_script,/free testing|service-line check/i);
+ assert.match(plan.primary_path.title,/free pipe record/i);
+});
+
+test('private-well plan names the county and builds an exact local testing search and script',()=>{
+ const data={address:{state:'FL',matched_address:'55 WELL RD, SANFORD, FL',geography:{county:{name:'Seminole County'}}},gaps:[],systems:[],provider:{candidates:[]},current_advisories:{records:[]},environment:{records:[]},archived_environment:{records:[]}};
+ const plan=buildAccessPlan(data,{privateWell:true,findings:[],compliance:[],providers:[],serviceLine:null});
+ assert.equal(plan.personalized.provider,'Private well');
+ assert.equal(plan.personalized.county,'Seminole County');
+ assert.match(plan.personalized.call_script,/Seminole County/);
+ assert.match(plan.personalized.call_script,/Total coliform/i);
+ assert.match(plan.personalized.local_lab_search,/google\.com\/search/);
+ assert.match(plan.personalized.why_this_is_for_you,/private well/i);
+});
