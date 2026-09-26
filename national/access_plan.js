@@ -93,7 +93,6 @@ function plainWhy({privateWell,providerName,county,tests,findings,serviceLine,cu
   return 'We matched this address to '+(providerName||'its likely water provider')+'. Nothing in the connected records says you should immediately buy a large test package, so we start with the free information already available.';
 }
 
-
 function plainGapList({privateWell,providerName,serviceLine,currentNotice,data}){
   const gaps=[];
   const add=(title,why,question)=>{if(!gaps.some(x=>x.title===title))gaps.push({title,why,question});};
@@ -104,7 +103,7 @@ function plainGapList({privateWell,providerName,serviceLine,currentNotice,data})
   if(!(data.address?.status==='matched'))add('Address match needs confirmation','A precise address match is needed before household-level records can be trusted.','Can this exact street address be confirmed?');
   return gaps.slice(0,4);
 }
-function healthProtectionPlan({privateWell,tests,findings,serviceLine}){
+function healthProtectionPlan({privateWell,tests}){
   const priorities=[];
   const add=(id,title,plain,when)=>{if(!priorities.some(x=>x.id===id))priorities.push({id,title,plain,when});};
   const names=tests.map(x=>x.name.toLowerCase());
@@ -116,14 +115,14 @@ function healthProtectionPlan({privateWell,tests,findings,serviceLine}){
   if(!priorities.length&&!privateWell)add('baseline','Tap-water baseline','Nothing in the connected records justifies an expensive broad panel as the first move.','Use targeted testing if there is an older home, plumbing concern, active notice, unusual water change, or a specific health concern.');
   return priorities.slice(0,4);
 }
-function buildPassport({data,privateWell,providerName,tests,findings,serviceLine,currentNotice,verifiedOptions,recordsTranslated,gapsCount,freeOptions}){
+function buildPassport({data,privateWell,providerName,tests,serviceLine,currentNotice,verifiedOptions,recordsTranslated,gapsCount,freeOptions}){
   const price=verifiedOptions[0]||null;
   const verifiedSaving=price?.potential_savings??null;
   const range=price?.potential_savings_range||null;
   const gaps=plainGapList({privateWell,providerName,serviceLine,currentNotice,data});
-  const health=healthProtectionPlan({privateWell,tests,findings,serviceLine});
-  const moneyText=verifiedSaving!=null
-    ? 'We found a comparable published option that is 
+  const health=healthProtectionPlan({privateWell,tests});
+  let moneyText='We put free and lower-cost steps before paid testing and only call something savings when the comparison is truly equivalent.';
+  if(verifiedSaving!=null)moneyText='We found a comparable published option that is 
   const contacts=providerContacts(data),state=data.address?.state||data.address?.components?.state||'',county=data.address?.geography?.county?.name||null;
   const exactLine=serviceLine?.status==='address-record-match'&&serviceLine.records?.[0];
   const tests=targetedTests(privateWell,findings,serviceLine);
@@ -216,7 +215,7 @@ function buildPassport({data,privateWell,providerName,tests,findings,serviceLine
   const recordsTranslated=(findings?.length||0)+issueCount+(data.current_advisories?.records?.length||0)+(exactLine?1:0)+(data.environment?.records?.length||0)+(data.archived_environment?.records?.length||0);
   const gaps=(data.gaps||[]).length;
   const equity=data.equity_context||null;
-  const passport=buildPassport({data,privateWell,providerName,tests,findings,serviceLine,currentNotice,verifiedOptions,recordsTranslated,gapsCount:gaps,freeOptions:steps.filter(x=>String(x.cost).startsWith('$0')).length});
+  const passport=buildPassport({data,privateWell,providerName,tests,serviceLine,currentNotice,verifiedOptions,recordsTranslated,gapsCount:gaps,freeOptions:steps.filter(x=>String(x.cost).startsWith('$0')).length});
   const barrierSignals=[];
   if(equity?.poverty_percent!=null&&equity.poverty_percent>=20)barrierSignals.push('higher neighborhood poverty');
   if(equity?.renter_percent!=null&&equity.renter_percent>=50)barrierSignals.push('many renter-occupied homes');
@@ -290,9 +289,8 @@ function buildPassport({data,privateWell,providerName,tests,findings,serviceLine
   };
 }
 module.exports={parseAcsContext,buildAccessPlan,providerContacts,targetedTests};
-+Number(verifiedSaving).toLocaleString('en-US')+' cheaper than the next verified option.'
-    : range
-      ? 'We found a published local option that may be 
++Number(verifiedSaving).toLocaleString('en-US')+' cheaper than the next verified option.';
+  else if(range)moneyText='We found a published local option that may be 
   const contacts=providerContacts(data),state=data.address?.state||data.address?.components?.state||'',county=data.address?.geography?.county?.name||null;
   const exactLine=serviceLine?.status==='address-record-match'&&serviceLine.records?.[0];
   const tests=targetedTests(privateWell,findings,serviceLine);
@@ -622,42 +620,15 @@ module.exports={parseAcsContext,buildAccessPlan,providerContacts,targetedTests};
   };
 }
 module.exports={parseAcsContext,buildAccessPlan,providerContacts,targetedTests};
-+Number(range[1]).toLocaleString('en-US')+' cheaper than the next verified option.'
-      : 'We put free and lower-cost steps before paid testing and avoid calling something “savings” unless the comparison is truly equivalent.';
++Number(range[1]).toLocaleString('en-US')+' cheaper than the next verified option.';
   return {
     version:'household-water-passport/1',
     promise:'One place to understand your water, avoid unnecessary spending, expose what is still unknown, and protect the people in your home.',
     pillars:{
-      money:{
-        title:'Save money',
-        status:verifiedOptions.length?'personalized':'guided',
-        plain:moneyText,
-        verified_savings:verifiedSaving,
-        verified_savings_range:range,
-        barrier_reduced:verifiedOptions.length>0||Number(freeOptions)>0
-      },
-      information:{
-        title:'Explain my water',
-        status:'personalized',
-        plain:recordsTranslated>0?'We turned '+recordsTranslated+' connected records or findings into the few things that matter for this home.':'We organize the available records into a short household plan instead of making you read agency reports.',
-        records_translated:recordsTranslated,
-        barrier_reduced:true
-      },
-      neglect:{
-        title:'Show what is still unknown',
-        status:gaps.length?'needs-follow-up':'checked',
-        plain:gaps.length?'We found '+gaps.length+' important thing'+(gaps.length===1?'':'s')+' that public records still do not confirm for this home.':'The main provider, pipe and notice questions we could check were covered by the connected records.',
-        gaps,
-        gap_count:Math.max(gaps.length,gapsCount||0),
-        barrier_exposed:gaps.length>0
-      },
-      health:{
-        title:'Protect my household',
-        status:'personalized',
-        plain:'We narrow health-protection steps to the contaminants and infrastructure that are actually relevant here, without diagnosing anyone.',
-        priorities:health,
-        guidance_delivered:health.length>0
-      }
+      money:{title:'Save money',status:verifiedOptions.length?'personalized':'guided',plain:moneyText,verified_savings:verifiedSaving,verified_savings_range:range,barrier_reduced:verifiedOptions.length>0||Number(freeOptions)>0},
+      information:{title:'Explain my water',status:'personalized',plain:recordsTranslated>0?'We turned '+recordsTranslated+' connected records or findings into the few things that matter for this home.':'We organize the available records into a short household plan instead of making you read agency reports.',records_translated:recordsTranslated,barrier_reduced:true},
+      neglect:{title:'Show what is still unknown',status:gaps.length?'needs-follow-up':'checked',plain:gaps.length?'We found '+gaps.length+' important thing'+(gaps.length===1?'':'s')+' that public records still do not confirm for this home.':'The main provider, pipe and notice questions we could check were covered by the connected records.',gaps,gap_count:Math.max(gaps.length,gapsCount||0),barrier_exposed:gaps.length>0},
+      health:{title:'Protect my household',status:'personalized',plain:'We narrow health-protection steps to the contaminants and infrastructure that are actually relevant here, without diagnosing anyone.',priorities:health,guidance_delivered:health.length>0}
     },
     local_only_profiles:[
       {id:'young-child',label:'Young child in the home',note:'Prioritize lead and nitrate guidance when relevant.'},
@@ -668,7 +639,6 @@ module.exports={parseAcsContext,buildAccessPlan,providerContacts,targetedTests};
     privacy_note:'These optional household selections stay in the browser and are not sent with the impact event.'
   };
 }
-
 function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],providers=[],serviceLine=null}={}){
   const contacts=providerContacts(data),state=data.address?.state||data.address?.components?.state||'',county=data.address?.geography?.county?.name||null;
   const exactLine=serviceLine?.status==='address-record-match'&&serviceLine.records?.[0];
