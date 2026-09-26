@@ -131,3 +131,16 @@ test('Water Access impact tracking is aggregate and rejects household identifier
   assert.ok(accessTable);
   assert.doesNotMatch(accessTable, /(street_address|latitude|longitude|email)/i);
 });
+
+test('Water Access impact metrics cover four barriers without adding household identifiers', () => {
+  assert.match(store, /verified_savings_cents/);
+  assert.match(store, /money_barrier_reduced/);
+  assert.match(store, /information_barrier_reduced/);
+  assert.match(store, /neglect_gap_exposed/);
+  assert.match(store, /health_guidance_delivered/);
+  assert.match(store, /money_barrier_households/);
+  assert.match(platform, /verifiedSavings: body\.verified_savings/);
+  const accessTable = store.match(/CREATE TABLE IF NOT EXISTS water_access_events \(([\s\S]*?)\);/)?.[1] || '';
+  assert.ok(accessTable);
+  assert.doesNotMatch(accessTable, /(street_address|latitude|longitude|email|child|pregnan|infant)/i);
+});
