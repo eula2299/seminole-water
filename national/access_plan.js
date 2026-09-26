@@ -73,6 +73,26 @@ function targetedTests(privateWell,findings,serviceLine){
   if(!privateWell&&(/lead|galvanized|unknown|unverified|not known/.test(material)||!out.length))add('Lead at the tap','Premise plumbing and service-line material can affect lead at the household tap.');
   return out.slice(0,6);
 }
+
+function cleanPlace(value){return String(value||'').replace(/\s+/g,' ').trim();}
+function webSearch(query){return 'https://www.google.com/search?q='+encodeURIComponent(query);}
+function concernLabel(tests,findings,serviceLine,privateWell){
+  if(privateWell)return tests.length?tests.map(x=>x.name).slice(0,3).join(', '):'routine well-water testing';
+  const line=String(serviceLine?.records?.[0]?.material||'').toLowerCase();
+  if(/lead|galvanized|unknown|unverified|not known/.test(line))return 'lead and your home plumbing';
+  const important=(findings||[]).find(x=>x.comparison?.above_reference)||(findings||[]).find(x=>x.detected);
+  return important?.name||'your household tap water';
+}
+function plainWhy({privateWell,providerName,county,tests,findings,serviceLine,currentNotice}){
+  if(currentNotice)return 'There is a current water notice connected to this area, so that comes before price shopping or extra testing.';
+  if(privateWell)return 'This home uses a private well, so utility-wide test results cannot tell you what is coming out of your tap. We use your county, state and the risks near this address to narrow the tests.';
+  const line=String(serviceLine?.records?.[0]?.material||'').trim();
+  if(line)return 'We matched this address to '+(providerName||'its water provider')+' and found a pipe record listed as “'+line+'”. That changes what is worth paying for.';
+  const important=(findings||[]).find(x=>x.comparison?.above_reference)||(findings||[]).find(x=>x.detected);
+  if(important)return 'We matched this address to '+(providerName||'its water provider')+' and found '+important.name+' in connected water records. That is why we are focusing your next step on '+important.name+', not a random full test package.';
+  return 'We matched this address to '+(providerName||'its likely water provider')+'. Nothing in the connected records says you should immediately buy a large test package, so we start with the free information already available.';
+}
+
 function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],providers=[],serviceLine=null}={}){
   const contacts=providerContacts(data),state=data.address?.state||data.address?.components?.state||'',county=data.address?.geography?.county?.name||null;
   const exactLine=serviceLine?.status==='address-record-match'&&serviceLine.records?.[0];
@@ -95,6 +115,16 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
   const issues=(compliance||[]).flatMap(x=>x.issues||[]);
   const elevated=findings.find(x=>x.comparison?.above_reference)||findings.find(x=>x.detected)||null;
   const localSearch=(q)=>'https://www.google.com/search?q='+encodeURIComponent([q,county,state].filter(Boolean).join(' '));
+  const addressLabel=cleanPlace(data.address?.matched_address||'this address');
+  const providerName=servingProvider||provider?.name||'your water provider';
+  const concern=concernLabel(tests,findings,serviceLine,privateWell);
+  const countyLabel=cleanPlace(county)||'your county';
+  const providerOfficialSearch=webSearch('"'+providerName+'" official water utility '+state);
+  const countyWellSearch=webSearch('"'+countyLabel+'" '+state+' health department private well water testing');
+  const personalizedWhy=plainWhy({privateWell,providerName,county:countyLabel,tests,findings,serviceLine,currentNotice});
+  const callScript=privateWell
+    ? 'Hi, I live in '+countyLabel+', '+state+'. I use a private well and need to test for '+(tests.map(x=>x.name).slice(0,3).join(', ')||'routine well-water contaminants')+'. Do you offer free or reduced-cost testing, and what will it cost before I collect the sample?'
+    : 'Hi, I live at '+addressLabel+'. My water provider appears to be '+providerName+'. I am checking '+concern+'. Do you offer free testing, a service-line check, or another no-cost option before I pay a private lab?';
 
   const steps=[];
   const add=(title,cost,why,url,kind='official')=>steps.push({title,cost,why,url,kind});
@@ -102,17 +132,17 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
   if(currentNotice){
     add('Follow the current water notice','$0','This matters before anything else. Follow the issuing utility or health department instructions first.',currentNotice.source_url||LOCAL);
   }else if(privateWell){
-    add('Check for free or reduced-cost well testing','$0 to check','Your local health department is the best first place to ask about free, subsidized, or community well-testing programs.',localSearch('free private well water testing health department'),'local-search');
+    add('Ask '+countyLabel+' about free or reduced-cost well testing','$0 to check','We are starting locally because county health programs can be much cheaper than private lab packages. Use this search to open the county or state health department result for your area.',countyWellSearch,'local-search');
     add('Ask what your well actually needs tested','$0','CDC recommends a basic yearly well panel and your local health department can add tests based on local risks.',WELL);
   }else if(exactLine){
     add('Use the free pipe record we already found','$0','You already have a public record for the pipe serving this property, so do not pay just to learn the recorded material.',exactLine.source_url||SERVICE_LINES);
-    if(provider) add('Ask your water provider what they will check for free','$0 to ask','Utilities may already have current sampling, pipe information, or local assistance that can answer part of the question before you pay.',LOCAL);
+    if(provider) add('Ask '+providerName+' what they will check for free','$0 to ask','This is your matched water provider. Ask about free testing, service-line checks, or recent sampling before paying a private lab.',providerOfficialSearch,'provider-specific');
   }else if(elevated){
-    if(provider) add('Ask your water provider for the latest follow-up result','$0','Because something relevant appeared in connected records, first ask for the newest result and whether they offer household sampling or assistance.',LOCAL);
+    if(provider) add('Ask '+providerName+' for the latest '+concern+' result','$0','Because '+concern+' appeared in records connected to this address, ask the matched provider for its newest result and whether it offers household testing or assistance.',providerOfficialSearch,'provider-specific');
     else add('Check your provider’s latest water report','$0','Start with the newest official report before buying a household test.',CCR);
   }else{
     add('Use the free records already checked for you','$0','You already have a first-pass water picture. Do not buy a broad test panel just because one is available.',CCR);
-    if(provider) add('Ask your water provider what they can check for free','$0 to ask','Ask whether they offer sampling, pipe checks, or local assistance before paying a private company.',LOCAL);
+    if(provider) add('Ask '+providerName+' what they can check for free','$0 to ask','Ask the matched provider whether it offers sampling, pipe checks, or local assistance before paying a private company.',providerOfficialSearch,'provider-specific');
   }
 
   if(!privateWell&&!exactLine){
@@ -182,6 +212,26 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
       comparison_provider:bestVerified?.comparison_provider||null,
       comparison_price:bestVerified?.comparison_price??null,
       wording:verifiedOptions.length?'Cheapest published option in our verified catalog for this exact test and location.':'We could not verify a comparable published price for the exact test needed, so we will not pretend we found the cheapest option.'
+    },
+    personalized:{
+      address:addressLabel,
+      provider:privateWell?'Private well':providerName,
+      county:countyLabel,
+      state,
+      concern,
+      why_this_is_for_you:personalizedWhy,
+      call_script:callScript,
+      how_it_works:[
+        'We use your address to identify your water source, provider and local public records.',
+        'We narrow the problem to the tests or checks that actually make sense for this home.',
+        'We look for free local help and published prices for those exact needs, then put the lowest-cost useful option first.'
+      ],
+      checked_for_you:[
+        privateWell?'Private-well testing needs':'Your likely water provider',
+        serviceLine?.status==='address-record-match'?'Your service-line record':'Available pipe/service-line information',
+        tests.length?tests.map(x=>x.name).join(', '):'Whether a paid household test is justified',
+        countyLabel+' / '+state+' local options'
+      ]
     },
     targeted_tests:tests,
     provider_contacts:contacts,
