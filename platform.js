@@ -461,7 +461,12 @@ const server = http.createServer(async (req, res) => {
         higherBarrierContext: body.higher_barrier_context,
         freeOptions: body.free_options,
         recordsTranslated: body.records_translated,
-        gapsIdentified: body.gaps_identified
+        gapsIdentified: body.gaps_identified,
+        verifiedSavings: body.verified_savings,
+        moneyBarrierReduced: body.money_barrier_reduced,
+        informationBarrierReduced: body.information_barrier_reduced,
+        neglectGapExposed: body.neglect_gap_exposed,
+        healthGuidanceDelivered: body.health_guidance_delivered
       });
       return json(res, 200, { ok: true });
     } catch (error) {
