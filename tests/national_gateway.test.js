@@ -64,11 +64,28 @@ test('production gateway preserves national, local, and account routes', { timeo
       const home = await fetch(base + '/');
       assert.equal(home.status, 200);
       assert.match(await home.text(), /Water answers, close to home/);
-      assert.equal(home.headers.get('cache-control'), 'no-store');
+      assert.match(home.headers.get('cache-control') || '', /public/);
       const client = await fetch(base + '/national-client.js');
       assert.equal(client.status, 200);
       assert.match(client.headers.get('content-type'), /javascript/);
       assert.match(await client.text(), /\/api\/national\/lookup/);
+    });
+
+    await t.test('SEO routes are crawlable and duplicate national home redirects to canonical root', async () => {
+      const national = await fetch(base + '/national', { redirect: 'manual' });
+      assert.equal(national.status, 301);
+      assert.equal(national.headers.get('location'), '/');
+      const robots = await fetch(base + '/robots.txt');
+      assert.equal(robots.status, 200);
+      assert.match(await robots.text(), /Sitemap: https:\/\/www\.ismywaterok\.com\/sitemap\.xml/);
+      const sitemap = await fetch(base + '/sitemap.xml');
+      assert.equal(sitemap.status, 200);
+      assert.match(await sitemap.text(), /water-quality-by-address/);
+      const guide = await fetch(base + '/private-well-water-testing');
+      assert.equal(guide.status, 200);
+      assert.match(await guide.text(), /Private well water testing/);
+      const details = await fetch(base + '/water-details');
+      assert.match(details.headers.get('x-robots-tag') || '', /noindex/);
     });
 
     await t.test('national status reports unavailable evidence without blocking process startup', async () => {
