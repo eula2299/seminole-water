@@ -125,7 +125,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
 
   let primary=steps[0]||{title:'Start with the free information already available',cost:'$0',why:'Use the public records first.',url:LOCAL};
   let fallback=steps.slice(1,3);
-  if(!currentNotice&&bestVerified){
+  if(!currentNotice&&bestVerified&&(privateWell||bestVerified.best.price===0)){
     const b=bestVerified.best;
     primary={
       title:b.provider,
