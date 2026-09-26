@@ -116,7 +116,7 @@ function healthProtectionPlan({privateWell,tests,findings,serviceLine}){
   if(!priorities.length&&!privateWell)add('baseline','Tap-water baseline','Nothing in the connected records justifies an expensive broad panel as the first move.','Use targeted testing if there is an older home, plumbing concern, active notice, unusual water change, or a specific health concern.');
   return priorities.slice(0,4);
 }
-function buildPassport({data,privateWell,providerName,tests,findings,serviceLine,currentNotice,verifiedOptions,recordsTranslated,gapsCount}){
+function buildPassport({data,privateWell,providerName,tests,findings,serviceLine,currentNotice,verifiedOptions,recordsTranslated,gapsCount,freeOptions}){
   const price=verifiedOptions[0]||null;
   const verifiedSaving=price?.potential_savings??null;
   const range=price?.potential_savings_range||null;
@@ -216,7 +216,7 @@ function buildPassport({data,privateWell,providerName,tests,findings,serviceLine
   const recordsTranslated=(findings?.length||0)+issueCount+(data.current_advisories?.records?.length||0)+(exactLine?1:0)+(data.environment?.records?.length||0)+(data.archived_environment?.records?.length||0);
   const gaps=(data.gaps||[]).length;
   const equity=data.equity_context||null;
-  const passport=buildPassport({data,privateWell,providerName,tests,findings,serviceLine,currentNotice,verifiedOptions,recordsTranslated,gapsCount:gaps});
+  const passport=buildPassport({data,privateWell,providerName,tests,findings,serviceLine,currentNotice,verifiedOptions,recordsTranslated,gapsCount:gaps,freeOptions:steps.filter(x=>String(x.cost).startsWith('$0')).length});
   const barrierSignals=[];
   if(equity?.poverty_percent!=null&&equity.poverty_percent>=20)barrierSignals.push('higher neighborhood poverty');
   if(equity?.renter_percent!=null&&equity.renter_percent>=50)barrierSignals.push('many renter-occupied homes');
@@ -634,7 +634,7 @@ module.exports={parseAcsContext,buildAccessPlan,providerContacts,targetedTests};
         plain:moneyText,
         verified_savings:verifiedSaving,
         verified_savings_range:range,
-        barrier_reduced:verifiedOptions.length>0
+        barrier_reduced:verifiedOptions.length>0||Number(freeOptions)>0
       },
       information:{
         title:'Explain my water',
