@@ -138,8 +138,8 @@ const OFFERS = Object.freeze([
     supply:['public','unknown'],
     tests:['Lead at the tap'],
     provider:'Seminole County Utilities',
-    price:0,
-    price_label:'$0 to contact',
+    price:null,
+    price_label:'Cost not published — call first',
     price_kind:'contact-first',
     scope:'lead-utility',
     url:'https://www.seminolecountyfl.gov/departments-services/utilities/lead-copper-rule-revision',
@@ -201,7 +201,7 @@ function offersFor({state,county,supply,provider,tests=[]}){
   return OFFERS.filter(o=>o.state===state&&countyMatches(o,county)&&(o.supply||[]).some(x=>norm(x)===s||norm(x)==='unknown')&&providerMatches(o,provider)&&tests.some(t=>testMatches(o,t)));
 }
 function chooseCheapest({state,county,supply,provider,tests=[]}){
-  const matches=offersFor({state,county,supply,provider,tests});
+  const matches=offersFor({state,county,supply,provider,tests}).filter(o=>Number.isFinite(Number(o.price)));
   const byTest=[];
   for(const test of tests){
     const options=matches.filter(o=>testMatches(o,test)).sort((a,b)=>a.price-b.price||a.provider.localeCompare(b.provider));
