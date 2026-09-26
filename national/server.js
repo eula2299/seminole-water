@@ -8,18 +8,18 @@ const seo=require('./seo');
 function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false}={}){
  const buckets=new Map();let active=0;
  const security={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",'Permissions-Policy':'geolocation=(), camera=(), microphone=()'};
- function send(res,status,body,type='application/json; charset=utf-8'){res.writeHead(status,{...security,'Content-Type':type});res.end(type.startsWith('application/json')?JSON.stringify(body):body);}
+ function send(res,status,body,type='application/json; charset=utf-8',headers={}){res.writeHead(status,{...security,'Content-Type':type,...headers});res.end(type.startsWith('application/json')?JSON.stringify(body):body);}
  function allowed(req){const now=Date.now();for(const[k,v]of buckets)if(v.expires<now)buckets.delete(k);const key=clientKey(req,trustProxy);if(!buckets.has(key)&&buckets.size>=10000)return false;const b=buckets.get(key)||{expires:now+60000,count:0};b.count++;buckets.set(key,b);return b.count<=30;}
  const server=http.createServer(async(req,res)=>{
   try{
    const u=new URL(req.url,'http://localhost');
    if(req.method==='GET'&&(u.pathname==='/national'||u.pathname==='/national/')){res.writeHead(301,{Location:'/',...security});return res.end();}
-   if(req.method==='GET'&&u.pathname==='/'){return send(res,200,HTML,'text/html; charset=utf-8');}
+   if(req.method==='GET'&&u.pathname==='/'){return send(res,200,HTML,'text/html; charset=utf-8',{'Cache-Control':'public, max-age=300, stale-while-revalidate=3600'});}
    if(req.method==='GET'&&u.pathname==='/water-details'){res.setHeader('X-Robots-Tag','noindex, nofollow');return send(res,200,HTML,'text/html; charset=utf-8');}
-   if(req.method==='GET'&&u.pathname==='/robots.txt')return send(res,200,seo.robots(),'text/plain; charset=utf-8');
-   if(req.method==='GET'&&u.pathname==='/sitemap.xml')return send(res,200,seo.sitemap(),'application/xml; charset=utf-8');
-   if(req.method==='GET'&&seo.GUIDES[u.pathname])return send(res,200,seo.guideHtml(u.pathname),'text/html; charset=utf-8');
-   if(req.method==='GET'&&u.pathname==='/national-client.js')return send(res,200,CLIENT,'application/javascript; charset=utf-8');
+   if(req.method==='GET'&&u.pathname==='/robots.txt')return send(res,200,seo.robots(),'text/plain; charset=utf-8',{'Cache-Control':'public, max-age=3600'});
+   if(req.method==='GET'&&u.pathname==='/sitemap.xml')return send(res,200,seo.sitemap(),'application/xml; charset=utf-8',{'Cache-Control':'public, max-age=3600'});
+   if(req.method==='GET'&&seo.GUIDES[u.pathname])return send(res,200,seo.guideHtml(u.pathname),'text/html; charset=utf-8',{'Cache-Control':'public, max-age=1800, stale-while-revalidate=86400'});
+   if(req.method==='GET'&&u.pathname==='/national-client.js')return send(res,200,CLIENT,'application/javascript; charset=utf-8',{'Cache-Control':'public, max-age=300, stale-while-revalidate=3600'});
    if(req.method==='GET'&&u.pathname==='/healthz')return send(res,200,{process:'up',national_data_ready:false});
    if(req.method==='GET'&&u.pathname==='/api/national/status')return send(res,200,await engine.status());
    if(req.method!=='POST'||u.pathname!=='/api/national/lookup')return send(res,404,{message:'Not found.'});
