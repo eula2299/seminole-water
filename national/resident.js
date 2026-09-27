@@ -143,8 +143,25 @@ function buildResidentReport(data){
  const risk_profile=addressRiskProfile(data,findings,compliance,privateWell),accuracy_check=addressQuality(data,findings,compliance);
  const access_plan=buildAccessPlan(data,{privateWell,findings,compliance,providers,serviceLine:service});
  const source_availability=(data.audit||[]).map(x=>({source:x.agent,status:x.status,error_code:x.error_code||null})).sort((a,b)=>a.source.localeCompare(b.source));
+ const warehouse_observation_rows=(data.systems||[]).reduce((sum,x)=>sum+Number(x.warehouse?.counts?.observation||0),0);
+ const warehouse_violation_rows=(data.systems||[]).reduce((sum,x)=>sum+Number(x.warehouse?.counts?.violation||0),0);
+ const loaded_observation_rows=(data.systems||[]).reduce((sum,x)=>sum+(x.warehouse?.observations?.length||0),0);
+ const archive_summary_rows=(data.systems||[]).reduce((sum,x)=>sum+(x.archive?.summaries?.length||0),0);
+ const truncation={
+   warehouse_observations:(data.systems||[]).some(x=>x.warehouse?.truncated?.observations===true),
+   warehouse_violations:(data.systems||[]).some(x=>x.warehouse?.truncated?.violation_records===true),
+   live_environment:data.environment?.status==='partial',
+   nearby_wells:data.property?.wells?.truncated===true||data.well_records?.truncated===true,
+   cleanup_sites:data.property?.cleanup_sites?.truncated===true
+ };
  const complete_evidence={
+   main_results:4,
+   unique_water_findings:findings.length,
    water_findings:findings.length,
+   underlying_water_observation_rows:warehouse_observation_rows,
+   loaded_water_observation_rows:loaded_observation_rows,
+   historical_water_summaries:archive_summary_rows,
+   warehouse_violation_rows,
    compliance_groups:compliance.length,
    compliance_issues:compliance.reduce((sum,x)=>sum+(x.issues?.length||0),0),
    current_notices:notices.records?.length||0,
@@ -154,7 +171,10 @@ function buildResidentReport(data){
    nearby_well_records:(data.well_records?.records||[]).length+(data.property?.wells?.records||[]).length,
    cleanup_sites:data.property?.cleanup_sites?.records?.length||0,
    provider_candidates:candidates.length,
-   source_availability
+   truncation,
+   environmental_archive_state:data.coverage?.completion?.environmental_archive||null,
+   source_availability,
+   count_note:'These counts describe different evidence types and are not added into one misleading total. Water findings are summaries; underlying sample rows can be much larger.'
  };
  return {version:'resident-report/5',headline,summary,address:data.address?.matched_address||null,address_choices:data.address?.candidates||[],providers,provider_ambiguity:candidates.length>1||data.provider?.conflict===true,private_well:privateWell,findings,detected_substances:detectedNames.size,compliance,actions,access_plan,complete_evidence,service_line:service||null,location:data.address?.geography||{},scope_note:'This address screening combines all evidence available to the lookup and labels each signal by what produced it. Use the detailed records below to inspect the evidence behind each tile.',advisories:notices,current_advisories_checked:(notices.checks||[]).some(c=>c.status==='checked'),advisories_comprehensive:false,household_safety:'not-determined',address_risk_level:risk_profile.overall,risk_profile,accuracy_check,generated_at:data.generated_at};
 }
