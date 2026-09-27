@@ -83,7 +83,7 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
    // Two concurrent source jobs; never launch a national fan-out per address.
    for(let i=0;i<selected.length;i+=2)await Promise.all(selected.slice(i,i+2).map(async pwsid=>{
     const liveJob=stage(`public-system:${pwsid}`,async()=>{let data=await get(query(ENDPOINTS.systems,{output:'JSON',p_pid:pwsid,queryset:10,responseset:10}));const qid=queryId(data);if(qid)data=await get(query(ENDPOINTS.query,{output:'JSON',qid,pageno:1}));return echoRows(data,pwsid);});
-    const storedJob=warehouse?stage(`stored-evidence:${pwsid}`,()=>warehouse.lookupSystem(pwsid,{limit:120})):null;
+    const storedJob=warehouse?stage(`stored-evidence:${pwsid}`,()=>warehouse.lookupSystem(pwsid,{limit:500})):null;
     const archiveJob=archive?stage(`historical-archive:${pwsid}`,()=>archive.lookupSystem(pwsid)):null;
     const [records,stored,historical]=await Promise.all([liveJob,storedJob,archiveJob]);
     if(historical?.summaries)historical.summaries=historical.summaries.map(r=>({...r,health_context:getHealthContext(r.analyte)}));
