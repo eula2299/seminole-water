@@ -265,6 +265,8 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
       paid:paidOptions,
       free:freeVerifiedOptions,
       contact_first:contactOptions,
+      best_paid:paidOptions[0]||null,
+      best_free:freeVerifiedOptions[0]||null,
       paid_count:paidOptions.length,
       free_count:freeVerifiedOptions.length,
       contact_count:contactOptions.length,
