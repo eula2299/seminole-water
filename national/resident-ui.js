@@ -196,14 +196,25 @@ function residentClient(){
   const counts=r.complete_evidence||{};
   const countGrid=n('div',undefined,'evidence-counts');
   for(const [value,label] of [
-   [counts.water_findings||0,'water test findings'],
+   [4,'main results shown above'],
+   [counts.unique_water_findings||0,'unique water findings'],
+   [counts.underlying_water_observation_rows||0,'underlying water sample rows'],
    [counts.compliance_issues||0,'past system issues'],
-   [counts.nearby_environmental_records||0,'nearby environmental records'],
-   [counts.nearby_well_records||0,'nearby well records'],
-   [counts.cleanup_sites||0,'cleanup sites'],
+   [counts.nearby_environmental_records||0,'nearby environmental records returned'],
+   [counts.nearby_well_records||0,'nearby well records returned'],
+   [counts.cleanup_sites||0,'cleanup sites returned'],
    [counts.service_line_records||0,'property pipe records']
   ]){const box=n('article');box.append(n('strong',Number(value).toLocaleString('en-US')),n('span',label));countGrid.append(box);}
   section.append(countGrid);
+  p(section,counts.count_note||'Different evidence types are kept separate so a summary count is never mistaken for the number of underlying records.','muted');
+  if(counts.environmental_archive_state&&/backfill|incremental|active/i.test(String(counts.environmental_archive_state)))p(section,'National environmental history is still backfilling. New historical records can be added as the archive completes; that does not mean the address itself changed.','attention');
+  const capped=[];
+  if(counts.truncation?.warehouse_observations)capped.push('raw water observations');
+  if(counts.truncation?.warehouse_violations)capped.push('raw violation rows');
+  if(counts.truncation?.live_environment)capped.push('live environmental readings');
+  if(counts.truncation?.nearby_wells)capped.push('nearby wells');
+  if(counts.truncation?.cleanup_sites)capped.push('cleanup sites');
+  if(capped.length)p(section,'This lookup still hit a display/retrieval cap for: '+capped.join(', ')+'. The count shown for that category is not a claim that no additional records exist.','attention');
 
   const providers=n('section',undefined,'evidence-group');
   providers.append(n('h3','Water source and provider'));
