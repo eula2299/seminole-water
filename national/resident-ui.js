@@ -122,17 +122,45 @@ function residentClient(){
   if((inventory.paid||[]).length){
    const paidAll=n('section',undefined,'all-paid-options');
    paidAll.append(n('p','ALL VERIFIED PAID OPTIONS WE FOUND','step-label'),n('h3','Paid testing options for this address'));
-   p(paidAll,'These are all published-price options currently matched to the exact tests in this plan. They are sorted from lowest published price to highest. We do not hide a lab just because it is not the cheapest.','step-copy');
+   p(paidAll,'These are all published-price options matched to the exact tests in this plan, sorted from lowest price to highest. We do not hide a verified option because it costs more.','step-copy');
    for(const option of inventory.paid){
     const row=n('article',undefined,'paid-option-row');
-    const left=n('div',undefined,'paid-option-main');left.append(n('strong',option.provider),n('span',option.test,'price-provider'));
-    const right=n('div',undefined,'paid-option-price');right.append(n('strong',option.price_label||('   const savings=n('div',undefined,'money-saved');savings.append(n('span','POTENTIAL SAVINGS','step-label'));
+    const left=n('div',undefined,'paid-option-main');
+    left.append(n('strong',option.provider),n('span',option.test,'price-provider'));
+    const right=n('div',undefined,'paid-option-price');
+    right.append(n('strong',option.price_label||String(option.price)));
+    row.append(left,right);
+    p(row,option.note,'muted');
+    if(option.phone)p(row,'Call: '+option.phone,'option-phone');
+    if(option.verified_at)p(row,'Published price checked '+option.verified_at+'.','verified-date');
+    if(option.url)row.append(a('Open this exact option →',option.url));
+    paidAll.append(row);
+   }
+   section.append(paidAll);
+  }
+
+  if((inventory.contact_first||[]).length){
+   const contacts=n('details',undefined,'plain-details');
+   contacts.append(n('summary','Options we found where the price is not published'));
+   for(const option of inventory.contact_first){
+    const row=n('article',undefined,'fallback-row');
+    const top=n('div');top.append(n('strong',option.provider),n('span',option.price_label||'Call for price','cost-chip'));row.append(top);
+    p(row,'For '+option.test+'. '+option.note,'muted');
+    if(option.phone)p(row,'Call: '+option.phone,'option-phone');
+    if(option.url)row.append(a('Open option',option.url));
+    contacts.append(row);
+   }
+   section.append(contacts);
+  }
+
+  if(found&&(finder.potential_savings!=null||finder.potential_savings_range)){
+   const savings=n('div',undefined,'money-saved');savings.append(n('span','POTENTIAL SAVINGS','step-label'));
    if(finder.potential_savings!=null){
-    savings.append(n('strong','$'+Number(finder.potential_savings).toLocaleString('en-US')));
+    savings.append(n('strong',String(finder.potential_savings)+' dollars'));
     p(savings,'difference versus the next comparable published option we verified.','muted');
    }else{
     const range=finder.potential_savings_range;
-    savings.append(n('strong','$'+Number(range[0]).toLocaleString('en-US')+'–$'+Number(range[1]).toLocaleString('en-US')));
+    savings.append(n('strong',String(range[0])+'–'+String(range[1])+' dollars'));
     p(savings,'possible difference based on the local published price range. Confirm the final local charge first.','muted');
    }
    section.append(savings);
