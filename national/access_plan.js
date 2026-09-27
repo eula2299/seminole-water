@@ -152,7 +152,17 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
     provider:servingProvider,
     tests:accessTargets
   });
-  const bestVerified=verifiedOptions[0]||null;
+  const bestVerified=verifiedOptions.find(x=>x.best)||verifiedOptions[0]||null;
+  const paidOptions=verifiedOptions.flatMap(match=>(match.all_options||[]).filter(option=>Number(option.price)>0).map(option=>({
+    test:match.test,id:option.id,provider:option.provider,price:option.price,price_max:option.price_max??null,price_label:option.price_label,
+    url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind
+  }))).sort((a,b)=>a.price-b.price||a.test.localeCompare(b.test)||a.provider.localeCompare(b.provider));
+  const freeVerifiedOptions=verifiedOptions.flatMap(match=>(match.all_options||[]).filter(option=>Number(option.price)===0).map(option=>({
+    test:match.test,id:option.id,provider:option.provider,price:0,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind
+  })));
+  const contactOptions=verifiedOptions.flatMap(match=>(match.contact_options||[]).map(option=>({
+    test:match.test,id:option.id,provider:option.provider,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind
+  })));
   const currentNotice=(data.current_advisories?.records||[])[0]||null;
   const provider=contacts[0]||null;
   const issues=(compliance||[]).flatMap(x=>x.issues||[]);
@@ -243,6 +253,16 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
     primary_path:primary,
     next_paths:fallback,
     verified_options:verifiedOptions,
+    option_inventory:{
+      paid:paidOptions,
+      free:freeVerifiedOptions,
+      contact_first:contactOptions,
+      paid_count:paidOptions.length,
+      free_count:freeVerifiedOptions.length,
+      contact_count:contactOptions.length,
+      exact_tests_with_options:verifiedOptions.length,
+      note:'Every verified option matched to the address context and exact targeted tests is returned here. The UI must not hide higher-priced verified alternatives.'
+    },
     price_finder:{
       status:verifiedOptions.length?'published-options-found':'no-comparable-published-price-found',
       checked_targets:accessTargets,
