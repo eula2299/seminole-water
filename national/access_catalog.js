@@ -201,19 +201,25 @@ function offersFor({state,county,supply,provider,tests=[]}){
   return OFFERS.filter(o=>o.state===state&&countyMatches(o,county)&&(o.supply||[]).some(x=>norm(x)===s||norm(x)==='unknown')&&providerMatches(o,provider)&&tests.some(t=>testMatches(o,t)));
 }
 function chooseCheapest({state,county,supply,provider,tests=[]}){
-  const matches=offersFor({state,county,supply,provider,tests}).filter(o=>Number.isFinite(Number(o.price)));
+  const allMatches=offersFor({state,county,supply,provider,tests});
+  const hasPrice=o=>o.price!==null&&o.price!==undefined&&String(o.price).trim()!==''&&Number.isFinite(Number(o.price));
+  const priced=allMatches.filter(hasPrice);
   const byTest=[];
   for(const test of tests){
-    const options=matches.filter(o=>testMatches(o,test)).sort((a,b)=>a.price-b.price||a.provider.localeCompare(b.provider));
-    if(!options.length)continue;
-    const best=options[0],privatePaid=options.find(o=>o.price_kind==='published'&&o.price>best.price);
-    const bestMax=Number.isFinite(Number(best.price_max))?Number(best.price_max):best.price;
-    const savingLow=privatePaid?Math.max(0,privatePaid.price-bestMax):null;
-    const savingHigh=privatePaid?Math.max(0,privatePaid.price-best.price):null;
+    const options=priced.filter(o=>testMatches(o,test)).sort((a,b)=>a.price-b.price||a.provider.localeCompare(b.provider)||a.id.localeCompare(b.id));
+    const contacts=allMatches.filter(o=>testMatches(o,test)&&!hasPrice(o)).sort((a,b)=>a.provider.localeCompare(b.provider)||a.id.localeCompare(b.id));
+    if(!options.length&&!contacts.length)continue;
+    const best=options[0]||null;
+    const privatePaid=best?options.find(o=>o.price_kind==='published'&&o.price>best.price):null;
+    const bestMax=best?(Number.isFinite(Number(best.price_max))?Number(best.price_max):best.price):null;
+    const savingLow=privatePaid&&bestMax!==null?Math.max(0,privatePaid.price-bestMax):null;
+    const savingHigh=privatePaid&&best?Math.max(0,privatePaid.price-best.price):null;
     byTest.push({
       test,
       best,
-      alternatives:options.slice(1,3),
+      all_options:options,
+      alternatives:options.slice(1),
+      contact_options:contacts,
       potential_savings:savingLow!==null&&savingLow===savingHigh?savingLow:null,
       potential_savings_range:savingLow!==null&&savingLow!==savingHigh?[savingLow,savingHigh]:null,
       comparison_provider:privatePaid?.provider||null,

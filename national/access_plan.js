@@ -152,7 +152,18 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
     provider:servingProvider,
     tests:accessTargets
   });
-  const bestVerified=verifiedOptions[0]||null;
+  const bestVerified=verifiedOptions.find(x=>x.best)||null;
+  const pricedMatchCount=verifiedOptions.filter(x=>x.best).length;
+  const paidOptions=verifiedOptions.flatMap(match=>(match.all_options||[]).filter(option=>Number(option.price)>0).map(option=>({
+    test:match.test,id:option.id,provider:option.provider,price:option.price,price_max:option.price_max??null,price_label:option.price_label,
+    url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind
+  }))).sort((a,b)=>a.price-b.price||a.test.localeCompare(b.test)||a.provider.localeCompare(b.provider));
+  const freeVerifiedOptions=verifiedOptions.flatMap(match=>(match.all_options||[]).filter(option=>Number(option.price)===0).map(option=>({
+    test:match.test,id:option.id,provider:option.provider,price:0,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind
+  })));
+  const contactOptions=verifiedOptions.flatMap(match=>(match.contact_options||[]).map(option=>({
+    test:match.test,id:option.id,provider:option.provider,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind
+  })));
   const currentNotice=(data.current_advisories?.records||[])[0]||null;
   const provider=contacts[0]||null;
   const issues=(compliance||[]).flatMap(x=>x.issues||[]);
@@ -198,7 +209,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
 
   let primary=steps[0]||{title:'Start with the free information already available',cost:'$0',why:'Use the public records first.',url:LOCAL};
   let fallback=steps.slice(1,3);
-  if(!currentNotice&&bestVerified&&(privateWell||bestVerified.best.price===0)){
+  if(!currentNotice&&bestVerified?.best&&(privateWell||bestVerified.best.price===0)){
     const b=bestVerified.best;
     primary={
       title:b.provider,
@@ -243,10 +254,20 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
     primary_path:primary,
     next_paths:fallback,
     verified_options:verifiedOptions,
+    option_inventory:{
+      paid:paidOptions,
+      free:freeVerifiedOptions,
+      contact_first:contactOptions,
+      paid_count:paidOptions.length,
+      free_count:freeVerifiedOptions.length,
+      contact_count:contactOptions.length,
+      exact_tests_with_options:verifiedOptions.length,
+      note:'Every verified option matched to the address context and exact targeted tests is returned here. The UI must not hide higher-priced verified alternatives.'
+    },
     price_finder:{
-      status:verifiedOptions.length?'published-options-found':'no-comparable-published-price-found',
+      status:pricedMatchCount?'published-options-found':'no-comparable-published-price-found',
       checked_targets:accessTargets,
-      published_matches:verifiedOptions.length,
+      published_matches:pricedMatchCount,
       best_test:bestVerified?.test||null,
       best_price:bestVerified?.best?.price??null,
       best_price_label:bestVerified?.best?.price_label||null,
@@ -255,7 +276,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
       potential_savings_range:bestVerified?.potential_savings_range||null,
       comparison_provider:bestVerified?.comparison_provider||null,
       comparison_price:bestVerified?.comparison_price??null,
-      wording:verifiedOptions.length?'Cheapest published option in our verified catalog for this exact test and location.':'We could not verify a comparable published price for the exact test needed, so we will not pretend we found the cheapest option.'
+      wording:pricedMatchCount?'Cheapest published option in our verified catalog for this exact test and location.':'We could not verify a comparable published price for the exact test needed, so we will not pretend we found the cheapest option.'
     },
     passport,
     personalized:{

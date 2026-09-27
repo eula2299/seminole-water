@@ -143,3 +143,24 @@ test('private-well Passport exposes missing household evidence and infant-releva
  assert.ok(plan.passport.pillars.health.priorities.some(x=>x.id==='nitrate'));
  assert.ok(plan.passport.pillars.health.priorities.some(x=>x.id==='bacteria'));
 });
+
+test('complete option inventory never hides a verified paid alternative',()=>{
+ const data={address:{status:'matched',state:'FL',matched_address:'55 WELL RD, SANFORD, FL',geography:{county:{name:'Seminole County'}}},gaps:[],systems:[],provider:{candidates:[]},current_advisories:{records:[]},environment:{records:[]},archived_environment:{records:[]}};
+ const plan=buildAccessPlan(data,{privateWell:true,findings:[],compliance:[],providers:[],serviceLine:null});
+ const bacteria=plan.verified_options.find(x=>x.test==='Total coliform and E. coli');
+ assert.ok(bacteria);
+ assert.ok(bacteria.all_options.length>=2);
+ assert.ok(bacteria.all_options.some(x=>x.provider.includes('Florida Department of Health')));
+ assert.ok(bacteria.all_options.some(x=>x.provider.includes('Advanced Environmental Laboratories')));
+ assert.ok(plan.option_inventory.paid.some(x=>x.test==='Total coliform and E. coli'&&x.provider.includes('Advanced Environmental Laboratories')));
+ assert.ok(plan.option_inventory.paid.every((x,i,arr)=>i===0||arr[i-1].price<=x.price));
+});
+
+test('unpriced utility contacts are returned but are never called a published-price match',()=>{
+ const data={address:{status:'matched',state:'FL',matched_address:'123 TEST ST, SANFORD, FL',geography:{county:{name:'Seminole County'}}},gaps:[],provider:{candidates:[{pwsid:'FL1234567',name:'Seminole County Utilities'}]},systems:[{pwsid:'FL1234567',records:[{data:{PWSName:'Seminole County Utilities'}}]}],current_advisories:{records:[]},environment:{records:[]},archived_environment:{records:[]}};
+ const findings=[{name:'Lead',detected:true,comparison:null}];
+ const plan=buildAccessPlan(data,{privateWell:false,findings,compliance:[],providers:[{id:'FL1234567',name:'Seminole County Utilities'}],serviceLine:{status:'address-record-match',records:[{material:'Copper',address:'123 TEST ST'}]}});
+ assert.ok(plan.option_inventory.contact_first.some(x=>x.provider==='Seminole County Utilities'));
+ assert.ok(plan.option_inventory.paid.some(x=>x.provider.includes('Advanced Environmental Laboratories')));
+ assert.equal(plan.price_finder.status,'published-options-found');
+});
