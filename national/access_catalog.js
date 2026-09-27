@@ -202,11 +202,12 @@ function offersFor({state,county,supply,provider,tests=[]}){
 }
 function chooseCheapest({state,county,supply,provider,tests=[]}){
   const allMatches=offersFor({state,county,supply,provider,tests});
-  const priced=allMatches.filter(o=>Number.isFinite(Number(o.price)));
+  const hasPrice=o=>o.price!==null&&o.price!==undefined&&String(o.price).trim()!==''&&Number.isFinite(Number(o.price));
+  const priced=allMatches.filter(hasPrice);
   const byTest=[];
   for(const test of tests){
     const options=priced.filter(o=>testMatches(o,test)).sort((a,b)=>a.price-b.price||a.provider.localeCompare(b.provider)||a.id.localeCompare(b.id));
-    const contacts=allMatches.filter(o=>testMatches(o,test)&&!Number.isFinite(Number(o.price))).sort((a,b)=>a.provider.localeCompare(b.provider)||a.id.localeCompare(b.id));
+    const contacts=allMatches.filter(o=>testMatches(o,test)&&!hasPrice(o)).sort((a,b)=>a.provider.localeCompare(b.provider)||a.id.localeCompare(b.id));
     if(!options.length&&!contacts.length)continue;
     const best=options[0]||null;
     const privatePaid=best?options.find(o=>o.price_kind==='published'&&o.price>best.price):null;
