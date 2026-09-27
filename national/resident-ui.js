@@ -26,7 +26,7 @@ function residentClient(){
  }
  function renderAccessPlan(r,data,main){
   const plan=r.access_plan;if(!plan)return;
-  const personal=plan.personalized||{},finder=plan.price_finder||{},bestMatch=(plan.verified_options||[])[0]||null;
+  const personal=plan.personalized||{},finder=plan.price_finder||{},inventory=plan.option_inventory||{},bestPaid=plan.option_inventory?.best_paid||null;
   const found=finder.status==='published-options-found';
   const section=n('section',undefined,'access-plan concierge-plan');
   section.append(n('p','FOR THIS HOME','mini-kicker'),n('h2','We already did the research for you'));
@@ -92,6 +92,15 @@ function residentClient(){
   const how=n('details',undefined,'plain-details how-this-works');how.append(n('summary','How this works — in plain English'));
   const ol=n('ol');for(const step of personal.how_it_works||[]){const li=n('li',step);ol.append(li);}how.append(ol);section.append(how);
 
+  const decision=n('section',undefined,'test-decision');
+  decision.append(n('p','DO I NEED TO TEST MY WATER?','step-label'),n('h3',plan.testing_decision?.label||'Here is the simplest answer'));
+  p(decision,plan.testing_decision?.plain||'Public records cannot measure your exact faucet. A household sample is the way to get household-level confirmation.','step-copy');
+  if((plan.what_to_ask_for||[]).length){
+   const ask=n('div',undefined,'ask-list');ask.append(n('strong','If you test, ask for:'));
+   const ul=n('ul');for(const item of plan.what_to_ask_for){const li=n('li');li.append(n('strong',item.name));if(item.why)p(li,item.why,'muted');ul.append(li);}ask.append(ul);decision.append(ask);
+  }
+  section.append(decision);
+
   const first=n('article',undefined,'concierge-step primary-step');
   first.append(n('span','1 · START HERE','step-label'));
   const firstHead=n('div',undefined,'step-head');firstHead.append(n('h3',plan.primary_path?.title||'Start here'),n('span',plan.primary_path?.cost||'$0','step-cost'));first.append(firstHead);
@@ -102,15 +111,15 @@ function residentClient(){
 
   if(personal.call_script){const script=n('div',undefined,'call-script');script.append(n('span','WHAT TO SAY','step-label'));p(script,personal.call_script,'script-text');section.append(script);}
 
-  if(found&&bestMatch){
-   const paid=n('article',undefined,'concierge-step paid-step');
-   paid.append(n('span','2 · IF YOU STILL NEED A LAB TEST','step-label'));
-   const ph=n('div',undefined,'step-head');ph.append(n('h3',bestMatch.best.provider),n('span',bestMatch.best.price_label,'step-cost'));paid.append(ph);
-   p(paid,'For '+bestMatch.test+'. This is the lowest published price we could verify for this exact test in the options we have checked.','step-copy');
-   p(paid,bestMatch.best.note,'muted');
-   if(bestMatch.best.phone)p(paid,'Call: '+bestMatch.best.phone,'option-phone');
-   if(bestMatch.best.verified_at)p(paid,'Price checked '+bestMatch.best.verified_at+'.','verified-date');
-   if(bestMatch.best.url)paid.append(a('Open this test →',bestMatch.best.url));
+  if(bestPaid){
+   const paid=n('article',undefined,'concierge-step paid-step best-paid');
+   paid.append(n('span','2 · BEST PAID TEST OPTION WE FOUND','step-label'));
+   const ph=n('div',undefined,'step-head');ph.append(n('h3',bestPaid.provider),n('span',bestPaid.price_label,'step-cost'));paid.append(ph);
+   p(paid,'For '+bestPaid.test+'. This is the lowest published paid price in the verified options currently matched to this address and test.','step-copy');
+   p(paid,bestPaid.note,'muted');
+   if(bestPaid.phone)p(paid,'Call: '+bestPaid.phone,'option-phone');
+   if(bestPaid.verified_at)p(paid,'Published price checked '+bestPaid.verified_at+'.','verified-date');
+   if(bestPaid.url)paid.append(a('Open this exact paid option →',bestPaid.url));
    section.append(paid);
   }else if(plan.targeted_tests?.length){
    const noPrice=n('article',undefined,'concierge-step paid-step');noPrice.append(n('span','2 · IF YOU STILL NEED A LAB TEST','step-label'),n('h3','We could not verify a reliable posted price nearby'));
@@ -118,7 +127,6 @@ function residentClient(){
    if(personal.local_lab_search)noPrice.append(a('Search certified labs for these exact tests →',personal.local_lab_search));section.append(noPrice);
   }
 
-  const inventory=plan.option_inventory||{};
   if((inventory.paid||[]).length){
    const paidAll=n('section',undefined,'all-paid-options');
    paidAll.append(n('p','ALL VERIFIED PAID OPTIONS WE FOUND','step-label'),n('h3','Paid testing options for this address'));
@@ -196,14 +204,25 @@ function residentClient(){
   const counts=r.complete_evidence||{};
   const countGrid=n('div',undefined,'evidence-counts');
   for(const [value,label] of [
-   [counts.water_findings||0,'water test findings'],
+   [4,'main results shown above'],
+   [counts.unique_water_findings||0,'unique water findings'],
+   [counts.underlying_water_observation_rows||0,'underlying water sample rows'],
    [counts.compliance_issues||0,'past system issues'],
-   [counts.nearby_environmental_records||0,'nearby environmental records'],
-   [counts.nearby_well_records||0,'nearby well records'],
-   [counts.cleanup_sites||0,'cleanup sites'],
+   [counts.nearby_environmental_records||0,'nearby environmental records returned'],
+   [counts.nearby_well_records||0,'nearby well records returned'],
+   [counts.cleanup_sites||0,'cleanup sites returned'],
    [counts.service_line_records||0,'property pipe records']
   ]){const box=n('article');box.append(n('strong',Number(value).toLocaleString('en-US')),n('span',label));countGrid.append(box);}
   section.append(countGrid);
+  p(section,counts.count_note||'Different evidence types are kept separate so a summary count is never mistaken for the number of underlying records.','muted');
+  if(counts.environmental_archive_state&&/backfill|incremental|active/i.test(String(counts.environmental_archive_state)))p(section,'National environmental history is still backfilling. New historical records can be added as the archive completes; that does not mean the address itself changed.','attention');
+  const capped=[];
+  if(counts.truncation?.warehouse_observations)capped.push('raw water observations');
+  if(counts.truncation?.warehouse_violations)capped.push('raw violation rows');
+  if(counts.truncation?.live_environment)capped.push('live environmental readings');
+  if(counts.truncation?.nearby_wells)capped.push('nearby wells');
+  if(counts.truncation?.cleanup_sites)capped.push('cleanup sites');
+  if(capped.length)p(section,'This lookup still hit a display/retrieval cap for: '+capped.join(', ')+'. The count shown for that category is not a claim that no additional records exist.','attention');
 
   const providers=n('section',undefined,'evidence-group');
   providers.append(n('h3','Water source and provider'));
@@ -375,7 +394,7 @@ const HTML=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta nam
 .concierge-plan>h2{font-size:29px;margin-bottom:7px}.concierge-intro{font-size:15px;max-width:780px;color:#3f5e57}
 .plain-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0}.plain-summary article{background:#fff;border:1px solid #dbe8e3;border-radius:10px;padding:13px}.plain-summary span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.plain-summary strong{display:block;margin-top:4px;font-size:14px}
 .how-this-works ol{margin:10px 0 0;padding-left:22px}.how-this-works li{margin:8px 0;color:#405d56}
-.concierge-step{margin-top:18px;border-radius:13px;background:#fff;padding:18px;border:1px solid #d6e6df}.primary-step{border:2px solid #8fc6b6}.paid-step{border-color:#cbd9e6}.step-label{font-size:10px;font-weight:850;letter-spacing:.12em;color:var(--teal)}.step-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-top:6px}.step-head h3{font-size:20px;margin:0}.step-cost{font-size:13px;font-weight:800;color:#176354;background:#e4f3ed;border-radius:999px;padding:5px 9px;white-space:nowrap}.step-copy{font-size:14px;color:#405d56;margin:8px 0 10px}
+.test-decision{margin-top:18px;padding:17px;border:2px solid #8fc6b6;border-radius:12px;background:#fff}.test-decision h3{font-size:20px;margin:5px 0}.ask-list{margin-top:12px;padding-top:12px;border-top:1px solid #dbe8e3}.ask-list ul{margin:7px 0 0;padding-left:20px}.ask-list li{margin:7px 0}.best-paid{background:#fbfdff;border-color:#9ebdd2}.concierge-step{margin-top:18px;border-radius:13px;background:#fff;padding:18px;border:1px solid #d6e6df}.primary-step{border:2px solid #8fc6b6}.paid-step{border-color:#cbd9e6}.step-label{font-size:10px;font-weight:850;letter-spacing:.12em;color:var(--teal)}.step-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-top:6px}.step-head h3{font-size:20px;margin:0}.step-cost{font-size:13px;font-weight:800;color:#176354;background:#e4f3ed;border-radius:999px;padding:5px 9px;white-space:nowrap}.step-copy{font-size:14px;color:#405d56;margin:8px 0 10px}
 .call-script{margin-top:12px;background:#fff8e8;border:1px solid #ead8aa;border-radius:11px;padding:14px}.script-text{font-size:14px;margin:5px 0 0;color:#55451f}
 .all-paid-options{margin-top:20px;padding-top:18px;border-top:1px solid #cfddd8}.all-paid-options>h3{font-size:18px;margin:4px 0}.paid-option-row{display:grid;grid-template-columns:1fr auto;gap:5px 16px;padding:14px 0;border-top:1px solid #dce8e3}.paid-option-row:first-of-type{margin-top:10px}.paid-option-main{display:grid}.paid-option-price{text-align:right}.paid-option-price strong{font-size:18px;color:#176354}.paid-option-row>p,.paid-option-row>a{grid-column:1/-1}.paid-option-row>a{font-size:12px}.money-saved{margin-top:14px;background:#eaf6ef;border:1px solid #c6e3d2;border-radius:11px;padding:14px}.money-saved strong{font-size:26px;color:#176354;display:block;margin-top:3px}.money-saved p{margin:3px 0}
 .avoid-box{margin-top:18px;background:#fff;border:1px solid #dce8e3;border-radius:10px;padding:15px}.avoid-box h3{font-size:16px}.picked-tests{margin-top:18px}.picked-tests h3{font-size:16px}.picked-tests ul{margin:8px 0;padding-left:20px}.picked-tests li{margin:6px 0;font-size:13px}

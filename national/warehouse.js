@@ -54,9 +54,9 @@ function createWarehouse({connectionString=process.env.DATABASE_URL,pool}={}) {
    counts:{observations:sum('observation_count'),systems:sum('system_count'),violation_records:sum('violation_count')},sources:result.rows,
    count_scope:'active verified imports; sample/analyte/method observations, not households or publisher inventory',coverage_verified:false};
  }
- async function lookupSystem(pwsid,{limit=120}={}) {
+ async function lookupSystem(pwsid,{limit=500}={}) {
   if(!validPwsid(pwsid)) throw new Error('Invalid full federal PWSID');
-  limit=Math.max(1,Math.min(250,Number(limit)||120));
+  limit=Math.max(1,Math.min(1000,Number(limit)||500));
   if(!pool) return {pwsid,status:'not-connected',system:null,observations:[],violations:[],observation_summary:[],counts:{},sources:[]};
   const base=`FROM national_water.records r JOIN national_water.sources s ON s.active_run=r.run_id WHERE r.pwsid=$1`;
   const result=await query(`SELECT r.kind,r.data ${base} AND r.kind='system' LIMIT 1`,[pwsid]);
