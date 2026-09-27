@@ -176,6 +176,13 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
   const providerOfficialSearch=webSearch('"'+providerName+'" official water utility '+state);
   const countyWellSearch=webSearch('"'+countyLabel+'" '+state+' health department private well water testing');
   const personalizedWhy=plainWhy({privateWell,providerName,county:countyLabel,tests,findings,serviceLine,currentNotice});
+  const householdTestDecision=currentNotice
+    ? {label:'Follow the notice first',plain:'Do not wait for a private lab result before following an active water notice. After the notice is resolved, test only if the utility or your household situation still leaves an important question.'}
+    : privateWell
+      ? {label:'Yes — test the well',plain:'A private well is not routinely tested by a public water utility. A sample from your own well is the only way to know what is actually in that household water.'}
+      : tests.length
+        ? {label:'A targeted home test makes sense',plain:'Public records describe the water system and nearby conditions, but they do not measure your exact faucet. If you want household-level confirmation, test only the specific items listed below first.'}
+        : {label:'Testing is optional',plain:'Nothing in the connected records currently points to a specific paid test. Public records still cannot certify what is coming out of your exact faucet, so a household test is the way to get that certainty if you want it.'};
   const callScript=privateWell
     ? 'Hi, I live in '+countyLabel+', '+state+'. I use a private well and need to test for '+(tests.map(x=>x.name).slice(0,3).join(', ')||'routine well-water contaminants')+'. Do you offer free or reduced-cost testing, and what will it cost before I collect the sample?'
     : 'Hi, I live at '+addressLabel+'. My water provider appears to be '+providerName+'. I am checking '+concern+'. Do you offer free testing, a service-line check, or another no-cost option before I pay a private lab?';
@@ -301,6 +308,8 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
         countyLabel+' / '+state+' local options'
       ]
     },
+    testing_decision:householdTestDecision,
+    what_to_ask_for:tests.map(x=>({name:x.name,why:x.why})),
     targeted_tests:tests,
     provider_contacts:contacts,
     home_summary:{
