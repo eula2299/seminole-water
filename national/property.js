@@ -9,29 +9,51 @@ function makeUrl(base,params){const u=new URL(base);u.search=new URLSearchParams
 function sourceReader({fetchImpl=fetch,timeoutMs=7000}={}){return async(url,{signal}={})=>{
  const u=new URL(url);if(!Object.values(ENDPOINTS).some(x=>{const a=new URL(x);return u.origin===a.origin&&u.pathname===a.pathname;})||u.username||u.password||u.hash)throw Error('Unapproved property source');
  const own=AbortSignal.timeout(timeoutMs),r=await fetchImpl(u,{redirect:'error',signal:signal?AbortSignal.any([own,signal]):own,headers:{Accept:'application/json','User-Agent':'IsMyWaterOK-Evidence/2 (+https://www.ismywaterok.com)'}});
- if(!r.ok){await r.body?.cancel();throw Error('Property source HTTP '+r.status);}const parts=[];let n=0;for await(const p of r.body||[]){n+=p.length;if(n>1500000)throw Error('Property source exceeds response budget');parts.push(Buffer.from(p));}
+ if(!r.ok){await r.body?.cancel();throw Error('Property source HTTP '+r.status);}const parts=[];let n=0;for await(const p of r.body||[]){n+=p.length;if(n>2000000)throw Error('Property source exceeds response budget');parts.push(Buffer.from(p));}
  const data=JSON.parse(Buffer.concat(parts));if(data?.error||data?.errorCode)throw Error('Property source error');return data;
 };}
 function createPropertyContext({request=sourceReader(),now=()=>new Date()}={}){
  let nycMeta=null,metaUntil=0,metaPending=null;
  async function metadata(signal){if(nycMeta&&Date.now()<metaUntil)return nycMeta;if(!metaPending)metaPending=request(ENDPOINTS.nycMetadata,{signal}).then(x=>{if(x.id!=='jqfp-uff7'||!Array.isArray(x.columns))throw Error('NYC metadata changed');nycMeta=x;metaUntil=Date.now()+3600000;return x;}).finally(()=>metaPending=null);return metaPending;}
- async function wells(address,signal){const records=[],sources=[];let truncated=false;
-  for(const box of bounds(address.latitude,address.longitude)){const url=makeUrl(ENDPOINTS.wells,{f:'json',bbox:box.join(','),site_type_code:'GW',limit:'100',crs:'http://www.opengis.net/def/crs/OGC/1.3/CRS84'}),data=await request(url,{signal});if(!Array.isArray(data.features))throw Error('USGS well source changed');truncated ||=!!data.links?.some(x=>x.rel==='next');
-   for(const f of data.features){const p=f?.properties,c=f?.geometry?.coordinates;if(!p||p.site_type_code!=='GW'||p.country_code!=='US'||f.geometry?.type!=='Point'||!Array.isArray(c)||!c.every(Number.isFinite)||c.length<2||typeof f.id!=='string')throw Error('USGS well identity or coordinate mismatch');const meters=distance(address.latitude,address.longitude,c[1],c[0]);if(meters>5000)continue;records.push({id:f.id,name:p.monitoring_location_name,distance_m:Math.round(meters),latitude:c[1],longitude:c[0],depth_ft:p.well_constructed_depth??null,construction_date:p.construction_date,local_aquifer_code:p.aquifer_code,national_aquifer_code:p.national_aquifer_code,coordinate_accuracy:p.horizontal_positional_accuracy,household_connection_verified:false,source_url:makeUrl(ENDPOINTS.wells,{f:'html',id:f.id}),retrieved_at:now().toISOString(),sha256:fingerprint(f),raw:f});}sources.push(url);
-  }records.sort((a,b)=>a.distance_m-b.distance_m);return {status:records.length?'records-returned':'no-records-in-search',records:records.slice(0,12),sources,search_radius_m:5000,truncated:truncated||records.length>12,scope:'nearby-monitoring-wells',household_connection_verified:false};
+ async function wells(address,signal){
+  const records=[],sources=[];let truncated=false,pages=0;
+  for(const box of bounds(address.latitude,address.longitude)){
+   let next=makeUrl(ENDPOINTS.wells,{f:'json',bbox:box.join(','),site_type_code:'GW',limit:'100',crs:'http://www.opengis.net/def/crs/OGC/1.3/CRS84'}),localPages=0;
+   while(next&&localPages<5){
+    const data=await request(next,{signal});if(!Array.isArray(data.features))throw Error('USGS well source changed');sources.push(next);pages++;localPages++;
+    for(const f of data.features){const p=f?.properties,c=f?.geometry?.coordinates;if(!p||p.site_type_code!=='GW'||p.country_code!=='US'||f.geometry?.type!=='Point'||!Array.isArray(c)||!c.every(Number.isFinite)||c.length<2||typeof f.id!=='string')throw Error('USGS well identity or coordinate mismatch');const meters=distance(address.latitude,address.longitude,c[1],c[0]);if(meters>5000)continue;records.push({id:f.id,name:p.monitoring_location_name,distance_m:Math.round(meters),latitude:c[1],longitude:c[0],depth_ft:p.well_constructed_depth??null,construction_date:p.construction_date,local_aquifer_code:p.aquifer_code,national_aquifer_code:p.national_aquifer_code,coordinate_accuracy:p.horizontal_positional_accuracy,household_connection_verified:false,source_url:makeUrl(ENDPOINTS.wells,{f:'html',id:f.id}),retrieved_at:now().toISOString(),sha256:fingerprint(f)});}
+    const link=(data.links||[]).find(x=>x.rel==='next'&&x.href);
+    if(!link){next=null;break;}
+    const candidate=new URL(link.href,next),base=new URL(ENDPOINTS.wells);
+    if(candidate.origin!==base.origin||candidate.pathname!==base.pathname){truncated=true;next=null;break;}
+    next=candidate.href;
+   }
+   if(next)truncated=true;
+  }
+  const unique=[...new Map(records.map(r=>[r.id,r])).values()].sort((a,b)=>a.distance_m-b.distance_m||a.id.localeCompare(b.id));
+  return {status:unique.length?'records-returned':'no-records-in-search',records:unique,sources,search_radius_m:5000,matched_count:unique.length,pages_fetched:pages,truncated,scope:'nearby-monitoring-wells',household_connection_verified:false};
  }
- async function cleanup(address,signal){const records=[],sources=[];let truncated=false;
-  for(const box of bounds(address.latitude,address.longitude)){const url=makeUrl(ENDPOINTS.cleanup,{f:'json',geometry:box.join(','),geometryType:'esriGeometryEnvelope',inSR:'4326',outSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'registry_id,site_id,primary_name,city_name,state_code,latitude,longitude,facility_url,profile_url',returnGeometry:'true',resultRecordCount:'50'}),data=await request(url,{signal});if(!Array.isArray(data.features))throw Error('EPA cleanup source changed');truncated ||= data.exceededTransferLimit===true;
-   for(const f of data.features){const p=f?.attributes,c=f?.geometry;if(!p?.primary_name||!p.registry_id||!Number.isFinite(c?.x)||!Number.isFinite(c?.y))throw Error('EPA cleanup identity changed');const meters=distance(address.latitude,address.longitude,c.y,c.x);if(meters>5000)continue;let link=null;try{const u=new URL(p.profile_url||p.facility_url);if(u.protocol==='https:'&&(u.hostname==='epa.gov'||u.hostname.endsWith('.epa.gov'))&&!u.username&&!u.password)link=u.href;}catch{}records.push({id:String(p.registry_id),name:p.primary_name,distance_m:Math.round(meters),source_url:link||'https://www.epa.gov/superfund/search-superfund-sites-where-you-live',retrieved_at:now().toISOString(),hydraulic_connection_verified:false,sha256:fingerprint(f)});}sources.push(url);
-  }return {status:records.length?'records-returned':'no-records-in-search',records:[...new Map(records.map(r=>[r.id,r])).values()].sort((a,b)=>a.distance_m-b.distance_m).slice(0,12),sources,search_radius_m:5000,truncated:truncated||records.length>12,scope:'nearby-listed-cleanup-sites',hydraulic_connection_verified:false};
+ async function cleanup(address,signal){
+  const records=[],sources=[];let truncated=false,pages=0;
+  for(const box of bounds(address.latitude,address.longitude)){
+   let offset=0,more=true,localPages=0;
+   while(more&&localPages<5){
+    const url=makeUrl(ENDPOINTS.cleanup,{f:'json',geometry:box.join(','),geometryType:'esriGeometryEnvelope',inSR:'4326',outSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'registry_id,site_id,primary_name,city_name,state_code,latitude,longitude,facility_url,profile_url',returnGeometry:'true',resultRecordCount:'100',resultOffset:String(offset)});
+    const data=await request(url,{signal});if(!Array.isArray(data.features))throw Error('EPA cleanup source changed');sources.push(url);pages++;localPages++;
+    for(const f of data.features){const p=f?.attributes,c=f?.geometry;if(!p?.primary_name||!p.registry_id||!Number.isFinite(c?.x)||!Number.isFinite(c?.y))throw Error('EPA cleanup identity changed');const meters=distance(address.latitude,address.longitude,c.y,c.x);if(meters>5000)continue;let link=null;try{const u=new URL(p.profile_url||p.facility_url);if(u.protocol==='https:'&&(u.hostname==='epa.gov'||u.hostname.endsWith('.epa.gov'))&&!u.username&&!u.password)link=u.href;}catch{}records.push({id:String(p.registry_id),name:p.primary_name,distance_m:Math.round(meters),source_url:link||'https://www.epa.gov/superfund/search-superfund-sites-where-you-live',retrieved_at:now().toISOString(),hydraulic_connection_verified:false,sha256:fingerprint(f)});}
+    more=data.exceededTransferLimit===true&&data.features.length>0;offset+=data.features.length;
+   }
+   if(more)truncated=true;
+  }
+  const unique=[...new Map(records.map(r=>[r.id,r])).values()].sort((a,b)=>a.distance_m-b.distance_m||a.id.localeCompare(b.id));
+  return {status:unique.length?'records-returned':'no-records-in-search',records:unique,sources,search_radius_m:5000,matched_count:unique.length,pages_fetched:pages,truncated,scope:'nearby-listed-cleanup-sites',hydraulic_connection_verified:false};
  }
  async function serviceLine(address,signal){if(address.state!=='NY'||address.latitude<40.45||address.latitude>40.95||address.longitude< -74.3||address.longitude> -73.65)return {status:'local-inventory-needed',records:[],household_match:false};
   const b=bounds(address.latitude,address.longitude,120)[0],polygon=`POLYGON ((${b[0]} ${b[1]},${b[2]} ${b[1]},${b[2]} ${b[3]},${b[0]} ${b[3]},${b[0]} ${b[1]}))`,url=makeUrl(ENDPOINTS.nyc,{$where:`intersects(the_geom,'${polygon}')`,$limit:'301',$select:'address,material,record_ty,tbbl'});
   const [data,meta]=await Promise.all([request(url,{signal}),metadata(signal)]);if(!Array.isArray(data)||data.some(x=>typeof x.address!=='string'||typeof x.material!=='string'||!/^\d{10}$/.test(x.tbbl)))throw Error('NYC service-line schema changed');if(data.length>300)return {status:'ambiguous',records:[],household_match:false};
   const matched=data.filter(x=>streetKey(x.address)===streetKey(address.matched_address.split(',')[0]));const unique=[...new Map(matched.map(x=>[x.tbbl,x])).values()];
-  // A street-range coordinate alone is never sufficient to assign a neighboring parcel.
   return {status:unique.length===1?'address-record-match':unique.length?'ambiguous':'address-record-needed',records:unique.map(x=>({...x,source_url:NYC_SOURCE,source_updated_at:Number.isFinite(meta.rowsUpdatedAt)?new Date(meta.rowsUpdatedAt*1000).toISOString():null,retrieved_at:now().toISOString(),match_method:'normalized-street-address-within-120m-envelope',sha256:fingerprint(x)})),source_url:NYC_SOURCE,household_match:unique.length===1,physical_material_verified:false,explanation:'Last recorded material for a tax lot. Matching the public address does not verify the pipe today, apartment plumbing, or lead concentration.'};
  }
- return async(address,{signal,supplyType}={})=>{const names=['wells','cleanup_sites','service_line'],jobs=[wells(address,signal),cleanup(address,signal),supplyType==='private-well'?Promise.resolve({status:'not-applicable',records:[],household_match:false}):serviceLine(address,signal)];const settled=await Promise.allSettled(jobs);return Object.fromEntries(settled.map((x,i)=>[names[i],x.status==='fulfilled'?x.value:{status:'unavailable',records:[],household_connection_verified:false}]));};
+ return async(address,{signal,supplyType}={})=>{const names=['wells','cleanup_sites','service_line'],jobs=[wells(address,signal),cleanup(address,signal),supplyType==='private-well'?Promise.resolve({status:'not-applicable',records:[],household_match:false}):serviceLine(address,signal)];const settled=await Promise.allSettled(jobs);return Object.fromEntries(settled.map((x,i)=>[names[i],x.status==='fulfilled'?x.value:{status:'unavailable',records:[],household_connection_verified:false,truncated:false}]));};
 }
 module.exports={createPropertyContext,sourceReader,ENDPOINTS,bounds,distance,streetKey};
