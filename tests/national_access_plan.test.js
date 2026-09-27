@@ -164,3 +164,21 @@ test('unpriced utility contacts are returned but are never called a published-pr
  assert.ok(plan.option_inventory.paid.some(x=>x.provider.includes('Advanced Environmental Laboratories')));
  assert.equal(plan.price_finder.status,'published-options-found');
 });
+
+test('best paid option is separate from a free service-line option',()=>{
+ const data={address:{status:'matched',state:'FL',matched_address:'123 TEST ST, SANFORD, FL',geography:{county:{name:'Seminole County'}}},gaps:[],provider:{candidates:[{pwsid:'FL1234567',name:'Seminole County Utilities'}]},systems:[{pwsid:'FL1234567',records:[{data:{PWSName:'Seminole County Utilities'}}]}],current_advisories:{records:[]},environment:{records:[]},archived_environment:{records:[]}};
+ const findings=[{name:'Lead',detected:true,comparison:null}];
+ const plan=buildAccessPlan(data,{privateWell:false,findings,compliance:[],providers:[{id:'FL1234567',name:'Seminole County Utilities'}],serviceLine:{status:'address-record-needed',records:[]}});
+ assert.equal(plan.option_inventory.best_free.provider,'Seminole County Utilities — Service Line Inventory');
+ assert.ok(plan.option_inventory.best_paid.provider.includes('Advanced Environmental Laboratories'));
+ assert.equal(plan.option_inventory.best_paid.price,120);
+ assert.equal(plan.option_inventory.best_paid.test,'Lead at the tap');
+});
+
+test('testing decision is explicit and exact ask list survives prioritization',()=>{
+ const data={address:{status:'matched',state:'FL',matched_address:'55 WELL RD, SANFORD, FL',geography:{county:{name:'Seminole County'}}},gaps:[],systems:[],provider:{candidates:[]},current_advisories:{records:[]},environment:{records:[]},archived_environment:{records:[]}};
+ const plan=buildAccessPlan(data,{privateWell:true,findings:[],compliance:[],providers:[],serviceLine:null});
+ assert.match(plan.testing_decision.label,/test the well/i);
+ assert.ok(plan.what_to_ask_for.some(x=>/coliform/i.test(x.name)));
+ assert.ok(plan.what_to_ask_for.some(x=>/nitrate/i.test(x.name)));
+});
