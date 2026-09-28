@@ -162,8 +162,15 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
     test:match.test,id:option.id,provider:option.provider,price:0,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind
   })));
   const contactOptions=verifiedOptions.flatMap(match=>(match.contact_options||[]).map(option=>({
-    test:match.test,id:option.id,provider:option.provider,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind
+    test:match.test,id:option.id,provider:option.provider,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind,location_label:option.location_label||null
   })));
+  const savingsCandidates=verifiedOptions.map(match=>({
+    test:match.test,
+    low:match.potential_savings!=null?match.potential_savings:(match.potential_savings_range?match.potential_savings_range[0]:null),
+    high:match.potential_savings!=null?match.potential_savings:(match.potential_savings_range?match.potential_savings_range[1]:null)
+  })).filter(x=>x.low!=null&&x.high!=null).sort((a,b)=>b.high-a.high||b.low-a.low||a.test.localeCompare(b.test));
+  const bestSavings=savingsCandidates[0]||null;
+  const optionCount=paidOptions.length+freeVerifiedOptions.length+contactOptions.length;
   const currentNotice=(data.current_advisories?.records||[])[0]||null;
   const provider=contacts[0]||null;
   const issues=(compliance||[]).flatMap(x=>x.issues||[]);
@@ -267,11 +274,27 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
       contact_first:contactOptions,
       best_paid:paidOptions[0]||null,
       best_free:freeVerifiedOptions[0]||null,
+      total_count:optionCount,
       paid_count:paidOptions.length,
       free_count:freeVerifiedOptions.length,
       contact_count:contactOptions.length,
       exact_tests_with_options:verifiedOptions.length,
       note:'Every verified option matched to the address context and exact targeted tests is returned here. The UI must not hide higher-priced verified alternatives.'
+    },
+    money_summary:{
+      option_count:optionCount,
+      potential_savings_low:bestSavings?.low??null,
+      potential_savings_high:bestSavings?.high??null,
+      savings_test:bestSavings?.test||null,
+      free_first_step:steps.some(x=>String(x.cost).startsWith('$0')),
+      label:bestSavings
+        ? (bestSavings.low===bestSavings.high
+          ? Number(bestSavings.low).toLocaleString('en-US')+' dollars potential savings found'
+          : Number(bestSavings.low).toLocaleString('en-US')+'–'+Number(bestSavings.high).toLocaleString('en-US')+' dollars potential savings found')
+        : (steps.some(x=>String(x.cost).startsWith('$0'))?'Free first step found':'No verified dollar savings yet'),
+      note:bestSavings
+        ? 'This compares published prices for the same test. It is potential savings, not money we claim you already saved.'
+        : 'We only show a dollar savings number when two options are truly comparable.'
     },
     price_finder:{
       status:pricedMatchCount?'published-options-found':'no-comparable-published-price-found',

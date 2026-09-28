@@ -131,6 +131,96 @@ const OFFERS = Object.freeze([
     verified_at:'2026-09-25'
   },
   {
+    id:'fl-bphl-bacteria',
+    state:'FL',
+    counties:['*'],
+    supply:['private-well'],
+    tests:['Total coliform and E. coli'],
+    provider:'Florida Bureau of Public Health Laboratories',
+    price:40,
+    price_label:'$40',
+    price_kind:'published',
+    scope:'microbiology',
+    url:'https://www.floridahealth.gov/community-environmental-public-health/public-health-laboratories/laboratory-services/environmental-laboratory-services/well-water-testing/',
+    phone:'904-791-1600',
+    note:'Florida DOH publishes a $40 private-testing price through BPHL for E. coli and coliform testing. Samples are handled through Jacksonville or Miami and have same-day delivery requirements.',
+    verified_at:'2026-09-27',
+    priority:20,
+    location_label:'Florida'
+  },
+  {
+    id:'emsl-orlando-lead',
+    state:'FL',
+    counties:['Seminole County','Seminole','Orange County','Orange','Osceola County','Osceola','Lake County','Lake','Volusia County','Volusia'],
+    supply:['public','private-well','unknown'],
+    tests:['Lead at the tap','Arsenic','Cadmium','Nitrate','Total coliform and E. coli'],
+    provider:'EMSL Analytical — Orlando',
+    price:null,
+    price_label:'Call for current price',
+    price_kind:'contact-first',
+    scope:'certified-local-lab',
+    url:'https://www.emsl.com/Locations.aspx?laboratoryid=10',
+    phone:'407-599-5887',
+    note:'Orlando drinking-water laboratory with current Florida accreditation covering lead, arsenic, cadmium, nitrate and microbiology methods. Ask for a quote for only the tests listed in your plan.',
+    verified_at:'2026-09-27',
+    priority:10,
+    location_label:'Orlando'
+  },
+  {
+    id:'eurofins-orlando-lead',
+    state:'FL',
+    counties:['Seminole County','Seminole','Orange County','Orange','Osceola County','Osceola','Lake County','Lake','Volusia County','Volusia'],
+    supply:['public','private-well','unknown'],
+    tests:['Lead at the tap','Arsenic','Cadmium','Nitrate'],
+    provider:'Eurofins Environment Testing — Orlando',
+    price:null,
+    price_label:'Call for current price',
+    price_kind:'contact-first',
+    scope:'certified-local-lab',
+    url:'https://location.eurofins.com/en/',
+    phone:'407-339-5984',
+    note:'Altamonte Springs drinking-water laboratory. Ask for an itemized quote for only the tests listed in your plan and confirm current Florida certification for each analyte.',
+    verified_at:'2026-09-27',
+    priority:9,
+    location_label:'Altamonte Springs'
+  },
+  {
+    id:'orlando-inspex-well-panel',
+    state:'FL',
+    counties:['Seminole County','Seminole','Orange County','Orange','Osceola County','Osceola','Lake County','Lake'],
+    supply:['private-well'],
+    tests:['Total coliform and E. coli','Nitrate','Lead at the tap'],
+    provider:'Orlando Inspex — FHA/VA Water Testing',
+    price:null,
+    price_label:'Call / book for current price',
+    price_kind:'contact-first',
+    scope:'local-testing-service',
+    url:'https://www.orlandoinspex.com/fha-va-watertest/',
+    phone:'407-605-6332',
+    note:'Local service using certified Florida labs. Its basic panel includes coliform, E. coli, lead, nitrate/nitrite, pH and turbidity. Useful if you prefer a bundled private-well panel.',
+    verified_at:'2026-09-27',
+    priority:12,
+    location_label:'Orlando'
+  },
+  {
+    id:'pace-ormond-lead',
+    state:'FL',
+    counties:['Seminole County','Seminole','Volusia County','Volusia','Flagler County','Flagler'],
+    supply:['public','private-well','unknown'],
+    tests:['Lead at the tap'],
+    provider:'Pace Analytical Services — Ormond Beach',
+    price:null,
+    price_label:'Call for current price',
+    price_kind:'contact-first',
+    scope:'certified-regional-lab',
+    url:'https://www.pacelabs.com/',
+    phone:'386-672-5668',
+    note:'Listed in Florida-certified lead laboratory directories. Confirm current certification and ask for a drinking-water lead quote and sampling kit instructions.',
+    verified_at:'2026-09-27',
+    priority:30,
+    location_label:'Ormond Beach'
+  },
+  {
     id:'fl-seminole-lead-utility',
     state:'FL',
     counties:['Seminole County','Seminole'],
@@ -207,7 +297,7 @@ function chooseCheapest({state,county,supply,provider,tests=[]}){
   const byTest=[];
   for(const test of tests){
     const options=priced.filter(o=>testMatches(o,test)).sort((a,b)=>a.price-b.price||a.provider.localeCompare(b.provider)||a.id.localeCompare(b.id));
-    const contacts=allMatches.filter(o=>testMatches(o,test)&&!hasPrice(o)).sort((a,b)=>a.provider.localeCompare(b.provider)||a.id.localeCompare(b.id));
+    const contacts=allMatches.filter(o=>testMatches(o,test)&&!hasPrice(o)).sort((a,b)=>(Number(a.priority)||100)-(Number(b.priority)||100)||a.provider.localeCompare(b.provider)||a.id.localeCompare(b.id));
     if(!options.length&&!contacts.length)continue;
     const best=options[0]||null;
     const privatePaid=best?options.find(o=>o.price_kind==='published'&&o.price>best.price):null;

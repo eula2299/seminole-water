@@ -66,9 +66,10 @@ test('Florida private-well bacteria returns an actual cheapest published option 
  assert.equal(found.length,1);
  assert.equal(found[0].best.provider,'Florida Department of Health — county health department');
  assert.equal(found[0].best.price,17);
- assert.equal(found[0].comparison_provider,'Advanced Environmental Laboratories (AEL)');
- assert.equal(found[0].comparison_price,120);
- assert.equal(found[0].potential_savings,103);
+ assert.equal(found[0].comparison_provider,'Florida Bureau of Public Health Laboratories');
+ assert.equal(found[0].comparison_price,40);
+ assert.equal(found[0].potential_savings,23);
+ assert.ok(found[0].all_options.some(x=>x.provider==='Advanced Environmental Laboratories (AEL)'&&x.price===120));
 });
 
 test('Florida private-well nitrate returns the published county price range before private lab pricing',()=>{
@@ -181,4 +182,23 @@ test('testing decision is explicit and exact ask list survives prioritization',(
  assert.match(plan.testing_decision.label,/test the well/i);
  assert.ok(plan.what_to_ask_for.some(x=>/coliform/i.test(x.name)));
  assert.ok(plan.what_to_ask_for.some(x=>/nitrate/i.test(x.name)));
+});
+
+test('Seminole private-well plan finds a broader set of local options and shows potential savings',()=>{
+ const data={address:{status:'matched',state:'FL',matched_address:'55 WELL RD, SANFORD, FL',geography:{county:{name:'Seminole County'}}},gaps:[],systems:[],provider:{candidates:[]},current_advisories:{records:[]},environment:{records:[]},archived_environment:{records:[]}};
+ const plan=buildAccessPlan(data,{privateWell:true,findings:[],compliance:[],providers:[],serviceLine:null});
+ assert.ok(plan.option_inventory.total_count>=6);
+ assert.ok(plan.option_inventory.contact_first.some(x=>/EMSL Analytical/.test(x.provider)));
+ assert.ok(plan.option_inventory.contact_first.some(x=>/Eurofins/.test(x.provider)));
+ assert.ok(plan.option_inventory.contact_first.some(x=>/Orlando Inspex/.test(x.provider)));
+ assert.equal(plan.money_summary.potential_savings_low,90);
+ assert.equal(plan.money_summary.potential_savings_high,100);
+ assert.match(plan.money_summary.label,/90–100 dollars potential savings/i);
+});
+
+test('money summary never claims savings without a comparable price',()=>{
+ const data={address:{status:'matched',state:'TX',matched_address:'100 TEST ST, AUSTIN, TX',geography:{county:{name:'Travis County'}}},gaps:[],systems:[],provider:{candidates:[]},current_advisories:{records:[]},environment:{records:[]},archived_environment:{records:[]}};
+ const plan=buildAccessPlan(data,{privateWell:false,findings:[],compliance:[],providers:[],serviceLine:null});
+ assert.equal(plan.money_summary.potential_savings_low,null);
+ assert.match(plan.money_summary.note,/only show a dollar savings number/i);
 });
