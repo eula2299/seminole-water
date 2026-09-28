@@ -1,0 +1,55 @@
+name: National live release verification
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/national-live-release.yml'
+permissions:
+  contents: read
+jobs:
+  live-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify public deployment with public institutional addresses
+        run: |
+          node <<'JS'
+          const fs=require('node:fs');
+          const base='https://www.ismywaterok.com';
+          (async()=>{
+           const out={checked_at:new Date().toISOString(),routes:[],lookups:[],coverage_certified:false};
+           for(let n=0;n<30;n++){
+            try{const r=await fetch(base+'/healthz',{signal:AbortSignal.timeout(6000)});const h=await r.json();if(r.ok&&h.version==='national-production/1')break;if(n===29)throw Error('New national gateway not active');}
+            catch(e){if(n===29)throw e;}
+            await new Promise(r=>setTimeout(r,4000));
+           }
+           for(const path of ['/','/seminole','/api/auth/me','/api/community/config','/api/national/status']){
+            const start=Date.now();const r=await fetch(base+path,{signal:AbortSignal.timeout(10000)});const text=await r.text();out.routes.push({path,status:r.status,ms:Date.now()-start,bytes:Buffer.byteLength(text)});
+            if(!r.ok)throw Error('Route failed '+path);
+            if(path==='/api/national/status')out.archive=JSON.parse(text);
+           }
+           const addresses=[{label:'Census example, Maryland',street:'4600 Silver Hill Rd',city:'Suitland',state:'MD',zip:'20746'},
+             {label:'Los Angeles public building',street:'200 N Spring St',city:'Los Angeles',state:'CA',zip:'90012'},
+             {label:'Austin public building',street:'301 W 2nd St',city:'Austin',state:'TX',zip:'78701'},
+             {label:'Private-well logic at public test coordinate',street:'4600 Silver Hill Rd',city:'Suitland',state:'MD',zip:'20746',supply_type:'private-well',include_environment:true}];
+           for(const input of addresses){
+            const start=Date.now();let data;
+            try{const r=await fetch(base+'/api/national/lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input),signal:AbortSignal.timeout(40000)});data=await r.json();out.lookups.push({input,status:r.status,ms:Date.now()-start,result:data});}
+            catch(e){out.lookups.push({input,error:e.message,ms:Date.now()-start});continue;}
+            if(data.household_safety?.status!=='not-determined')throw Error('Unexpected household certification');
+            if(input.supply_type==='private-well'&&data.occurrence?.length)throw Error('Private-well scope violation');
+           }
+           fs.writeFileSync('national-live-release.json',JSON.stringify(out,null,2));
+           console.log(JSON.stringify({routes:out.routes,archive:out.archive,lookups:out.lookups.map(x=>({label:x.input.label,status:x.status,error:x.error,ms:x.ms,address:x.result?.address?.status,providers:x.result?.provider?.candidates?.map(p=>p.pwsid),occurrence:x.result?.occurrence?.map(y=>({pwsid:y.pwsid,status:y.status,summaries:y.summaries?.length})),environment:x.result?.environment?.status}))},null,2));
+           if(!out.archive?.observations?.retained_source_records||!out.lookups.some(x=>x.result?.occurrence?.some(y=>y.summaries?.length)))throw Error('No production occurrence serving verified');
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: national-live-release
+          path: national-live-release.json
+          retention-days: 5
