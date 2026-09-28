@@ -289,7 +289,15 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
       free_first_step:steps.some(x=>String(x.cost).startsWith('$0')),
       label:bestSavings
         ? (bestSavings.low===bestSavings.high
-          ? '      status:pricedMatchCount?'published-options-found':'no-comparable-published-price-found',
+          ? Number(bestSavings.low).toLocaleString('en-US')+' dollars potential savings found'
+          : Number(bestSavings.low).toLocaleString('en-US')+'–'+Number(bestSavings.high).toLocaleString('en-US')+' dollars potential savings found')
+        : (steps.some(x=>String(x.cost).startsWith('$0'))?'Free first step found':'No verified dollar savings yet'),
+      note:bestSavings
+        ? 'This compares published prices for the same test. It is potential savings, not money we claim you already saved.'
+        : 'We only show a dollar savings number when two options are truly comparable.'
+    },
+    price_finder:{
+      status:pricedMatchCount?'published-options-found':'no-comparable-published-price-found',
       checked_targets:accessTargets,
       published_matches:pricedMatchCount,
       best_test:bestVerified?.test||null,
