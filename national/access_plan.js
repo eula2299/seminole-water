@@ -162,8 +162,15 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
     test:match.test,id:option.id,provider:option.provider,price:0,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind
   })));
   const contactOptions=verifiedOptions.flatMap(match=>(match.contact_options||[]).map(option=>({
-    test:match.test,id:option.id,provider:option.provider,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind
+    test:match.test,id:option.id,provider:option.provider,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind,location_label:option.location_label||null
   })));
+  const savingsCandidates=verifiedOptions.map(match=>({
+    test:match.test,
+    low:match.potential_savings!=null?match.potential_savings:(match.potential_savings_range?match.potential_savings_range[0]:null),
+    high:match.potential_savings!=null?match.potential_savings:(match.potential_savings_range?match.potential_savings_range[1]:null)
+  })).filter(x=>x.low!=null&&x.high!=null).sort((a,b)=>b.high-a.high||b.low-a.low||a.test.localeCompare(b.test));
+  const bestSavings=savingsCandidates[0]||null;
+  const optionCount=paidOptions.length+freeVerifiedOptions.length+contactOptions.length;
   const currentNotice=(data.current_advisories?.records||[])[0]||null;
   const provider=contacts[0]||null;
   const issues=(compliance||[]).flatMap(x=>x.issues||[]);
@@ -267,11 +274,210 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
       contact_first:contactOptions,
       best_paid:paidOptions[0]||null,
       best_free:freeVerifiedOptions[0]||null,
+      total_count:optionCount,
       paid_count:paidOptions.length,
       free_count:freeVerifiedOptions.length,
       contact_count:contactOptions.length,
       exact_tests_with_options:verifiedOptions.length,
       note:'Every verified option matched to the address context and exact targeted tests is returned here. The UI must not hide higher-priced verified alternatives.'
+    },
+    money_summary:{
+      option_count:optionCount,
+      potential_savings_low:bestSavings?.low??null,
+      potential_savings_high:bestSavings?.high??null,
+      savings_test:bestSavings?.test||null,
+      free_first_step:steps.some(x=>String(x.cost).startsWith('$0')),
+      label:bestSavings
+        ? (bestSavings.low===bestSavings.high
+          ? '      status:pricedMatchCount?'published-options-found':'no-comparable-published-price-found',
+      checked_targets:accessTargets,
+      published_matches:pricedMatchCount,
+      best_test:bestVerified?.test||null,
+      best_price:bestVerified?.best?.price??null,
+      best_price_label:bestVerified?.best?.price_label||null,
+      best_provider:bestVerified?.best?.provider||null,
+      potential_savings:bestVerified?.potential_savings??null,
+      potential_savings_range:bestVerified?.potential_savings_range||null,
+      comparison_provider:bestVerified?.comparison_provider||null,
+      comparison_price:bestVerified?.comparison_price??null,
+      wording:pricedMatchCount?'Cheapest published option in our verified catalog for this exact test and location.':'We could not verify a comparable published price for the exact test needed, so we will not pretend we found the cheapest option.'
+    },
+    passport,
+    personalized:{
+      address:addressLabel,
+      provider:privateWell?'Private well':providerName,
+      county:countyLabel,
+      state,
+      concern,
+      why_this_is_for_you:personalizedWhy,
+      call_script:callScript,
+      local_lab_search:webSearch('state certified drinking water laboratory '+countyLabel+' '+state+' '+(tests.map(x=>x.name).slice(0,3).join(' ')||concern)),
+      local_help_search:privateWell?countyWellSearch:providerOfficialSearch,
+      how_it_works:[
+        'We use your address to identify your water source, provider and local public records.',
+        'We narrow the problem to the tests or checks that actually make sense for this home.',
+        'We look for free local help and published prices for those exact needs, then put the lowest-cost useful option first.'
+      ],
+      checked_for_you:[
+        privateWell?'Private-well testing needs':'Your likely water provider',
+        serviceLine?.status==='address-record-match'?'Your service-line record':'Available pipe/service-line information',
+        tests.length?tests.map(x=>x.name).join(', '):'Whether a paid household test is justified',
+        countyLabel+' / '+state+' local options'
+      ]
+    },
+    testing_decision:householdTestDecision,
+    what_to_ask_for:tests.map(x=>({name:x.name,why:x.why})),
+    targeted_tests:tests,
+    provider_contacts:contacts,
+    home_summary:{
+      water_source:privateWell?'Private well':providers.length===1?providers[0].name:providers.length>1?'More than one possible water provider':'Water provider not fully confirmed',
+      pipe_record:exactLine?String(exactLine.material||'Public pipe record found'):'No exact pipe record found yet'
+    },
+    can_avoid_broad_panel:tests.length>0,
+    broad_panel_message:tests.length?'You do not need to start with a huge “test everything” package. Ask for these specific tests first.':'There is no reason from the current records alone to start with an expensive broad panel.',
+    neighborhood_context:equity,
+    barrier_context:barrierSignals.length?{signals:barrierSignals}:null,
+    quote_check:{
+      service_line_free_record_available:!!exactLine,
+      target_tests:tests.map(x=>x.name)
+    },
+    impact:{
+      free_options_identified:steps.filter(x=>String(x.cost).startsWith('$0')).length,
+      records_translated:recordsTranslated,
+      gaps_identified:gaps
+    },
+    sources:{certified_labs:LABS,service_line_inventory:SERVICE_LINES,local_help:TESTING_HELP}
+  };
+}
+module.exports={parseAcsContext,buildAccessPlan,providerContacts,targetedTests};
++Number(bestSavings.low).toLocaleString('en-US')+' potential savings found'
+          : '      status:pricedMatchCount?'published-options-found':'no-comparable-published-price-found',
+      checked_targets:accessTargets,
+      published_matches:pricedMatchCount,
+      best_test:bestVerified?.test||null,
+      best_price:bestVerified?.best?.price??null,
+      best_price_label:bestVerified?.best?.price_label||null,
+      best_provider:bestVerified?.best?.provider||null,
+      potential_savings:bestVerified?.potential_savings??null,
+      potential_savings_range:bestVerified?.potential_savings_range||null,
+      comparison_provider:bestVerified?.comparison_provider||null,
+      comparison_price:bestVerified?.comparison_price??null,
+      wording:pricedMatchCount?'Cheapest published option in our verified catalog for this exact test and location.':'We could not verify a comparable published price for the exact test needed, so we will not pretend we found the cheapest option.'
+    },
+    passport,
+    personalized:{
+      address:addressLabel,
+      provider:privateWell?'Private well':providerName,
+      county:countyLabel,
+      state,
+      concern,
+      why_this_is_for_you:personalizedWhy,
+      call_script:callScript,
+      local_lab_search:webSearch('state certified drinking water laboratory '+countyLabel+' '+state+' '+(tests.map(x=>x.name).slice(0,3).join(' ')||concern)),
+      local_help_search:privateWell?countyWellSearch:providerOfficialSearch,
+      how_it_works:[
+        'We use your address to identify your water source, provider and local public records.',
+        'We narrow the problem to the tests or checks that actually make sense for this home.',
+        'We look for free local help and published prices for those exact needs, then put the lowest-cost useful option first.'
+      ],
+      checked_for_you:[
+        privateWell?'Private-well testing needs':'Your likely water provider',
+        serviceLine?.status==='address-record-match'?'Your service-line record':'Available pipe/service-line information',
+        tests.length?tests.map(x=>x.name).join(', '):'Whether a paid household test is justified',
+        countyLabel+' / '+state+' local options'
+      ]
+    },
+    testing_decision:householdTestDecision,
+    what_to_ask_for:tests.map(x=>({name:x.name,why:x.why})),
+    targeted_tests:tests,
+    provider_contacts:contacts,
+    home_summary:{
+      water_source:privateWell?'Private well':providers.length===1?providers[0].name:providers.length>1?'More than one possible water provider':'Water provider not fully confirmed',
+      pipe_record:exactLine?String(exactLine.material||'Public pipe record found'):'No exact pipe record found yet'
+    },
+    can_avoid_broad_panel:tests.length>0,
+    broad_panel_message:tests.length?'You do not need to start with a huge “test everything” package. Ask for these specific tests first.':'There is no reason from the current records alone to start with an expensive broad panel.',
+    neighborhood_context:equity,
+    barrier_context:barrierSignals.length?{signals:barrierSignals}:null,
+    quote_check:{
+      service_line_free_record_available:!!exactLine,
+      target_tests:tests.map(x=>x.name)
+    },
+    impact:{
+      free_options_identified:steps.filter(x=>String(x.cost).startsWith('$0')).length,
+      records_translated:recordsTranslated,
+      gaps_identified:gaps
+    },
+    sources:{certified_labs:LABS,service_line_inventory:SERVICE_LINES,local_help:TESTING_HELP}
+  };
+}
+module.exports={parseAcsContext,buildAccessPlan,providerContacts,targetedTests};
++Number(bestSavings.low).toLocaleString('en-US')+'–      status:pricedMatchCount?'published-options-found':'no-comparable-published-price-found',
+      checked_targets:accessTargets,
+      published_matches:pricedMatchCount,
+      best_test:bestVerified?.test||null,
+      best_price:bestVerified?.best?.price??null,
+      best_price_label:bestVerified?.best?.price_label||null,
+      best_provider:bestVerified?.best?.provider||null,
+      potential_savings:bestVerified?.potential_savings??null,
+      potential_savings_range:bestVerified?.potential_savings_range||null,
+      comparison_provider:bestVerified?.comparison_provider||null,
+      comparison_price:bestVerified?.comparison_price??null,
+      wording:pricedMatchCount?'Cheapest published option in our verified catalog for this exact test and location.':'We could not verify a comparable published price for the exact test needed, so we will not pretend we found the cheapest option.'
+    },
+    passport,
+    personalized:{
+      address:addressLabel,
+      provider:privateWell?'Private well':providerName,
+      county:countyLabel,
+      state,
+      concern,
+      why_this_is_for_you:personalizedWhy,
+      call_script:callScript,
+      local_lab_search:webSearch('state certified drinking water laboratory '+countyLabel+' '+state+' '+(tests.map(x=>x.name).slice(0,3).join(' ')||concern)),
+      local_help_search:privateWell?countyWellSearch:providerOfficialSearch,
+      how_it_works:[
+        'We use your address to identify your water source, provider and local public records.',
+        'We narrow the problem to the tests or checks that actually make sense for this home.',
+        'We look for free local help and published prices for those exact needs, then put the lowest-cost useful option first.'
+      ],
+      checked_for_you:[
+        privateWell?'Private-well testing needs':'Your likely water provider',
+        serviceLine?.status==='address-record-match'?'Your service-line record':'Available pipe/service-line information',
+        tests.length?tests.map(x=>x.name).join(', '):'Whether a paid household test is justified',
+        countyLabel+' / '+state+' local options'
+      ]
+    },
+    testing_decision:householdTestDecision,
+    what_to_ask_for:tests.map(x=>({name:x.name,why:x.why})),
+    targeted_tests:tests,
+    provider_contacts:contacts,
+    home_summary:{
+      water_source:privateWell?'Private well':providers.length===1?providers[0].name:providers.length>1?'More than one possible water provider':'Water provider not fully confirmed',
+      pipe_record:exactLine?String(exactLine.material||'Public pipe record found'):'No exact pipe record found yet'
+    },
+    can_avoid_broad_panel:tests.length>0,
+    broad_panel_message:tests.length?'You do not need to start with a huge “test everything” package. Ask for these specific tests first.':'There is no reason from the current records alone to start with an expensive broad panel.',
+    neighborhood_context:equity,
+    barrier_context:barrierSignals.length?{signals:barrierSignals}:null,
+    quote_check:{
+      service_line_free_record_available:!!exactLine,
+      target_tests:tests.map(x=>x.name)
+    },
+    impact:{
+      free_options_identified:steps.filter(x=>String(x.cost).startsWith('$0')).length,
+      records_translated:recordsTranslated,
+      gaps_identified:gaps
+    },
+    sources:{certified_labs:LABS,service_line_inventory:SERVICE_LINES,local_help:TESTING_HELP}
+  };
+}
+module.exports={parseAcsContext,buildAccessPlan,providerContacts,targetedTests};
++Number(bestSavings.high).toLocaleString('en-US')+' potential savings found')
+        : (steps.some(x=>String(x.cost).startsWith('$0'))?'$0 first step found':'No verified dollar savings yet'),
+      note:bestSavings
+        ? 'This compares published prices for the same test. It is potential savings, not money we claim you already saved.'
+        : 'We only show a dollar savings number when two options are truly comparable.'
     },
     price_finder:{
       status:pricedMatchCount?'published-options-found':'no-comparable-published-price-found',
