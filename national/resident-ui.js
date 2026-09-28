@@ -41,10 +41,10 @@ function residentClient(){
 
   const moneyBox=n('section',undefined,'clean-money');moneyBox.append(n('span','MONEY','clean-label'));
   const low=money.potential_savings_low,high=money.potential_savings_high;
-  if(low!=null&&high!=null){moneyBox.append(n('strong',low===high?'$'+Number(low).toLocaleString('en-US'):'$'+Number(low).toLocaleString('en-US')+'–$'+Number(high).toLocaleString('en-US')));p(moneyBox,'potential savings found for '+(money.savings_test||'a comparable test')+'.','money-copy');}
+  if(low!=null&&high!=null){moneyBox.append(n('strong','You could save '+(low===high?'$'+Number(low).toLocaleString('en-US'):'$'+Number(low).toLocaleString('en-US')+'–$'+Number(high).toLocaleString('en-US'))));p(moneyBox,'on '+(money.savings_test||'a comparable test')+' compared with the next published price we verified.','money-copy');}
   else if(money.free_first_step){moneyBox.append(n('strong','$0 first step'));p(moneyBox,'We found a useful free step before you spend money.','money-copy');}
   else{moneyBox.append(n('strong','No verified savings yet'));p(moneyBox,'We will not invent a dollar amount when the options are not truly comparable.','money-copy');}
-  if(money.option_count!=null)p(moneyBox,'We found '+money.option_count+' testing/help option'+(money.option_count===1?'':'s')+' for this plan.','muted');
+  if(money.provider_count!=null)p(moneyBox,'We found '+money.provider_count+' different lab/program option'+(money.provider_count===1?'':'s')+' for this plan.','muted');
   section.append(moneyBox);
 
   const first=n('article',undefined,'clean-step clean-free');first.append(n('span','1 · START HERE','clean-label'));
@@ -71,14 +71,14 @@ function residentClient(){
   const counts=r.complete_evidence||{};
   const findings=counts.unique_water_findings||0,rows=counts.underlying_water_observation_rows||0;
   const section=n('details',undefined,'complete-evidence collapsed-evidence');
-  section.append(n('summary','See everything we found'+(findings||rows?' · '+findings+' findings'+(rows?' · '+Number(rows).toLocaleString('en-US')+' source rows':''):'')));
+  section.append(n('summary','See everything we found'+(findings||rows?' · '+findings+' findings'+(rows?' · '+Number(rows).toLocaleString('en-US')+' records checked':''):'')));
   section.append(n('h2','Complete evidence for this address'));
   p(section,'This is the full evidence view. You do not need this section to follow the action plan above.','complete-intro');
   const countGrid=n('div',undefined,'evidence-counts');
   for(const [value,label] of [
    [4,'main results shown above'],
    [counts.unique_water_findings||0,'unique water findings'],
-   [counts.underlying_water_observation_rows||0,'underlying water sample rows'],
+   [counts.underlying_water_observation_rows||0,'water sample records checked'],
    [counts.compliance_issues||0,'past system issues'],
    [counts.nearby_environmental_records||0,'nearby environmental records returned'],
    [counts.nearby_well_records||0,'nearby well records returned'],

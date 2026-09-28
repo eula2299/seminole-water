@@ -202,3 +202,12 @@ test('money summary never claims savings without a comparable price',()=>{
  assert.equal(plan.money_summary.potential_savings_low,null);
  assert.match(plan.money_summary.note,/only show a dollar savings number/i);
 });
+
+test('Seminole plan returns many distinct local lab and program choices',()=>{
+ const data={address:{status:'matched',state:'FL',matched_address:'55 WELL RD, SANFORD, FL',geography:{county:{name:'Seminole County'}}},gaps:[],systems:[],provider:{candidates:[]},current_advisories:{records:[]},environment:{records:[]},archived_environment:{records:[]}};
+ const plan=buildAccessPlan(data,{privateWell:true,findings:[],compliance:[],providers:[],serviceLine:null});
+ assert.ok(plan.option_inventory.provider_count>=8);
+ for(const name of ['HBEL','PC&B','Water Shed','EMSL','Eurofins','Advanced Environmental Laboratories']){
+  assert.ok([...plan.option_inventory.paid,...plan.option_inventory.contact_first].some(x=>x.provider.includes(name)),name);
+ }
+});

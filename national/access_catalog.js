@@ -221,6 +221,60 @@ const OFFERS = Object.freeze([
     location_label:'Ormond Beach'
   },
   {
+    id:'pcb-oviedo-local',
+    state:'FL',
+    counties:['Seminole County','Seminole'],
+    supply:['public','private-well','unknown'],
+    tests:['*'],
+    provider:'PC&B — Oviedo',
+    price:null,
+    price_label:'Call for price',
+    price_kind:'contact-first',
+    scope:'state-approved-local-lab',
+    url:'https://seminole.floridahealth.gov/programs-and-services/environmental-public-health/state-approved-water-labs/',
+    phone:'407-359-7194',
+    note:'Listed by the Florida Department of Health in Seminole County as a state-approved water lab. Call first to confirm that it handles the exact test in your plan, the current price, bottle requirements, and drop-off timing.',
+    verified_at:'2026-09-27',
+    priority:8,
+    location_label:'Oviedo'
+  },
+  {
+    id:'hbel-sanford-local',
+    state:'FL',
+    counties:['Seminole County','Seminole'],
+    supply:['public','private-well','unknown'],
+    tests:['*'],
+    provider:'HBEL — Sanford',
+    price:null,
+    price_label:'Call for price',
+    price_kind:'contact-first',
+    scope:'state-approved-local-lab',
+    url:'https://seminole.floridahealth.gov/programs-and-services/environmental-public-health/state-approved-water-labs/',
+    phone:'407-322-4686',
+    note:'Listed by the Florida Department of Health in Seminole County as a state-approved water lab. Call first to confirm the exact analyte, current price, sample bottle, and delivery schedule.',
+    verified_at:'2026-09-27',
+    priority:7,
+    location_label:'Sanford'
+  },
+  {
+    id:'watershed-deland-local',
+    state:'FL',
+    counties:['Seminole County','Seminole','Volusia County','Volusia'],
+    supply:['public','private-well','unknown'],
+    tests:['*'],
+    provider:'Water Shed Lab — DeLand',
+    price:null,
+    price_label:'Call for price',
+    price_kind:'contact-first',
+    scope:'state-approved-local-lab',
+    url:'https://seminole.floridahealth.gov/programs-and-services/environmental-public-health/state-approved-water-labs/',
+    phone:'386-736-3397',
+    note:'Listed by the Florida Department of Health in Seminole County as a state-approved water lab. Call to confirm the exact test, price, collection bottle, and when the sample must arrive.',
+    verified_at:'2026-09-27',
+    priority:11,
+    location_label:'DeLand'
+  },
+  {
     id:'fl-seminole-lead-utility',
     state:'FL',
     counties:['Seminole County','Seminole'],
@@ -284,7 +338,7 @@ function providerMatches(offer,provider){
 }
 function testMatches(offer,test){
   const t=norm(test);
-  return (offer.tests||[]).some(x=>norm(x)===t);
+  return (offer.tests||[]).some(x=>x==='*'||norm(x)===t);
 }
 function offersFor({state,county,supply,provider,tests=[]}){
   const s=norm(supply||'unknown');

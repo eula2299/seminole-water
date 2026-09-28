@@ -171,6 +171,8 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
   })).filter(x=>x.low!=null&&x.high!=null).sort((a,b)=>b.high-a.high||b.low-a.low||a.test.localeCompare(b.test));
   const bestSavings=savingsCandidates[0]||null;
   const optionCount=paidOptions.length+freeVerifiedOptions.length+contactOptions.length;
+  const uniqueOptionProviders=new Set([...paidOptions,...freeVerifiedOptions,...contactOptions].map(x=>x.id||x.provider));
+  const providerOptionCount=uniqueOptionProviders.size;
   const currentNotice=(data.current_advisories?.records||[])[0]||null;
   const provider=contacts[0]||null;
   const issues=(compliance||[]).flatMap(x=>x.issues||[]);
@@ -275,6 +277,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
       best_paid:paidOptions[0]||null,
       best_free:freeVerifiedOptions[0]||null,
       total_count:optionCount,
+      provider_count:providerOptionCount,
       paid_count:paidOptions.length,
       free_count:freeVerifiedOptions.length,
       contact_count:contactOptions.length,
@@ -283,6 +286,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
     },
     money_summary:{
       option_count:optionCount,
+      provider_count:providerOptionCount,
       potential_savings_low:bestSavings?.low??null,
       potential_savings_high:bestSavings?.high??null,
       savings_test:bestSavings?.test||null,
