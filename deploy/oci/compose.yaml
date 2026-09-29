@@ -1,0 +1,85 @@
+services:
+  db:
+    image: postgres:18-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: water
+      POSTGRES_DB: water
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - /srv/water-data/postgres:/var/lib/postgresql
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U water -d water']
+      interval: 10s
+      retries: 12
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: server /data
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?Set S3_ACCESS_KEY in .env}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?Set S3_SECRET_KEY in .env}
+    volumes:
+      - /srv/water-data/objects:/data
+
+  app:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: '8080'
+      INTERNAL_APP_PORT: '8082'
+      DATABASE_URL: postgres://water:${DB_PASSWORD:?Set DB_PASSWORD in .env}@db:5432/water
+      NATIONAL_ARCHIVE_URL: http://127.0.0.1:8083
+      WAREHOUSE_URL: http://127.0.0.1:8083
+      NATIONAL_SYNC_ENABLED: 'false'
+      PUBLIC_BASE_URL: https://www.ismywaterok.com
+      TRUST_PROXY: 'true'
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, node, -e, "require('http').get('http://127.0.0.1:8080/healthz',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 15s
+      retries: 12
+
+  warehouse:
+    build:
+      context: ../..
+      dockerfile: national/warehouse.Dockerfile
+    restart: unless-stopped
+    network_mode: service:app
+    env_file: .env
+    environment:
+      PORT: '8083'
+      AWS_ENDPOINT_URL: http://minio:9000
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:?Set S3_ACCESS_KEY in .env}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:?Set S3_SECRET_KEY in .env}
+      AWS_S3_BUCKET_NAME: national-water-evidence
+      WAREHOUSE_STORAGE_PROVIDER: s3
+      WAREHOUSE_DIR: /app/runtime
+    volumes:
+      - /srv/water-data/warehouse-runtime:/app/runtime
+    depends_on:
+      app:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - /srv/water-data/caddy:/data
+      - /srv/water-data/caddy-config:/config
+    depends_on:
+      app:
+        condition: service_healthy

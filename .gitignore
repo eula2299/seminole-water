@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 national/downloads/
 national/backfill/
+deploy/oci/.env
+deploy/oci/backups/

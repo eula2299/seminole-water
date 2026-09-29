@@ -1,0 +1,7 @@
+ismywaterok.com {
+  redir https://www.ismywaterok.com{uri} permanent
+}
+
+www.ismywaterok.com {
+  reverse_proxy app:8080
+}
