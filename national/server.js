@@ -5,9 +5,9 @@ const {EvidenceError,REGION_CODES}=require('./evidence');
 const {HTML,CLIENT}=require('./ui');
 const {clientKey,readJson,HttpInputError}=require('./http_safety');
 const seo=require('./seo');
-function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false}={}){
+function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false,metrics=null}={}){
  const buckets=new Map();let active=0;
- const security={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",'Permissions-Policy':'geolocation=(), camera=(), microphone=()'};
+ const security={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; script-src 'self' https://www.googletagmanager.com; style-src 'unsafe-inline'; connect-src 'self' https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com; img-src 'self' https://*.google-analytics.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",'Permissions-Policy':'geolocation=(), camera=(), microphone=()'};
  function send(res,status,body,type='application/json; charset=utf-8',headers={}){res.writeHead(status,{...security,'Content-Type':type,...headers});res.end(type.startsWith('application/json')?JSON.stringify(body):body);}
  function allowed(req){const now=Date.now();for(const[k,v]of buckets)if(v.expires<now)buckets.delete(k);const key=clientKey(req,trustProxy);if(!buckets.has(key)&&buckets.size>=10000)return false;const b=buckets.get(key)||{expires:now+60000,count:0};b.count++;buckets.set(key,b);return b.count<=30;}
  const server=http.createServer(async(req,res)=>{
@@ -21,6 +21,7 @@ function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false}=
    if(req.method==='GET'&&seo.GUIDES[u.pathname])return send(res,200,seo.guideHtml(u.pathname),'text/html; charset=utf-8',{'Cache-Control':'public, max-age=1800, stale-while-revalidate=86400'});
    if(req.method==='GET'&&u.pathname==='/national-client.js')return send(res,200,CLIENT,'application/javascript; charset=utf-8',{'Cache-Control':'public, max-age=300, stale-while-revalidate=3600'});
    if(req.method==='GET'&&u.pathname==='/healthz')return send(res,200,{process:'up',national_data_ready:false});
+   if(req.method==='GET'&&u.pathname==='/api/national/impact')return send(res,200,metrics?await metrics.totals():{savings:null,analytics:null});
    if(req.method==='GET'&&u.pathname==='/api/national/status')return send(res,200,await engine.status());
    if(req.method!=='POST'||u.pathname!=='/api/national/lookup')return send(res,404,{message:'Not found.'});
    if(req.headers.origin){let host;try{const origin=new URL(req.headers.origin);if(!['https:','http:'].includes(origin.protocol))throw new Error();host=origin.host;}catch{return send(res,403,{message:'Invalid origin.'});}if(host!==req.headers.host)return send(res,403,{message:'Origin not permitted.'});}
@@ -30,7 +31,7 @@ function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false}=
    // This handler is also mounted on the gateway, so bound its body-read time
    // independently of the standalone server's transport settings.
    const bodyTimer=setTimeout(()=>req.destroy(),10000);bodyTimer.unref();
-   try{const body=await readJson(req,8192);clearTimeout(bodyTimer);return send(res,200,await engine.lookup(body));}finally{clearTimeout(bodyTimer);active--;}
+   try{const body=await readJson(req,8192);clearTimeout(bodyTimer);const result=await engine.lookup(body);if(metrics)try{await metrics.record(result.resident_report,body.request_id);}catch{console.error("Potential savings could not be recorded");}return send(res,200,result);}finally{clearTimeout(bodyTimer);active--;}
   }catch(e){const expected=e instanceof EvidenceError||e instanceof HttpInputError;if(!res.headersSent)send(res,expected?e.status:500,{error:expected?e.code:'INTERNAL_ERROR',message:expected?e.message:'Lookup failed. No water-safety conclusion was made.'});else res.end();}
  });
  server.headersTimeout=10000;server.requestTimeout=25000;server.keepAliveTimeout=5000;

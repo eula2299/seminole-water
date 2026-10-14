@@ -344,8 +344,8 @@ function offersFor({state,county,supply,provider,tests=[]}){
   const s=norm(supply||'unknown');
   return OFFERS.filter(o=>o.state===state&&countyMatches(o,county)&&(o.supply||[]).some(x=>norm(x)===s||norm(x)==='unknown')&&providerMatches(o,provider)&&tests.some(t=>testMatches(o,t)));
 }
-function chooseCheapest({state,county,supply,provider,tests=[]}){
-  const allMatches=offersFor({state,county,supply,provider,tests});
+function chooseCheapest({state,county,supply,provider,tests=[]},catalogueMatches){
+  const allMatches=catalogueMatches||offersFor({state,county,supply,provider,tests});
   const hasPrice=o=>o.price!==null&&o.price!==undefined&&String(o.price).trim()!==''&&Number.isFinite(Number(o.price));
   const priced=allMatches.filter(hasPrice);
   const byTest=[];
@@ -354,8 +354,8 @@ function chooseCheapest({state,county,supply,provider,tests=[]}){
     const contacts=allMatches.filter(o=>testMatches(o,test)&&!hasPrice(o)).sort((a,b)=>(Number(a.priority)||100)-(Number(b.priority)||100)||a.provider.localeCompare(b.provider)||a.id.localeCompare(b.id));
     if(!options.length&&!contacts.length)continue;
     const best=options[0]||null;
-    const privatePaid=best?options.find(o=>o.price_kind==='published'&&o.price>best.price):null;
-    const bestMax=best?(Number.isFinite(Number(best.price_max))?Number(best.price_max):best.price):null;
+    const privatePaid=best?(Number(best.price)===0?options.find(o=>/^published/.test(o.price_kind)&&Number(o.price)>0):options[1]):null;
+    const bestMax=best?(best.price_max!=null&&Number.isFinite(Number(best.price_max))?Number(best.price_max):best.price):null;
     const savingLow=privatePaid&&bestMax!==null?Math.max(0,privatePaid.price-bestMax):null;
     const savingHigh=privatePaid&&best?Math.max(0,privatePaid.price-best.price):null;
     byTest.push({

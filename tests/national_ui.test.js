@@ -13,7 +13,7 @@ test('national client compiles without inline event handlers or unsafe HTML inse
   assert.doesNotThrow(()=>new Function(CLIENT));
   assert.doesNotMatch(CLIENT,/innerHTML|insertAdjacentHTML|document\.write/);
   assert.doesNotMatch(HTML,/\son(?:click|submit|change)=/);
-  assert.match(HTML,/href="\/seminole"/);
+  assert.doesNotMatch(HTML,/Seminole County|href="\/seminole"/);
   assert.match(HTML,/href="\/account\.html"/);
   assert.match(HTML,/name="supply_type"/);
   assert.match(HTML,/value="private-well"/);

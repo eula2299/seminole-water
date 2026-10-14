@@ -223,6 +223,7 @@ const server = http.createServer(async (req, res) => {
  try {
   const target = new URL(req.url, 'http://localhost');
   const pathname = target.pathname;
+  if (['/seminole','/seminole/','/index.html','/city.html'].includes(pathname)) return redirect(res,'/');
   if(['/api/service-areas/sync','/api/epa/reload','/api/local/reload'].includes(pathname)) return json(res,404,{error:'Not found.'});
   if(pathname==='/api/diagnostics/geocode'&&!rateAllowed(req,'diagnostic-geocode',10,60000))return json(res,429,{error:'Please try again later.'});
   if (pathname === '/healthz' && req.method === 'GET') return json(res,coreReady?200:503,{process:'up',core:coreReady?'ready':'starting',release:'national-integration',commit:process.env.RAILWAY_GIT_COMMIT_SHA||null});
@@ -230,7 +231,6 @@ const server = http.createServer(async (req, res) => {
     national.server.emit('request',req,res);
     return;
   }
-  if (pathname === '/seminole' || pathname === '/seminole/') req.url='/';
   if ((pathname === '/api/impact' || pathname === '/api/community/impact') && req.method === 'GET') return json(res, 404, { error: 'Not found.' });
 
   if (pathname === '/api/community/config' && req.method === 'GET') {
@@ -463,7 +463,7 @@ const server = http.createServer(async (req, res) => {
         freeOptions: body.free_options,
         recordsTranslated: body.records_translated,
         gapsIdentified: body.gaps_identified,
-        verifiedSavings: body.verified_savings,
+        verifiedSavings: 0,
         moneyBarrierReduced: body.money_barrier_reduced,
         informationBarrierReduced: body.information_barrier_reduced,
         neglectGapExposed: body.neglect_gap_exposed,

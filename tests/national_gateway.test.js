@@ -97,10 +97,10 @@ test('production gateway preserves national, local, and account routes', { timeo
       assert.equal(data.household_laboratory_data, 'not-connected');
     });
 
-    await t.test('legacy Seminole and account pages remain reachable', async () => {
-      const local = await fetch(base + '/seminole');
-      assert.equal(local.status, 200);
-      assert.match(await local.text(), /SEMINOLE COUNTY WATER CHECK/);
+    await t.test('legacy county page redirects nationwide and accounts remain reachable', async () => {
+      const local = await fetch(base + '/seminole', {redirect:'manual'});
+      assert.equal(local.status, 302);
+      assert.equal(local.headers.get('location'), '/');
       const account = await fetch(base + '/account.html');
       assert.equal(account.status, 200);
       assert.match(await account.text(), /Sign in with Google or email/);
