@@ -60,7 +60,7 @@ function residentClient(){
   p(decision,plan.testing_decision?.plain||'A sample from your own faucet is the only way to know what is in your exact household water.','clean-copy');
   if((plan.what_to_ask_for||[]).length){const ask=n('div',undefined,'clean-ask');ask.append(n('strong','Ask the lab for:'));const ul=n('ul');for(const item of plan.what_to_ask_for){ul.append(n('li',item.name));}ask.append(ul);decision.append(ask);}section.append(decision);
 
-  const moneyBox=n('section',undefined,'clean-money');moneyBox.append(n('span','MONEY','clean-label'));
+  const moneyBox=n('section',undefined,'clean-money');
   const low=money.potential_savings_low,high=money.potential_savings_high;
   if(low!=null&&high!=null){moneyBox.append(n('span','Potential testing savings identified','clean-label'),n('strong',(low===high?'$'+Number(low).toLocaleString('en-US'):'$'+Number(low).toLocaleString('en-US')+'–$'+Number(high).toLocaleString('en-US'))));p(moneyBox,'on '+(money.savings_test||'a comparable test')+' compared with the next published price we verified.','money-copy');}
   else if(money.free_first_step){moneyBox.append(n('strong','$0 first step'));p(moneyBox,'We found a useful free step before you spend money.','money-copy');}
