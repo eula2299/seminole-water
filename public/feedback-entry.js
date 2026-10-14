@@ -6,7 +6,7 @@
 
   function addNavLink() {
     const nav = document.querySelector('.resident-nav .nav-links, .community-topbar-links');
-    if (!nav || nav.querySelector('[data-feedback-link]')) return;
+    if (!nav || nav.querySelector('[data-feedback-link], a[href="/feedback.html"]')) return;
     nav.insertAdjacentHTML('beforeend', `<a data-feedback-link href="/feedback.html">${t('Feedback', 'Comentarios')}</a>`);
   }
 

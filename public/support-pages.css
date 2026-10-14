@@ -1,0 +1,77 @@
+/* Contact and feedback share a deliberate form layout, isolated from the lookup grid. */
+.support-page { background: #f5f9f8; }
+.support-page a { color: #17665d; text-underline-offset: 3px; }
+.support-page .community-topbar {
+  max-width: 1120px;
+  min-height: 84px;
+  padding: 18px 24px;
+  border-bottom: 1px solid #dce7e3;
+}
+.support-page .community-topbar > a:first-child { font-size: 21px; letter-spacing: -.7px; }
+.support-page .community-topbar-links { gap: 8px; }
+.support-page .community-topbar-links > a { font-size: 14px; padding: 8px 11px; }
+.support-page .community-topbar-links > a[aria-current="page"] { color: #075b50; background: #e4f0ec; border-radius: 8px; }
+.support-page .community-page.wide { max-width: 1120px; padding: 48px 24px 40px; }
+.support-page .community-page-header { margin: 0 0 32px; max-width: 780px; }
+.support-page .community-page-header .section-kicker { font-size: 12px; color: #17665d; letter-spacing: .15em; margin: 0 0 14px; }
+.support-page .community-page-header h1 { font-size: clamp(32px, 4vw, 46px); line-height: 1.12; letter-spacing: -.04em; margin: 0 0 16px; text-wrap: balance; }
+.support-page .community-page-header > p:last-child { margin: 0; font-size: 17px; line-height: 1.65; max-width: 710px; }
+.support-page .support-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 28px; align-items: start; }
+.support-page .community-card { min-width: 0; padding: 32px; border-radius: 20px; box-shadow: 0 10px 32px rgba(15,62,54,.04); }
+.support-page .community-form { grid-template-columns: minmax(0, 1fr); align-items: start; gap: 24px; }
+.support-page .community-form > *, .support-page .preferences-grid > * { min-width: 0; }
+.support-page .community-form label { font-size: 14px; font-weight: 650; line-height: 1.5; gap: 8px; }
+.support-page .community-form input:not([type="checkbox"]):not([type="radio"]),
+.support-page .community-form select,
+.support-page .community-form textarea { font-size: 16px; font-weight: 400; line-height: 1.5; padding: 12px 14px; border-radius: 10px; min-width: 0; }
+.support-page .community-form textarea { min-height: 176px; resize: vertical; }
+.support-page .community-form textarea::placeholder { color: #75847f; opacity: 1; }
+.support-page .preferences-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.support-page [hidden] { display: none !important; }
+.support-page .newsletter-options { background: #f6faf8; padding: 18px; gap: 20px; }
+.support-page #contact-newsletter-options > label:last-child { grid-column: 1 / -1; }
+.support-page .checkbox-line { gap: 10px !important; font-weight: 400 !important; }
+.support-page .checkbox-line input { flex: 0 0 auto; width: 18px !important; height: 18px; min-height: 18px; margin: 2px 0 0; padding: 0; accent-color: #087f6d; }
+.support-page .community-form .primary-button { width: auto; justify-self: start; min-height: 48px; padding: 12px 26px; font-size: 16px; border-radius: 10px; box-shadow: 0 5px 14px rgba(8,127,109,.12); }
+.support-page .form-status { margin: 0; font-size: 14px; }
+.support-page .form-status:empty { display: none; }
+.support-page .rating-fieldset { min-width: 0; }
+.support-page .rating-fieldset legend { font-size: 14px; font-weight: 650; margin-bottom: 10px; }
+.support-page .rating-options { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.support-page .rating-options label { min-height: 80px; padding: 10px 5px; grid-template-rows: 32px 18px; gap: 5px !important; border-radius: 10px; }
+.support-page .rating-options label { position: relative; }
+.support-page .rating-options input { width: 1px; height: 1px; min-height: 0; padding: 0; left: 50%; top: 50%; }
+.support-page .rating-options span { font-size: 16px; }
+.support-page .rating-options small { font-size: 11px; }
+.support-page .contact-aside, .support-page .feedback-aside { padding: 28px; border-radius: 20px; background: #123f38; }
+.support-page .support-aside-kicker { font-size: 10px; font-weight: 750; letter-spacing: .12em; margin: 0 0 16px; color: #a8d8c9; }
+.support-page .support-layout aside h2 { font-size: 25px; line-height: 1.25; letter-spacing: -.025em; margin: 0 0 16px; }
+.support-page .support-layout aside p:not(.support-aside-kicker), .support-page .support-layout aside li { font-size: 14px; line-height: 1.65; color: #d4e5de; }
+.support-page .support-layout aside ul { margin: 22px 0; padding-left: 18px; }
+.support-page .support-layout aside li + li { margin-top: 10px; }
+.support-page .support-layout aside .support-urgent { border-top: 1px solid #3c6058; padding-top: 20px; margin: 22px 0 0; font-size: 13px !important; }
+.support-footer { max-width: 1072px; margin: 0 auto; padding: 24px 0 36px; border-top: 1px solid #dce7e3; display: flex; justify-content: space-between; gap: 16px; font-size: 13px; color: #60736f; }
+.support-footer a { text-decoration: none; font-weight: 650; }
+.support-skip { position: absolute; left: 24px; top: -80px; background: white; padding: 12px 18px; z-index: 10; border-radius: 8px; }
+.support-skip:focus { top: 12px; }
+.support-page a:focus-visible, .support-page button:focus-visible { outline: 3px solid #449b88; outline-offset: 4px; }
+@media (max-width: 850px) {
+  .support-page .support-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .support-page .support-layout aside { padding: 28px; }
+  .support-footer { margin: 0 24px; }
+}
+@media (max-width: 620px) {
+  .support-page .community-topbar { padding: 18px 20px; flex-wrap: wrap; gap: 14px; }
+  .support-page .community-topbar-links { width: 100%; gap: 4px; justify-content: flex-start; }
+  .support-page .community-topbar-links > a:not(.community-account-link) { display: block; }
+  .support-page .community-topbar-links > a { font-size: 13px; padding: 7px 9px; }
+  .support-page .community-page.wide { padding: 32px 16px; }
+  .support-page .community-page-header { margin-bottom: 24px; }
+  .support-page .community-page-header > p:last-child { font-size: 16px; }
+  .support-page .community-card { padding: 22px 18px; border-radius: 16px; }
+  .support-page .preferences-grid { grid-template-columns: minmax(0, 1fr); }
+  .support-page .community-form { gap: 22px; }
+  .support-page .rating-options { gap: 6px; }
+  .support-page .community-form .primary-button { width: 100%; justify-self: stretch; }
+  .support-footer { margin: 0 20px; flex-direction: column; gap: 10px; }
+}

@@ -8,29 +8,33 @@
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/roadmap.css">
   <link rel="stylesheet" href="/community.css">
+  <link rel="stylesheet" href="/support-pages.css?v=20261014-1">
   <script src="/analytics.js"></script>
 </head>
-<body>
+<body class="support-page">
+  <a class="support-skip" href="#main-content">Skip to content</a>
   <nav class="community-topbar" aria-label="Main navigation">
     <a href="/">IsMyWaterOK</a>
     <div class="community-topbar-links">
       <a href="/">Water check</a>
-      <a href="/city.html">Cities</a>
-      <a href="/issue.html">Health guides</a>
-      <a href="/feedback.html">Feedback</a>
+      <a href="/contact.html" aria-current="page">Contact</a>
+      <a href="/feedback.html" data-feedback-link>Feedback</a>
+      <a href="/account.html" class="community-account-link">Account</a>
     </div>
   </nav>
-  <main class="community-page wide" id="main-content">
+  <main class="community-page wide" id="main-content" tabindex="-1">
     <header class="community-page-header">
       <p class="section-kicker">CONTACT US</p>
       <h1>Send us a message.</h1>
-      <p>Questions, corrections, community partnerships, media requests, or general messages are welcome. For product feedback or a confusing water result, use the dedicated <a href="/feedback.html">feedback page</a>.</p>
+      <p>Have a question, a correction, or an idea for working together? We’d like to hear from you. For help with a water result or the website, visit our <a href="/feedback.html">feedback page</a>.</p>
     </header>
-    <div class="contact-layout">
+    <div class="contact-layout support-layout">
       <section class="community-card">
         <form id="contact-form" class="community-form">
-          <label><span>Name</span><input id="contact-name" autocomplete="name" maxlength="100" required></label>
-          <label><span>Email</span><input id="contact-email" type="email" autocomplete="email" required></label>
+          <div class="preferences-grid">
+            <label><span>Name</span><input id="contact-name" autocomplete="name" maxlength="100" required></label>
+            <label><span>Email</span><input id="contact-email" type="email" autocomplete="email" required></label>
+          </div>
           <label><span>What is this about?</span><select id="contact-subject"><option>General question</option><option>Water data or correction</option><option>Community partnership</option><option>School or research</option><option>Media request</option><option>Website feedback</option></select></label>
           <label><span>Message</span><textarea id="contact-message" rows="7" maxlength="5000" required placeholder="How can we help?"></textarea></label>
           <label class="honeypot" aria-hidden="true"><span>Website</span><input id="contact-website" tabindex="-1" autocomplete="off"></label>
@@ -47,19 +51,21 @@
         </form>
       </section>
       <aside class="contact-aside">
-        <h2>What happens after you send it?</h2>
-        <p>Your message is delivered privately to the IsMyWaterOK team. The receiving email address is not displayed on this page.</p>
+        <p class="support-aside-kicker">A DIRECT LINE TO THE TEAM</p>
+        <h2>We’re here to help.</h2>
+        <p>Your message goes privately to the IsMyWaterOK team. Leave your email so we can get back to you.</p>
         <ul>
           <li>Your email is used so we can reply.</li>
           <li>You only join water-update emails if you check the opt-in box.</li>
           <li>You can unsubscribe from update emails at any time.</li>
         </ul>
-        <p>For an urgent water outage, boil-water notice, or utility emergency, use your official local utility instead of this form.</p>
+        <p class="support-urgent">For an urgent water outage, boil-water notice, or utility emergency, use your official local utility instead of this form.</p>
       </aside>
     </div>
   </main>
+  <footer class="support-footer"><a href="/">Back to the water check <span aria-hidden="true">→</span></a><span>Water answers, close to home · nationwide</span></footer>
   <script src="/community.js"></script>
-  <script src="/feedback-entry.js"></script>
+  <script src="/feedback-entry.js?v=20261014-1"></script>
   <script src="/page-tracking.js"></script>
 </body>
 </html>
