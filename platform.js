@@ -227,7 +227,7 @@ const server = http.createServer(async (req, res) => {
   if(['/api/service-areas/sync','/api/epa/reload','/api/local/reload'].includes(pathname)) return json(res,404,{error:'Not found.'});
   if(pathname==='/api/diagnostics/geocode'&&!rateAllowed(req,'diagnostic-geocode',10,60000))return json(res,429,{error:'Please try again later.'});
   if (pathname === '/healthz' && req.method === 'GET') return json(res,coreReady?200:503,{process:'up',core:coreReady?'ready':'starting',release:'national-integration',commit:process.env.RAILWAY_GIT_COMMIT_SHA||null});
-  if (['/','/national','/national/','/water-details','/national-client.js','/robots.txt','/sitemap.xml'].includes(pathname) || nationalSeo.GUIDES[pathname] || pathname.startsWith('/api/national/')) {
+  if (['/','/national','/national/','/water-details','/national-client.js','/water-voice.js','/water-voice-worklet.js','/water-voice.css','/robots.txt','/sitemap.xml'].includes(pathname) || nationalSeo.GUIDES[pathname] || pathname.startsWith('/api/national/')) {
     national.server.emit('request',req,res);
     return;
   }
@@ -515,6 +515,8 @@ function shutdown(signal) {
 }
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
+
+server.on('upgrade',(req,socket,head)=>{if(!national.voice.upgrade(req,socket,head))socket.destroy();});
 
 server.listen(PORT, () => {
   console.log(`IsMyWaterOK community gateway running at http://localhost:${PORT}; water core on ${CORE_PORT}.`);

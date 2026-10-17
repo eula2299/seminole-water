@@ -16,7 +16,8 @@ function createNationalRuntime(){
  const warehouse=createWarehouse();
  const metrics=require('./public_metrics').createPublicMetrics();
  const engine=withServiceLines(createEngine({warehouse,archive:createArchive(),context:createContext(),propertyContext:createPropertyContext(),advisories:createAdvisories()}));
- const server=createServer({engine,metrics,trustProxy:!!process.env.RAILWAY_ENVIRONMENT_ID});
+ const voice=require('./voice').createVoiceService();
+ const server=createServer({engine,metrics,voice,trustProxy:!!process.env.RAILWAY_ENVIRONMENT_ID});
  let worker=null,closed=false,timer=null;
  async function refresh(){
   if(closed||worker||!process.env.DATABASE_URL||process.env.NATIONAL_SYNC_ENABLED==='false')return;
@@ -30,6 +31,6 @@ function createNationalRuntime(){
  // must not prevent future imports. The worker skips sources checked this week.
  timer=setInterval(refresh,60*60*1000);timer.unref();
  const ready=warehouse.initialize().then(()=>refresh()).catch(error=>console.error('National warehouse initialization unavailable:',error.code||error.name));
- return {server,engine,ready,async close(){closed=true;clearInterval(timer);worker?.kill('SIGTERM');await warehouse.close();await metrics.close();}};
+ return {server,engine,voice,ready,async close(){voice.close();closed=true;clearInterval(timer);worker?.kill('SIGTERM');await warehouse.close();await metrics.close();}};
 }
 module.exports={createNationalRuntime};

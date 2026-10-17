@@ -1,0 +1,6 @@
+// Streams mono PCM16 at 16 kHz, including when the device uses 44.1/48 kHz.
+class WaterMic extends AudioWorkletProcessor {
+ constructor(){super();this.phase=0;this.sum=0;this.count=0;this.buffer=new Int16Array(2048);this.offset=0;}
+ process(inputs){const channel=inputs[0]?.[0];if(!channel)return true;const ratio=sampleRate/16000;for(const value of channel){this.sum+=value;this.count++;this.phase++;if(this.phase>=ratio){const sample=Math.max(-1,Math.min(1,this.sum/this.count));this.buffer[this.offset++]=Math.round(sample*(sample<0?32768:32767));this.phase-=ratio;this.sum=0;this.count=0;if(this.offset===this.buffer.length){this.port.postMessage(this.buffer.buffer,[this.buffer.buffer]);this.buffer=new Int16Array(2048);this.offset=0;}}}return true;}
+}
+registerProcessor('water-mic',WaterMic);

@@ -51,7 +51,8 @@
   "dependencies": {
     "google-auth-library": "^10.9.1",
     "nodemailer": "^9.0.3",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "ws": "8.22.0"
   },
   "engines": {
     "node": ">=22"
