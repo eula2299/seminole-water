@@ -7,6 +7,7 @@ const TESTING_HELP='https://www.epa.gov/ground-water-and-drinking-water/forms/co
 const SERVICE_LINES='https://www.epa.gov/ground-water-and-drinking-water/planning-and-developing-service-line-inventory';
 const WELL='https://www.cdc.gov/drinking-water/safety/guidelines-for-testing-well-water.html';
 const {chooseCheapest}=require('./access_catalog');
+const {stateAgencies}=require('../public/water-actions-data');
 
 function finite(value){
   if(value===null||value===undefined||String(value).trim()==='')return null;
@@ -75,7 +76,7 @@ function targetedTests(privateWell,findings,serviceLine){
 }
 
 function cleanPlace(value){return String(value||'').replace(/\s+/g,' ').trim();}
-function webSearch(query){return 'https://www.google.com/search?q='+encodeURIComponent(query);}
+
 function concernLabel(tests,findings,serviceLine,privateWell){
   if(privateWell)return tests.length?tests.map(x=>x.name).slice(0,3).join(', '):'routine well-water testing';
   const line=String(serviceLine?.records?.[0]?.material||'').toLowerCase();
@@ -148,6 +149,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
   const verifiedOptions=chooseCheapest({
     state,
     county,
+    city:data.address?.components?.city||data.address?.city||'',
     supply:privateWell?'private-well':'public',
     provider:servingProvider,
     tests:accessTargets
@@ -155,14 +157,14 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
   const bestVerified=verifiedOptions.find(x=>x.best)||null;
   const pricedMatchCount=verifiedOptions.filter(x=>x.best).length;
   const paidOptions=verifiedOptions.flatMap(match=>(match.all_options||[]).filter(option=>Number(option.price)>0).map(option=>({
-    test:match.test,id:option.id,provider:option.provider,price:option.price,price_max:option.price_max??null,price_label:option.price_label,
-    url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind
+    test:match.test,id:option.id,organization:option.organization||option.provider,provider:option.provider,price:option.price,price_max:option.price_max??null,price_label:option.price_label,
+    url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind,location_label:option.location_label||null,delivery:option.delivery||null,shipping_included:option.shipping_included??null
   }))).sort((a,b)=>a.price-b.price||a.test.localeCompare(b.test)||a.provider.localeCompare(b.provider));
   const freeVerifiedOptions=verifiedOptions.flatMap(match=>(match.all_options||[]).filter(option=>Number(option.price)===0).map(option=>({
-    test:match.test,id:option.id,provider:option.provider,price:0,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind
+    test:match.test,id:option.id,organization:option.organization||option.provider,provider:option.provider,price:0,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind,location_label:option.location_label||null,delivery:option.delivery||null,shipping_included:option.shipping_included??null
   })));
   const contactOptions=verifiedOptions.flatMap(match=>(match.contact_options||[]).map(option=>({
-    test:match.test,id:option.id,provider:option.provider,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind,location_label:option.location_label||null
+    test:match.test,id:option.id,organization:option.organization||option.provider,provider:option.provider,price_label:option.price_label,url:option.url,phone:option.phone||null,note:option.note,verified_at:option.verified_at,price_kind:option.price_kind,location_label:option.location_label||null,delivery:option.delivery||null,shipping_included:option.shipping_included??null
   })));
   const savingsCandidates=verifiedOptions.map(match=>({
     test:match.test,
@@ -171,20 +173,20 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
   })).filter(x=>x.low!=null&&x.high!=null).sort((a,b)=>b.high-a.high||b.low-a.low||a.test.localeCompare(b.test));
   const bestSavings=savingsCandidates[0]||null;
   const optionCount=paidOptions.length+freeVerifiedOptions.length+contactOptions.length;
-  const uniqueOptionProviders=new Set([...paidOptions,...freeVerifiedOptions,...contactOptions].map(x=>x.id||x.provider));
+  const uniqueOptionProviders=new Set([...paidOptions,...freeVerifiedOptions,...contactOptions].map(x=>x.organization||x.provider));
   const providerOptionCount=uniqueOptionProviders.size;
   const currentNotice=(data.current_advisories?.records||[])[0]||null;
   const provider=contacts[0]||null;
   const issues=(compliance||[]).flatMap(x=>x.issues||[]);
   const elevated=findings.find(x=>x.comparison?.above_reference)||findings.find(x=>x.detected)||null;
-  const localSearch=(q)=>'https://www.google.com/search?q='+encodeURIComponent([q,county,state].filter(Boolean).join(' '));
+  const agency=stateAgencies[state];
   const addressLabel=cleanPlace(data.address?.matched_address||'this address');
   const providerName=servingProvider||provider?.name||'your water provider';
   const concern=concernLabel(tests,findings,serviceLine,privateWell);
   const countyLabel=cleanPlace(county)||'your county';
-  const providerOfficialSearch=webSearch('"'+providerName+'" official water utility '+state);
-  const countyWellSearch=webSearch('"'+countyLabel+'" '+state+' health department private well water testing');
-  const personalizedWhy=plainWhy({privateWell,providerName,county:countyLabel,tests,findings,serviceLine,currentNotice});
+  const providerOfficialSearch=provider?.phone?'tel:'+provider.phone.replace(/[^+0-9]/g,''):(agency?.url||LOCAL);
+  const countyWellSearch=agency?.url||WELL;
+  const personalizedWhy=data.address?.status==='matched'?plainWhy({privateWell,providerName,county:countyLabel,tests,findings,serviceLine,currentNotice}):'These testing options use the state and water source you entered. They do not depend on a public-record match for your street address.';
   const householdTestDecision=currentNotice
     ? {label:'Follow the notice first',plain:'Do not wait for a private lab result before following an active water notice. After the notice is resolved, test only if the utility or your household situation still leaves an important question.'}
     : privateWell
@@ -197,12 +199,12 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
     : 'Hi, I live at '+addressLabel+'. My water provider appears to be '+providerName+'. I am checking '+concern+'. Do you offer free testing, a service-line check, or another no-cost option before I pay a private lab?';
 
   const steps=[];
-  const add=(title,cost,why,url,kind='official')=>steps.push({title,cost,why,url,kind});
+  const add=(title,cost,why,url,kind='official')=>steps.push({title,cost,why:why+(kind==='provider-specific'&&!provider?.phone?' The linked state program can help you reach the correct utility.':''),url,kind});
 
   if(currentNotice){
     add('Follow the current water notice','$0','This matters before anything else. Follow the issuing utility or health department instructions first.',currentNotice.source_url||LOCAL);
   }else if(privateWell){
-    add('Ask '+countyLabel+' about free or reduced-cost well testing','$0 to check','We are starting locally because county health programs can be much cheaper than private lab packages. Use this search to open the county or state health department result for your area.',countyWellSearch,'local-search');
+    add('Ask '+countyLabel+' about free or reduced-cost well testing','$0 to check','Use your state drinking-water program to reach the local well-health team and ask about testing assistance. Direct mail-in lab options and prices are also listed below.',countyWellSearch,'official');
     add('Ask what your well actually needs tested','$0','CDC recommends a basic yearly well panel and your local health department can add tests based on local risks.',WELL);
   }else if(exactLine){
     add('Use the free pipe record we already found','$0','You already have a public record for the pipe serving this property, so do not pay just to learn the recorded material.',exactLine.source_url||SERVICE_LINES);
@@ -225,7 +227,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
 
   let primary=steps[0]||{title:'Start with the free information already available',cost:'$0',why:'Use the public records first.',url:LOCAL};
   let fallback=steps.slice(1,3);
-  if(!currentNotice&&bestVerified?.best&&(privateWell||bestVerified.best.price===0)){
+  if(!currentNotice&&bestVerified?.best&&(bestVerified.best.price===0||(privateWell&&bestVerified.best.delivery!=='mail-in'))){
     const b=bestVerified.best;
     primary={
       title:b.provider,
@@ -274,7 +276,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
       paid:paidOptions,
       free:freeVerifiedOptions,
       contact_first:contactOptions,
-      best_paid:paidOptions[0]||null,
+      best_paid:paidOptions.find(x=>x.shipping_included!==false)||paidOptions[0]||null,
       best_free:freeVerifiedOptions[0]||null,
       total_count:optionCount,
       provider_count:providerOptionCount,
@@ -312,7 +314,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
       potential_savings_range:bestVerified?.potential_savings_range||null,
       comparison_provider:bestVerified?.comparison_provider||null,
       comparison_price:bestVerified?.comparison_price??null,
-      wording:pricedMatchCount?'Cheapest published option in our verified catalog for this exact test and location.':'We could not verify a comparable published price for the exact test needed, so we will not pretend we found the cheapest option.'
+      wording:pricedMatchCount?'Cheapest published option in our verified catalog for this exact test and location.':'Use the direct laboratory options below to arrange the tests in your plan.'
     },
     passport,
     personalized:{
@@ -323,7 +325,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
       concern,
       why_this_is_for_you:personalizedWhy,
       call_script:callScript,
-      local_lab_search:webSearch('state certified drinking water laboratory '+countyLabel+' '+state+' '+(tests.map(x=>x.name).slice(0,3).join(' ')||concern)),
+      local_lab_search:paidOptions[0]?.url||LABS,
       local_help_search:privateWell?countyWellSearch:providerOfficialSearch,
       how_it_works:[
         'We use your address to identify your water source, provider and local public records.',

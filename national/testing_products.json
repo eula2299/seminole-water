@@ -1,0 +1,383 @@
+[
+  {
+    "id": "tapscore-lead-and-copper-water-test",
+    "state": "*",
+    "counties": [
+      "*"
+    ],
+    "supply": [
+      "public",
+      "private-well",
+      "unknown"
+    ],
+    "tests": [
+      "Lead at the tap"
+    ],
+    "provider": "Tap Score / SimpleLab \u2014 Lead and Copper Water Test",
+    "organization": "Tap Score / SimpleLab",
+    "price": 55.0,
+    "price_label": "$55 \u00b7 shipping included",
+    "price_kind": "published",
+    "scope": "mail-in-laboratory",
+    "delivery": "mail-in",
+    "location_label": "U.S. mail-in laboratory testing",
+    "url": "https://mytapscore.com/products/lead-and-copper-water-test",
+    "phone": "510-485-9396",
+    "note": "Lead and copper laboratory analysis; includes a pH strip. Sampling materials, analysis and standard U.S. shipping both ways included. Follow the lab\u2019s collection and shipping instructions. Taxes or shipping upgrades may add cost.",
+    "verified_at": "2026-10-17",
+    "available": true,
+    "comparable": false,
+    "shipping_included": true,
+    "price_feed": "https://mytapscore.com/products/lead-and-copper-water-test.js",
+    "product_id": 8652471110,
+    "variant_id": 30210308678,
+    "shipping_source": "https://mytapscore.com/blogs/tips-for-taps/shipping-with-tap-score"
+  },
+  {
+    "id": "tapscore-total-arsenic-water-test",
+    "state": "*",
+    "counties": [
+      "*"
+    ],
+    "supply": [
+      "public",
+      "private-well",
+      "unknown"
+    ],
+    "tests": [
+      "Arsenic"
+    ],
+    "provider": "Tap Score / SimpleLab \u2014 Total Arsenic Water Test",
+    "organization": "Tap Score / SimpleLab",
+    "price": 79.0,
+    "price_label": "$79 \u00b7 shipping included",
+    "price_kind": "published",
+    "scope": "mail-in-laboratory",
+    "delivery": "mail-in",
+    "location_label": "U.S. mail-in laboratory testing",
+    "url": "https://mytapscore.com/products/total-arsenic-water-test",
+    "phone": "510-485-9396",
+    "note": "Total arsenic laboratory analysis. Sampling materials, analysis and standard U.S. shipping both ways included. Follow the lab\u2019s collection and shipping instructions. Taxes or shipping upgrades may add cost.",
+    "verified_at": "2026-10-17",
+    "available": true,
+    "comparable": false,
+    "shipping_included": true,
+    "price_feed": "https://mytapscore.com/products/total-arsenic-water-test.js",
+    "product_id": 4742786908257,
+    "variant_id": 32664053776481,
+    "shipping_source": "https://mytapscore.com/blogs/tips-for-taps/shipping-with-tap-score"
+  },
+  {
+    "id": "tapscore-nitrates-water-test",
+    "state": "*",
+    "counties": [
+      "*"
+    ],
+    "supply": [
+      "public",
+      "private-well",
+      "unknown"
+    ],
+    "tests": [
+      "Nitrate"
+    ],
+    "provider": "Tap Score / SimpleLab \u2014 Nitrate Water Test",
+    "organization": "Tap Score / SimpleLab",
+    "price": 115.0,
+    "price_label": "$115 \u00b7 shipping included",
+    "price_kind": "published",
+    "scope": "mail-in-laboratory",
+    "delivery": "mail-in",
+    "location_label": "U.S. mail-in laboratory testing",
+    "url": "https://mytapscore.com/products/nitrates-water-test",
+    "phone": "510-485-9396",
+    "note": "Nitrate laboratory analysis; overnight return shipping included. Sampling materials, analysis and standard U.S. shipping both ways included. Follow the lab\u2019s collection and shipping instructions. Taxes or shipping upgrades may add cost.",
+    "verified_at": "2026-10-17",
+    "available": true,
+    "comparable": false,
+    "shipping_included": true,
+    "price_feed": "https://mytapscore.com/products/nitrates-water-test.js",
+    "product_id": 650799480860,
+    "variant_id": 7768981274652,
+    "shipping_source": "https://mytapscore.com/blogs/tips-for-taps/shipping-with-tap-score"
+  },
+  {
+    "id": "tapscore-coliform-bacteria-water-test",
+    "state": "*",
+    "counties": [
+      "*"
+    ],
+    "supply": [
+      "public",
+      "private-well",
+      "unknown"
+    ],
+    "tests": [
+      "Total coliform and E. coli"
+    ],
+    "provider": "Tap Score / SimpleLab \u2014 Coliform and E. coli Water Test",
+    "organization": "Tap Score / SimpleLab",
+    "price": 99.0,
+    "price_label": "$99 \u00b7 shipping included",
+    "price_kind": "published",
+    "scope": "mail-in-laboratory",
+    "delivery": "mail-in",
+    "location_label": "U.S. mail-in laboratory testing",
+    "url": "https://mytapscore.com/products/coliform-bacteria-water-test",
+    "phone": "510-485-9396",
+    "note": "Presence/absence laboratory analysis of total coliform and E. coli; overnight return shipping included. Sampling materials, analysis and standard U.S. shipping both ways included. Follow the lab\u2019s collection and shipping instructions. Taxes or shipping upgrades may add cost.",
+    "verified_at": "2026-10-17",
+    "available": true,
+    "comparable": false,
+    "shipping_included": true,
+    "price_feed": "https://mytapscore.com/products/coliform-bacteria-water-test.js",
+    "product_id": 10638872902,
+    "variant_id": 43831939398,
+    "shipping_source": "https://mytapscore.com/blogs/tips-for-taps/shipping-with-tap-score"
+  },
+  {
+    "id": "tapscore-metals-and-minerals-water-test",
+    "state": "*",
+    "counties": [
+      "*"
+    ],
+    "supply": [
+      "public",
+      "private-well",
+      "unknown"
+    ],
+    "tests": [
+      "Cadmium",
+      "Lead at the tap",
+      "Arsenic"
+    ],
+    "provider": "Tap Score / SimpleLab \u2014 Metals and Minerals Water Test",
+    "organization": "Tap Score / SimpleLab",
+    "price": 125.0,
+    "price_label": "$125 \u00b7 shipping included",
+    "price_kind": "published",
+    "scope": "mail-in-laboratory",
+    "delivery": "mail-in",
+    "location_label": "U.S. mail-in laboratory testing",
+    "url": "https://mytapscore.com/products/metals-and-minerals-water-test",
+    "phone": "510-485-9396",
+    "note": "35-analyte metals and minerals panel, including cadmium, arsenic and lead. One kit covers these listed metals together. Sampling materials, analysis and standard U.S. shipping both ways included. Follow the lab\u2019s collection and shipping instructions. Taxes or shipping upgrades may add cost.",
+    "verified_at": "2026-10-17",
+    "available": true,
+    "comparable": false,
+    "shipping_included": true,
+    "price_feed": "https://mytapscore.com/products/metals-and-minerals-water-test.js",
+    "product_id": 6651652964534,
+    "variant_id": 39577335562422,
+    "shipping_source": "https://mytapscore.com/blogs/tips-for-taps/shipping-with-tap-score"
+  },
+  {
+    "id": "tapscore-essential-well-water-test",
+    "state": "*",
+    "counties": [
+      "*"
+    ],
+    "supply": [
+      "public",
+      "private-well",
+      "unknown"
+    ],
+    "tests": [
+      "pH and total dissolved solids",
+      "Total coliform and E. coli",
+      "Nitrate",
+      "Arsenic",
+      "Lead at the tap",
+      "Cadmium"
+    ],
+    "provider": "Tap Score / SimpleLab \u2014 Essential Well Water Test",
+    "organization": "Tap Score / SimpleLab",
+    "price": 209.0,
+    "price_label": "$209 \u00b7 shipping included",
+    "price_kind": "published",
+    "scope": "mail-in-laboratory",
+    "delivery": "mail-in",
+    "location_label": "U.S. mail-in laboratory testing",
+    "url": "https://mytapscore.com/products/essential-well-water-test",
+    "phone": "510-485-9396",
+    "note": "54-analyte well panel, including bacteria, nitrate, metals, pH and total dissolved solids. One kit covers the listed tests together. Sampling materials, analysis and standard U.S. shipping both ways included. Follow the lab\u2019s collection and shipping instructions. Taxes or shipping upgrades may add cost.",
+    "verified_at": "2026-10-17",
+    "available": true,
+    "comparable": false,
+    "shipping_included": true,
+    "price_feed": "https://mytapscore.com/products/essential-well-water-test.js",
+    "product_id": 766375723105,
+    "variant_id": 8211158892641,
+    "shipping_source": "https://mytapscore.com/blogs/tips-for-taps/shipping-with-tap-score"
+  },
+  {
+    "id": "tapscore-pfas-water-test",
+    "state": "*",
+    "counties": [
+      "*"
+    ],
+    "supply": [
+      "public",
+      "private-well",
+      "unknown"
+    ],
+    "tests": [
+      "PFAS panel including PFOA/PFOS"
+    ],
+    "provider": "Tap Score / SimpleLab \u2014 PFAS Water Test",
+    "organization": "Tap Score / SimpleLab",
+    "price": 335.0,
+    "price_label": "$335 \u00b7 shipping included",
+    "price_kind": "published",
+    "scope": "mail-in-laboratory",
+    "delivery": "mail-in",
+    "location_label": "U.S. mail-in laboratory testing",
+    "url": "https://mytapscore.com/products/pfas-water-test",
+    "phone": "510-485-9396",
+    "note": "18 PFAS, including PFOA and PFOS, by EPA 537.1. This is a household screening service; arrange any required regulatory certification with the lab. Sampling materials, analysis and standard U.S. shipping both ways included. Follow the lab\u2019s collection and shipping instructions. Taxes or shipping upgrades may add cost.",
+    "verified_at": "2026-10-17",
+    "available": true,
+    "comparable": false,
+    "shipping_included": true,
+    "price_feed": "https://mytapscore.com/products/pfas-water-test.js",
+    "product_id": 3880353431649,
+    "variant_id": 29243769651297,
+    "shipping_source": "https://mytapscore.com/blogs/tips-for-taps/shipping-with-tap-score"
+  },
+  {
+    "id": "ntl-fast-lead",
+    "state": "*",
+    "counties": [
+      "*"
+    ],
+    "supply": [
+      "public",
+      "private-well",
+      "unknown"
+    ],
+    "tests": [
+      "Lead at the tap"
+    ],
+    "provider": "National Testing Laboratories \u2014 Fast Lead (single sample)",
+    "organization": "National Testing Laboratories",
+    "price": 75.0,
+    "price_label": "$75 + shipping",
+    "price_kind": "published",
+    "scope": "mail-in-laboratory",
+    "delivery": "mail-in",
+    "location_label": "U.S. mail-in laboratory testing",
+    "url": "https://watercheck.com/products/fast-lead",
+    "phone": "800-458-3330",
+    "note": "Single-sample lead laboratory test.Return shipping is extra; arrange the required shipping with the lab before collecting water. This is the test price, not the delivered total.",
+    "verified_at": "2026-10-17",
+    "available": true,
+    "comparable": false,
+    "shipping_included": false,
+    "price_feed": "https://watercheck.com/products/fast-lead.js",
+    "product_id": 191629525018,
+    "variant_id": 2836318584858,
+    "shipping_source": "https://watercheck.com/pages/faq"
+  },
+  {
+    "id": "ntl-arsenic",
+    "state": "*",
+    "counties": [
+      "*"
+    ],
+    "supply": [
+      "public",
+      "private-well",
+      "unknown"
+    ],
+    "tests": [
+      "Arsenic"
+    ],
+    "provider": "National Testing Laboratories \u2014 Arsenic",
+    "organization": "National Testing Laboratories",
+    "price": 75.0,
+    "price_label": "$75 + shipping",
+    "price_kind": "published",
+    "scope": "mail-in-laboratory",
+    "delivery": "mail-in",
+    "location_label": "U.S. mail-in laboratory testing",
+    "url": "https://watercheck.com/products/arsenic",
+    "phone": "800-458-3330",
+    "note": "Arsenic laboratory test.Return shipping is extra; arrange the required shipping with the lab before collecting water. This is the test price, not the delivered total.",
+    "verified_at": "2026-10-17",
+    "available": true,
+    "comparable": false,
+    "shipping_included": false,
+    "price_feed": "https://watercheck.com/products/arsenic.js",
+    "product_id": 191630147610,
+    "variant_id": 2836319305754,
+    "shipping_source": "https://watercheck.com/pages/faq"
+  },
+  {
+    "id": "ntl-quick-nitrate-and-nitrite",
+    "state": "*",
+    "counties": [
+      "*"
+    ],
+    "supply": [
+      "public",
+      "private-well",
+      "unknown"
+    ],
+    "tests": [
+      "Nitrate"
+    ],
+    "provider": "National Testing Laboratories \u2014 Quick Nitrate & Nitrite Water Test Kit",
+    "organization": "National Testing Laboratories",
+    "price": 79.0,
+    "price_label": "$79 + shipping",
+    "price_kind": "published",
+    "scope": "mail-in-laboratory",
+    "delivery": "mail-in",
+    "location_label": "U.S. mail-in laboratory testing",
+    "url": "https://watercheck.com/products/quick-nitrate-and-nitrite",
+    "phone": "800-458-3330",
+    "note": "Nitrate and nitrite laboratory test. Next-day sample return required.Return shipping is extra; arrange the required shipping with the lab before collecting water. This is the test price, not the delivered total.",
+    "verified_at": "2026-10-17",
+    "available": true,
+    "comparable": false,
+    "shipping_included": false,
+    "price_feed": "https://watercheck.com/products/quick-nitrate-and-nitrite.js",
+    "product_id": 191629590554,
+    "variant_id": 2836318617626,
+    "shipping_source": "https://watercheck.com/pages/faq"
+  },
+  {
+    "id": "ntl-quick-bacteria",
+    "state": "*",
+    "counties": [
+      "*"
+    ],
+    "supply": [
+      "public",
+      "private-well",
+      "unknown"
+    ],
+    "tests": [
+      "Total coliform and E. coli"
+    ],
+    "provider": "National Testing Laboratories \u2014 Quick Bacteria (presence/absence test)",
+    "organization": "National Testing Laboratories",
+    "price": 75.0,
+    "price_label": "$75 + shipping",
+    "price_kind": "published",
+    "scope": "mail-in-laboratory",
+    "delivery": "mail-in",
+    "location_label": "U.S. mail-in laboratory testing",
+    "url": "https://watercheck.com/products/quick-bacteria",
+    "phone": "800-458-3330",
+    "note": "Total coliform and E. coli presence/absence laboratory test. Next-day sample return required.Return shipping is extra; arrange the required shipping with the lab before collecting water. This is the test price, not the delivered total.",
+    "verified_at": "2026-10-17",
+    "available": true,
+    "comparable": false,
+    "shipping_included": false,
+    "price_feed": "https://watercheck.com/products/quick-bacteria.js",
+    "product_id": 191629459482,
+    "variant_id": 2836318519322,
+    "shipping_source": "https://watercheck.com/pages/faq"
+  }
+]
