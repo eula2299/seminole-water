@@ -154,7 +154,7 @@ function buildAccessPlan(data,{privateWell=false,findings=[],compliance=[],provi
     provider:servingProvider,
     tests:accessTargets
   });
-  const bestVerified=verifiedOptions.find(x=>x.best)||null;
+  const bestVerified=verifiedOptions.find(x=>x.best?.price===0)||verifiedOptions.find(x=>x.best)||null;
   const pricedMatchCount=verifiedOptions.filter(x=>x.best).length;
   const paidOptions=verifiedOptions.flatMap(match=>(match.all_options||[]).filter(option=>Number(option.price)>0).map(option=>({
     test:match.test,id:option.id,organization:option.organization||option.provider,provider:option.provider,price:option.price,price_max:option.price_max??null,price_label:option.price_label,

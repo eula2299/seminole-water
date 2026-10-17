@@ -52,3 +52,10 @@ test('backup testing endpoint works without geocoding or evidence-service availa
   assert.equal((await fetch(base+'/api/national/testing-options?state=ZZ')).status,400);
  }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
 });
+
+test('a matched free test remains first even when other contaminants have only paid options',()=>{
+ const plan=buildAccessPlan({address:{status:'matched',state:'IL',components:{city:'Chicago'}},systems:[]},{findings:[{name:'Nitrate',detected:true},{name:'Arsenic',detected:true},{name:'Lead',detected:true}]});
+ assert.equal(plan.primary_path.title,'Chicago Department of Water Management — free lead test kit');
+ assert.equal(plan.primary_path.test,'Lead at the tap');
+ assert.equal(plan.option_inventory.best_paid.price,55);
+});
