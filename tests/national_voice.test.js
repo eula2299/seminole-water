@@ -17,3 +17,12 @@ test('expired reports and missing consent never open a provider call',async t=>{
 test('server ends calls at the time limit and releases the report',async t=>{const h=await harness(t,{durationMs:30}),token=h.voice.remember(sample),c=await h.client();c.send(JSON.stringify({type:'start',token,consent:true}));await until(()=>h.ups.length);h.ups[0].receive({setupComplete:{}});await once(c,'close');assert.equal(h.ups[0].readyState,3);assert.equal(h.voice._reports.get(token).active,false);});
 test('daily capacity fails closed without creating paid fallback calls',async t=>{const h=await harness(t,{maxDaily:0}),token=h.voice.remember(sample),c=await h.client();c.send(JSON.stringify({type:'start',token,consent:true}));const [m]=await once(c,'message');assert.match(JSON.parse(m).message,/Calls are paused for today/);await once(c,'close');assert.equal(h.ups.length,0);});
 test('cross-origin websocket connections are rejected',async t=>{const h=await harness(t);const c=new WebSocket(h.origin.replace('http:','ws:')+'/api/national/voice',{origin:'https://attacker.example'});const [error]=await once(c,'error');assert.match(error.message,/403/);assert.equal(h.ups.length,0);});
+
+test('microphone resampling preserves one second and clips PCM safely across device rates',()=>{
+ const vm=require('node:vm'),fs=require('node:fs');
+ for(const rate of [16000,44100,48000]){let Processor;const packets=[];const sandbox={AudioWorkletProcessor:class{constructor(){this.port={postMessage:b=>packets.push(new Int16Array(b))};}},sampleRate:rate,registerProcessor:(name,p)=>{Processor=p;}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../public/water-voice-worklet.js'),'utf8'),sandbox);
+ const p=new Processor();for(let left=rate;left>0;left-=128)p.process([[new Float32Array(Math.min(128,left)).fill(2)]]);
+ assert.equal(packets.reduce((n,a)=>n+a.length,0)+p.offset,16000);assert.ok(packets.every(a=>a.every(x=>x===32767)));
+ }
+});

@@ -45,7 +45,7 @@
     ctx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:16000});await ctx.resume();if(stopped||current!==attempt)return;
     const acquired=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});
     if(stopped||current!==attempt){acquired.getTracks().forEach(t=>t.stop());return;}stream=acquired;
-    await ctx.audioWorklet.addModule('/water-voice-worklet.js?v=1');if(stopped||current!==attempt)return;
+    await ctx.audioWorklet.addModule('/water-voice-worklet.js?v=2');if(stopped||current!==attempt)return;
     source=ctx.createMediaStreamSource(stream);processor=new AudioWorkletNode(ctx,'water-mic');silent=ctx.createGain();silent.gain.value=0;source.connect(processor);processor.connect(silent);silent.connect(ctx.destination);
     socket=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/api/national/voice');
     const ws=socket;status.textContent='Connecting your AI water-results guide…';
