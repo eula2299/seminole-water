@@ -39,5 +39,5 @@ test('GA4 follows exact introduction and aggregate savings appear only in the ac
  assert.equal(plan.children[1].textContent,'Here is what to do next');
  const savings=plan.children.filter(x=>x.className==='clean-money aggregate-savings');
  assert.equal(savings.length,1);assert.match(savings[0].textContent,/Potential testing savings identified.*\$25/);
- assert.match(savings[0].textContent,/not confirmed purchases/);
+ assert.match(savings[0].textContent,/do not mean someone bought a test or saved this money/);
 });

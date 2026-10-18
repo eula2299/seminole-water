@@ -4,12 +4,12 @@ const BASE='https://www.ismywaterok.com';
 const GUIDES=Object.freeze({
   '/water-quality-by-address':{
     title:'Water Quality by Address: Check What Matters at Your Home',
-    description:'Enter your address to connect public water records, pipe information, local environmental context, health meaning, and lower-cost next steps.',
+    description:'Enter your address to connect public water records, pipe information, nearby pollution records, possible health effects, and lower-cost next steps.',
     h1:'Water quality by address',
-    intro:'Water quality is not just a citywide number. Your provider, service line, plumbing, well status, and nearby conditions can all change what matters at one home.',
+    intro:'Water quality is not just a citywide number. Your provider, pipe to your home, indoor pipes, private well, and nearby conditions can all change what matters at one home.',
     sections:[
-      ['What an address check can tell you','IsMyWaterOK uses the address to identify the likely water source and provider, connect available testing and infrastructure records, and explain what deserves attention. It does not claim that public records are a laboratory sample from your tap.'],
-      ['Why this is more useful than a ZIP-code score','A ZIP code can contain multiple water systems, private wells, different pipe materials, and very different housing. Address-level matching lets the site narrow the evidence and the next step without pretending to know what has not been measured.'],
+      ['What an address check can tell you','IsMyWaterOK uses the address to identify the likely water source and provider, connect available water-test and pipe records, and explain what deserves attention. It does not claim that public records are a laboratory sample from your tap.'],
+      ['Why this is more useful than a ZIP-code score','A ZIP code can contain multiple water systems, private wells, different pipe materials, and very different housing. Using your address helps us find the records and next steps that fit your home. It cannot tell us what a home test would find.'],
       ['What happens after the check','The result shows what stands out, what is still unknown, what to do next, and the lowest-cost useful path we can verify before you buy testing you may not need.']
     ]
   },
@@ -19,8 +19,8 @@ const GUIDES=Object.freeze({
     h1:'Is my tap water safe?',
     intro:'No website can certify the water coming from your faucet without a household sample. But you can check current notices, your likely water provider, historical test records, pipe information, and what a home test should focus on.',
     sections:[
-      ['Start with current instructions','A boil-water or do-not-drink notice matters more than an old compliance result. IsMyWaterOK checks connected notice sources where available and tells you when today’s status still needs confirmation.'],
-      ['Then check the source and pipes','Utility records describe the water system, while service lines and household plumbing can change what reaches the tap. Lead is the clearest example of why both layers matter.'],
+      ['Start with current instructions','A boil-water or do-not-drink notice matters more than an old record of a water-system issue. IsMyWaterOK checks connected notice sources where available and tells you when today’s status still needs confirmation.'],
+      ['Then check the source and pipes','Utility records describe the water system, while pipes to and inside your home can change what reaches the tap. Lead is the clearest example of why both layers matter.'],
       ['Test only when it adds new evidence','A home test is most useful when it answers something public records cannot: what is actually in water collected from your faucet or private well.']
     ]
   },
@@ -28,10 +28,10 @@ const GUIDES=Object.freeze({
     title:'Lead in Drinking Water: Check Pipes, Records, and Testing Options',
     description:'Check whether lead-related pipe or water records matter for your address and find the lowest-cost useful next step before paying for testing.',
     h1:'Lead in drinking water',
-    intro:'Lead often comes from service lines or household plumbing rather than the water source itself. That makes the address and pipe record especially important.',
+    intro:'Lead often comes from pipes to or inside your home rather than the water source itself. That makes the address and pipe record especially important.',
     sections:[
-      ['Why the home matters','Two homes served by the same utility can have different lead risk because their service lines, fixtures, solder, and plumbing history differ.'],
-      ['What to check first','Look for an address-level service-line record and ask the matched water provider whether it offers free line identification or household sampling before paying a private laboratory.'],
+      ['Why the home matters','Two homes served by the same utility can have different lead risk because their pipes, faucets, and the metals joining their pipes differ.'],
+      ['What to check first','Look for a record of the pipe to your home and ask the matched water provider whether it offers help checking pipe materials or free home testing before paying a private laboratory.'],
       ['When a tap test helps','If pipe material is lead, galvanized, unknown, or the household has a specific concern, a properly collected lead-at-the-tap sample can answer what public records cannot.']
     ]
   },
@@ -41,8 +41,8 @@ const GUIDES=Object.freeze({
     h1:'Private well water testing',
     intro:'Private wells are different from public water: the homeowner is responsible for knowing what is in the well, and nearby utility records do not describe the household supply.',
     sections:[
-      ['The basic yearly checks','Routine private-well screening commonly includes bacteria, nitrate, pH, and total dissolved solids. Local geology, flooding, septic systems, agriculture, and nearby contamination can justify additional tests.'],
-      ['Do not automatically buy the largest panel','A broad package can cost much more than a targeted plan. IsMyWaterOK starts with the tests supported by the address context and checks county or state options before private lab pricing.'],
+      ['The basic yearly checks','Yearly well tests commonly includes bacteria, nitrate, pH (how acidic the water is), and total dissolved solids (minerals and other dissolved material). Local geology, flooding, septic systems, agriculture, and nearby contamination can justify additional tests.'],
+      ['Do not automatically buy the largest test package','A broad package can cost much more than a targeted plan. IsMyWaterOK starts with the tests supported by the address context and checks county or state options before private lab pricing.'],
       ['Use local health programs','County and state health departments may offer lower-cost sampling, test kits, or guidance. Availability and price vary, so the site tries to route the household to the local program rather than a generic national page.']
     ]
   },
@@ -50,18 +50,18 @@ const GUIDES=Object.freeze({
     title:'PFAS in Drinking Water: What the Records Mean for Your Home',
     description:'Understand PFAS water records, when household testing adds value, and how to compare targeted PFAS testing instead of buying unrelated panels.',
     h1:'PFAS in drinking water',
-    intro:'PFAS results can come from utility monitoring, source-water studies, or environmental sampling. The location and sampling scope matter before treating a result as evidence about one household.',
+    intro:'PFAS results can come from utility monitoring, tests of water before treatment, or environmental sampling. The location and sample location matter before treating a result as evidence about one household.',
     sections:[
-      ['Read the sampling scope','A PFAS detection in a nearby environmental sample is not the same as a tap-water result. Utility monitoring is more relevant to served customers, but household plumbing and exact distribution conditions still matter.'],
+      ['Check where the sample was taken','A PFAS detection in a nearby environmental sample is not the same as a tap-water result. Utility monitoring is more relevant to served customers, but household plumbing and exact distribution conditions still matter.'],
       ['Use targeted testing','If PFAS is the concern, compare PFAS-specific certified testing instead of paying for a large unrelated water package.'],
-      ['Keep the claim proportional to the evidence','IsMyWaterOK labels whether the record comes from the serving system, source water, nearby environment, or the property so the user can see what the result actually establishes.']
+      ['Know what the result can tell you','IsMyWaterOK labels whether the record comes from the water provider, water before treatment, nearby land or water, or the home itself so the user can see what the result actually establishes.']
     ]
   },
   '/arsenic-in-water':{
     title:'Arsenic in Water: What to Check at Your Address',
     description:'See when arsenic records are relevant to your water source, what they mean, and when targeted household or well testing makes sense.',
     h1:'Arsenic in water',
-    intro:'Arsenic can occur naturally in groundwater and is especially important for some private wells. Public-water systems also monitor regulated contaminants, but historical system results are not the same as a current tap sample.',
+    intro:'Arsenic can occur naturally in groundwater and is especially important for some private wells. Public-water systems also monitor substances covered by drinking-water rules, but historical system results are not the same as a current tap sample.',
     sections:[
       ['Private wells need their own evidence','A nearby well or geology signal can make arsenic worth testing, but only a sample from the household well establishes the concentration in that water.'],
       ['Public-system records need dates and scope','The site keeps the provider, sampling period, unit, and comparison context together instead of reducing everything to a vague safe/unsafe label.'],

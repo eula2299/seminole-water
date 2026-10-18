@@ -14,12 +14,12 @@
   const heading=el('div');heading.append(el('p','LET’S TALK IT THROUGH','voice-kicker'));
   const title=el('h2','Let’s work out your next step.');title.id='water-voice-title';heading.append(title,el('p','Talk about your results, testing costs, renting, unanswered requests, or helping neighbors. Your AI guide can prepare the next step with you. No typing needed.','voice-intro'));top.append(orb,heading);
   const consent=el('div',null,'voice-consent');
-  consent.append(el('p','Your microphone audio, water findings, and public help options go to Google Gemini. Google may use them to improve its products, including human review. We do not send your street address or save the conversation.'));
+  consent.append(el('p','Google Gemini receives what you say, the water results, and the help options shown here. Google may use this information to improve its products, and people at Google may review it. We do not send your street address or save this conversation.'));
   const terms=el('a','How Google uses this data');terms.href='https://ai.google.dev/gemini-api/terms#unpaid-services';terms.target='_blank';terms.rel='noopener noreferrer';consent.append(terms);
-  const checkLabel=el('label',null,'voice-check'),check=document.createElement('input');check.type='checkbox';checkLabel.append(check,el('span','I’m 18 or older, using this from the United States, and agree to share audio and water findings with Google for this call.'));consent.append(checkLabel);
+  const checkLabel=el('label',null,'voice-check'),check=document.createElement('input');check.type='checkbox';checkLabel.append(check,el('span','I’m 18 or older, using this from the United States, and agree to share what I say and these water results with Google for this call.'));consent.append(checkLabel);
   const actions=el('div',null,'voice-actions'),start=button('Start voice call','voice-start'),mute=button('Mute microphone','voice-secondary'),end=button('End call','voice-end'),next=button('Show next steps ↓','voice-secondary');
   start.disabled=true;mute.hidden=end.hidden=true;actions.append(start,mute,end,next);
-  const status=el('p','Up to 3 minutes per call.','voice-status');status.setAttribute('role','status');
+  const status=el('p','Up to 15 minutes per call.','voice-status');status.setAttribute('role','status');
   const captions=el('details',null,'voice-captions'),log=el('div',null,'voice-log');captions.append(el('summary','Show conversation captions'),log);
   box.append(top,consent,actions,status,captions,el('p','AI can make mistakes. These are public records, not a test of your own water.','voice-note'));parent.append(box);
   let selectedLane=null;
@@ -53,7 +53,8 @@
     processor.port.onmessage=event=>{if(ready&&!stopped&&!muted&&ws.readyState===WebSocket.OPEN){if(ws.bufferedAmount>131072){stop('Your connection is too slow for a voice call. Please try again.');return;}ws.send(event.data);}};
     ws.onopen=()=>{if(stopped||current!==attempt)return;ws.send(JSON.stringify({type:'start',token:data.voice_token,consent:true,lane:selectedLane}));};
     ws.onmessage=event=>{if(stopped||current!==attempt)return;let m;try{m=JSON.parse(event.data);}catch{return stop('The voice connection was interrupted.');}
-     if(m.type==='ready'){ready=true;mute.hidden=false;mute.textContent='Mute microphone';mute.setAttribute('aria-pressed','false');box.classList.add('is-live');deadline=Date.now()+m.seconds*1000;const tick=()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));status.textContent=(muted?'Microphone muted':'Call connected — speak naturally')+' · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0')+' left';if(!left)stop('Your three-minute call has ended. Choose Show next steps for testing options and potential savings.');};tick();clock=setInterval(tick,500);}
+     if(m.type==='ready'){clearInterval(clock);ready=true;mute.hidden=false;mute.textContent='Mute microphone';mute.setAttribute('aria-pressed','false');box.classList.add('is-live');deadline=Date.now()+m.seconds*1000;const tick=()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));status.textContent=(!ready?'Reconnecting your call…':muted?'Microphone muted':'Call connected — speak naturally')+' · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0')+' left';if(!left)stop('Your call has ended. Your drafts, testing options, and next steps are still here.');};tick();clock=setInterval(tick,500);}
+     else if(m.type==='reconnecting'){ready=false;status.textContent='Reconnecting your call…';}
      else if(m.type==='audio')play(m.data,m.rate);
      else if(m.type==='action')window.WaterActions?.present(m.action);
      else if(m.type==='caption')caption(m.speaker,m.text);

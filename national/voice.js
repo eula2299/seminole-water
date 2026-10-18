@@ -19,7 +19,7 @@ function voiceReport(data){
   practical_help:actions.context(data),
   advisory_guidance:cap(r.advisories?.records,5).map(a=>({title:text(a.title,250),guidance:text(a.guidance),issued_at:text(a.issued_at,50),source_is_recent:a.source_is_recent===true,household_applies_verified:a.household_applies_verified===true}))};
 }
-const INSTRUCTIONS=`You are the IsMyWaterOK AI water-help guide. You help with the whole water situation: understanding results, affordable testing, paying for testing or qualifying repairs, renting, unanswered requests, appointments, and helping neighbors. Do not restrict yourself to toxin results or send the caller away just because they ask about money or housing. Answer relevant practical questions, ask ONE useful follow-up at a time, and do the preparation work. Use friendly fifth-grade language and short spoken turns (usually 20–45 words). Respond in the caller's language. If a concern is unclear, ask what they need help getting done; do not list all five choices in every reply.
+const INSTRUCTIONS=`You are the IsMyWaterOK AI water-help guide. You help with the whole water situation: understanding results, affordable testing, paying for testing or qualifying repairs, renting, unanswered requests, appointments, and helping neighbors. Do not restrict yourself to toxin results or send the caller away just because they ask about money or housing. Answer relevant practical questions, ask ONE useful follow-up at a time, and do the preparation work. Explain scientific words the first time you use them. Say “amount in the water” instead of “concentration,” “pipe to the home” instead of “service line,” and “who can get help” instead of “eligibility.” Keep exact chemical names and numbers when discussing a result. Use friendly fifth-grade language and short spoken turns (usually 20–45 words). Respond in the caller's language. If a concern is unclear, ask what they need help getting done; do not list all five choices in every reply.
 Choose the action by the requested job, not by a household trait: requests for free or affordable testing use afford even when the caller rents; requests to a landlord use rent; unanswered requests use followup. Prefer a supplied free testing program over paid kits when its published coverage fits. Give its actual direct link or phone route, not an invented email. Ask exactly one question per turn. Do not stack multiple questions or repeatedly offer help instead of doing the requested work. If the caller asks for a draft, call prepare_water_action before replying. Use get_water_help to read the relevant verified options and instructions. Use prepare_water_action early to put a useful editable draft on the page. Write a tailored draft from what the caller actually said, using [your name] and [your address] placeholders. Do not just tell them to scroll and do it themselves. The user can review, edit, print, download, or explicitly open an email draft. You cannot send, submit, pay, or book anything; never say you did. An appointment is a request until the office confirms it. Say a draft is ready only after the tool succeeds. Ask whether they want a change to it.
 Evidence: Measurements are public records, not a test of this household. Preserve exact values, units, detection qualifiers, dates and sampling scope. Nondetection is not zero, and missing data never proves safe water. Source-water samples are before treatment. Unknown pipe material is not confirmed lead. Explain supplied health information as education, without diagnosing or prescribing. Do not give definitive legal advice or promise repairs, funding or eligibility. General practical guidance is welcome, but local laws, coverage, contact details, opening hours, deadlines and programs need supplied sources. Use the dated catalog options and explain what must be confirmed. A free pipe inventory lookup is not a free laboratory test. Assistance referrals are not grants. USDA home repair assistance is not a general testing subsidy; eligibility is decided by USDA. No web browsing is available in this call; never claim to have just searched the web.
 Personalization: Ask optional practical questions such as whether the person rents, what they asked for, or whether they need testing versus repairs. Never infer identity, income, race, tenancy or health from an address. Do not ask for names, exact addresses, income amounts, account numbers or medical history. Financial documents and detailed eligibility information belong with the official organization, not this call. A neighbor sheet must only use public report facts, never the caller's private details. Explain what remains unknown.
@@ -39,13 +39,13 @@ function toolAction(report,call){
  if(lane!=='neighbors'&&typeof call.args.draft_body==='string'){
   const allowed=new Set([...report.practical_help.options.map(x=>x.url),...report.practical_help.sources.map(x=>x.url),...report.practical_help.findings.map(x=>x.source_url)]);
   plan.body=call.args.draft_body.slice(0,6000).replace(/https?:\/\/[^\s<>]+/g,u=>allowed.has(u)?u:'[check the source link below]');
-  plan.body+='\n\nEvidence note: Public records do not establish the concentration in this home’s water. Nothing has been sent or booked.';
+  plan.body+='\n\nPlease note: These public records do not tell us the amount in this home’s water. Nothing has been sent or booked.';
   if(typeof call.args.subject==='string')plan.subject=call.args.subject.replace(/[\r\n]/g,' ').slice(0,180);
  }
  return {action:plan};
 }
 
-function createVoiceService({env=process.env,now=Date.now,upstreamFactory=url=>new WebSocket(url,{handshakeTimeout:15000,maxPayload:1048576}),durationMs=180000,maxConcurrent=2,maxDaily=200}={}){
+function createVoiceService({env=process.env,now=Date.now,upstreamFactory=url=>new WebSocket(url,{handshakeTimeout:15000,maxPayload:1048576}),durationMs=900000,maxConcurrent=2,maxDaily=200}={}){
  const reports=new Map(),rates=new Map(),calls=new Set(); let day='',daily=0;
  const wss=new WebSocketServer({noServer:true,maxPayload:8192,perMessageDeflate:false});
  const enabled=()=>env.GEMINI_VOICE_ENABLED==='true'&&!!env.GEMINI_API_KEY;
@@ -62,12 +62,42 @@ function createVoiceService({env=process.env,now=Date.now,upstreamFactory=url=>n
   wss.handleUpgrade(req,socket,head,client=>connect(client));return true;
  }
  function connect(client){
-  let upstream=null,entry=null,ready=false,finished=false,bytes=0,toolCount=0,selectedLane=null,windowStart=now();
+  let upstream=null,entry=null,ready=false,finished=false,bytes=0,toolCount=0,selectedLane=null,windowStart=now(),resumeHandle=null,reconnects=0,started=false,deadline=0;
   const timers=[];
   const send=value=>{if(client.readyState===WebSocket.OPEN){if(client.bufferedAmount>1048576){finish('The connection is too slow. Please try again.');return;}client.send(JSON.stringify(value));}};
   function finish(message){if(finished)return;finished=true;if(message&&client.readyState===WebSocket.OPEN)client.send(JSON.stringify({type:'ended',message}));timers.forEach(clearTimeout);if(entry)entry.active=false;calls.delete(finish);if(upstream){upstream.removeAllListeners('message');upstream.close();timers.push(setTimeout(()=>upstream.terminate(),1000).unref());}client.close();setTimeout(()=>client.terminate(),1000).unref();}
   calls.add(finish);
-  timers.push(setTimeout(()=>{if(!ready)finish('The AI could not connect. Please try again later.');},20000).unref());
+  timers.push(setTimeout(()=>{if(!started)finish('The AI could not connect. Please try again later.');},20000).unref());
+  function reconnect(){
+   if(finished)return;
+   if(!resumeHandle||++reconnects>3||now()>=deadline)return finish('The call ended. Your drafts and next steps are still here.');
+   ready=false;send({type:'reconnecting'});const previous=upstream;upstream=null;
+   previous.close();timers.push(setTimeout(()=>previous.terminate(),1000).unref());openUpstream();
+  }
+  function openUpstream(){
+    const model=env.GEMINI_VOICE_MODEL||'gemini-3.1-flash-live-preview';
+    try{upstream=upstreamFactory('wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key='+encodeURIComponent(env.GEMINI_API_KEY));}catch{return finish('The voice service is unavailable.');}
+    const connection=upstream;
+    timers.push(setTimeout(()=>{if(!finished&&upstream===connection&&!ready)finish('The call could not reconnect. Please start another call.');},20000).unref());
+    upstream.on('open',()=>{if(finished||upstream!==connection)return;upstream.send(JSON.stringify({setup:{sessionResumption:resumeHandle?{handle:resumeHandle}:{},contextWindowCompression:{slidingWindow:{}},model:'models/'+model,generationConfig:{responseModalities:['AUDIO'],maxOutputTokens:2048,speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:'Kore'}}}},systemInstruction:{parts:[{text:INSTRUCTIONS+'\nREPORT DATA: '+JSON.stringify(entry.report)}]},inputAudioTranscription:{},outputAudioTranscription:{},tools:TOOLS}}));});
+    upstream.on('message',raw=>{
+     if(finished||upstream!==connection)return;let m;try{m=JSON.parse(raw.toString());}catch{return finish('The voice connection was interrupted.');}
+     if(!m||typeof m!=='object')return finish('The voice connection was interrupted.');
+     if(m.error)return finish('The call could not connect. Please try again later.');
+     if(m.sessionResumptionUpdate){const update=m.sessionResumptionUpdate;resumeHandle=update.resumable&&typeof update.newHandle==='string'?update.newHandle:null;}
+     if(m.goAway&&resumeHandle){reconnect();return;}
+     if(m.setupComplete){ready=true;if(started){send({type:'ready',seconds:Math.max(0,(deadline-now())/1000)});return;}started=true;deadline=now()+durationMs;send({type:'ready',seconds:durationMs/1000});timers.push(setTimeout(()=>finish('Your call has ended. Your drafts, testing options, and next steps are still here.'),durationMs).unref());upstream.send(JSON.stringify({clientContent:{turns:[{role:'user',parts:[{text:selectedLane?'I chose: '+actions.labels[selectedLane]+'. Please use prepare_water_action now to put a first draft on the page, then ask one question to personalize it.':"Start with exactly one short greeting: 'Hi, I’m your AI water-help guide. What would you like help getting done?' Then stop and listen. Do not ask a second question."}]}],turnComplete:true}}));}
+     if(Array.isArray(m.toolCall?.functionCalls)){const responses=[];for(const call of m.toolCall.functionCalls.slice(0,8)){const result=++toolCount>64?{error:'Continue the conversation; no more draft operations this call.'}:toolAction(entry.report,call);if(result.action)send({type:'action',action:result.action});responses.push({id:call.id,name:call.name,response:result.action?{prepared:true,lane:result.action.lane,title:result.action.title,not_sent:true,next_contacts:result.action.options.slice(0,3).map(x=>({title:x.title,url:x.url,phone:x.phone||null}))}:result});}if(upstream.readyState===WebSocket.OPEN)upstream.send(JSON.stringify({toolResponse:{functionResponses:responses}}));}
+     const s=m.serverContent;if(!s)return;
+     if(s.interrupted)send({type:'interrupted'});
+     for(const p of s.modelTurn?.parts||[]){const a=p.inlineData;if(a?.data&&/^audio\/pcm/.test(a.mimeType||''))send({type:'audio',data:a.data,rate:24000});}
+     if(s.inputTranscription?.text)send({type:'caption',speaker:'You',text:s.inputTranscription.text.slice(0,3000)});
+     if(s.outputTranscription?.text)send({type:'caption',speaker:'AI guide',text:s.outputTranscription.text.slice(0,3000)});
+     if(s.turnComplete)send({type:'turn-complete'});
+    });
+    upstream.on('error',()=>{if(!finished&&upstream===connection){if(started&&resumeHandle)reconnect();else finish('The call could not connect. Please try again later.');}});
+    upstream.on('close',()=>{if(!finished&&upstream===connection){if(started&&resumeHandle)reconnect();else finish('The call ended. Your results and next steps are still here.');}});
+  }
   client.on('error',()=>finish());client.on('close',()=>finish());
   client.on('message',(raw,binary)=>{
    if(finished)return;
@@ -81,24 +111,7 @@ function createVoiceService({env=process.env,now=Date.now,upstreamFactory=url=>n
     entry.active=true;entry.calls++;daily++;selectedLane=actions.labels[msg.lane]?msg.lane:null;
     // Fixed provider/model, server-owned instructions and evidence. The client
     // cannot redirect this socket, change models, inject tools or replace data.
-    const model=env.GEMINI_VOICE_MODEL||'gemini-3.1-flash-live-preview';
-    try{upstream=upstreamFactory('wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key='+encodeURIComponent(env.GEMINI_API_KEY));}catch{return finish('The voice service is unavailable.');}
-    upstream.on('open',()=>{if(finished)return;upstream.send(JSON.stringify({setup:{model:'models/'+model,generationConfig:{responseModalities:['AUDIO'],maxOutputTokens:2048,speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:'Kore'}}}},systemInstruction:{parts:[{text:INSTRUCTIONS+'\nREPORT DATA: '+JSON.stringify(entry.report)}]},inputAudioTranscription:{},outputAudioTranscription:{},tools:TOOLS}}));});
-    upstream.on('message',raw=>{
-     if(finished)return;let m;try{m=JSON.parse(raw.toString());}catch{return finish('The voice connection was interrupted.');}
-     if(!m||typeof m!=='object')return finish('The voice connection was interrupted.');
-     if(m.error)return finish('The call could not connect. Please try again later.');
-     if(m.setupComplete){ready=true;send({type:'ready',seconds:durationMs/1000});timers.push(setTimeout(()=>finish('Your three-minute call has ended. You can find testing options and potential savings in Show next steps.'),durationMs).unref());upstream.send(JSON.stringify({clientContent:{turns:[{role:'user',parts:[{text:selectedLane?'I chose: '+actions.labels[selectedLane]+'. Please use prepare_water_action now to put a first draft on the page, then ask one question to personalize it.':"Start with exactly one short greeting: 'Hi, I’m your AI water-help guide. What would you like help getting done?' Then stop and listen. Do not ask a second question."}]}],turnComplete:true}}));}
-     if(Array.isArray(m.toolCall?.functionCalls)){const responses=[];for(const call of m.toolCall.functionCalls.slice(0,8)){const result=++toolCount>16?{error:'Continue the conversation; no more draft operations this call.'}:toolAction(entry.report,call);if(result.action)send({type:'action',action:result.action});responses.push({id:call.id,name:call.name,response:result.action?{prepared:true,lane:result.action.lane,title:result.action.title,not_sent:true,next_contacts:result.action.options.slice(0,3).map(x=>({title:x.title,url:x.url,phone:x.phone||null}))}:result});}if(upstream.readyState===WebSocket.OPEN)upstream.send(JSON.stringify({toolResponse:{functionResponses:responses}}));}
-     const s=m.serverContent;if(!s)return;
-     if(s.interrupted)send({type:'interrupted'});
-     for(const p of s.modelTurn?.parts||[]){const a=p.inlineData;if(a?.data&&/^audio\/pcm/.test(a.mimeType||''))send({type:'audio',data:a.data,rate:24000});}
-     if(s.inputTranscription?.text)send({type:'caption',speaker:'You',text:s.inputTranscription.text.slice(0,3000)});
-     if(s.outputTranscription?.text)send({type:'caption',speaker:'AI guide',text:s.outputTranscription.text.slice(0,3000)});
-     if(s.turnComplete)send({type:'turn-complete'});
-    });
-    upstream.on('error',()=>finish('The call could not connect. Please try again later.'));
-    upstream.on('close',()=>finish('The call ended. Your results and next steps are still here.'));
+    openUpstream();
     return;
    }
    if(binary){
@@ -113,7 +126,8 @@ function createVoiceService({env=process.env,now=Date.now,upstreamFactory=url=>n
     if(!m||typeof m!=='object')return finish();
     if(m.type==='end')finish();
     else if(m.type==='focus'&&actions.labels[m.lane]&&ready&&upstream.readyState===WebSocket.OPEN)upstream.send(JSON.stringify({clientContent:{turns:[{role:'user',parts:[{text:'I chose '+actions.labels[m.lane]+'. Help me with that and prepare the next useful action.'}]}],turnComplete:true}}));
-    else if(m.type==='mute'&&ready&&upstream.readyState===WebSocket.OPEN)upstream.send(JSON.stringify({realtimeInput:{audioStreamEnd:true}}));
+    else if(m.type==='mute'){if(ready&&upstream.readyState===WebSocket.OPEN)upstream.send(JSON.stringify({realtimeInput:{audioStreamEnd:true}}));}
+    else if(m.type==='focus'&&actions.labels[m.lane]&&!ready)selectedLane=m.lane;
     else finish('The call received an unsupported message.');
    }
   });
