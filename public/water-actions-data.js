@@ -15,7 +15,7 @@
   const r=data.resident_report||{},p=r.access_plan||{},i=p.option_inventory||{};
   const agency=stateAgencies[clean(p.personalized?.state,60)]||resources.agency;
   const options=[...(i.free||[]),...(i.contact_first||[]),...(i.paid||[])];const seen=new Set();
-  return {state:clean(p.personalized?.state,60),county:clean(p.personalized?.county,100),provider:clean(p.personalized?.provider,200),private_well:r.private_well===true,
+  return {provider_ambiguous:r.provider_ambiguity===true,provider_contacts:(p.provider_contacts||[]).slice(0,6).map(x=>({name:clean(x.name,200),email:clean(x.email,254),phone:clean(x.phone,60),pwsid:clean(x.pwsid,60),source_url:url(x.source_url)})),state:clean(p.personalized?.state,60),county:clean(p.personalized?.county,100),provider:clean(p.personalized?.provider,200),private_well:r.private_well===true,
    tests:(p.what_to_ask_for||[]).slice(0,8).map(x=>clean(x.name,150)),
    options:options.filter(x=>url(x.url)&&!seen.has(x.url+'|'+x.test)&&(seen.add(x.url+'|'+x.test),true)).slice(0,16).map(x=>({title:clean(x.provider,200),url:url(x.url),test:clean(x.test,150),price:typeof x.price==='number'?x.price:null,price_label:clean(x.price_label,100),note:clean(x.note),checked:clean(x.verified_at,40),phone:clean(x.phone,50)})),
    findings:(r.findings||[]).slice(0,5).map(x=>({name:clean(x.name,120),result:clean(x.result,300),scope:clean(x.scope,120),date:clean(x.last_sample,60),health:clean(x.health?.text),qualification:clean(x.comparison?.qualification),source_url:url(x.source_url)})),
@@ -43,12 +43,12 @@
     checklist=['Homeowner who occupies the home: '+(answers.housing==='rent'?'does not match this requirement.':answers.housing==='own'?'you said yes; USDA must verify.':'not confirmed.'),'Property must be in an eligible rural area; confirm on USDA’s site.','Household income must meet the applicable county limit; check privately with USDA.','You must be unable to get an affordable loan elsewhere.','Grants also require age 62 or older and the very-low-income limit.','USDA lists RD 3550-35 and RD 3550-1 to check whether you can apply; its “To Apply” section has the current forms.'];
    }
   }else if(lane==='rent'){
-   title='Your landlord request is ready';description='Ask for testing and pipe information in writing. The draft uses the records we found. It does not assume your landlord broke a law.';subject='Request for water testing and pipe information at my rental';
-   body=`Hello,\n\nI rent [your address]. I would like to understand the water supplied to the home. Please share the water provider’s name, the latest water-quality report, and any records about the pipe bringing water to the home or the pipes inside.\n\nCould you help arrange appropriate testing for ${tests}, explain who will cover the cost, and give me a written response with the next steps?\n\nRelevant public findings:\n${records}\n\n${scope}\n\nThank you,\n[your name]`;
-   options=[resources.tenant,agency];checklist=['Add your landlord or property manager’s verified contact.','Keep a copy of the request and their reply.','Ask local tenant assistance about rules that apply to your situation.'];
+   title='Your rental water request is ready';description='Ask for testing and pipe information in writing. The draft uses the records we found. It does not assume your landlord broke a law.';subject='Request for water testing and pipe information at my rental';
+   body=`Hello,\n\nI rent [your address]. I would like to understand the water supplied to the home. Please share the water provider’s name, the latest water-quality report, and any records about the pipe bringing water to the home or the pipes inside.\n\nCould you help arrange appropriate testing for ${tests}, explain who will cover the cost, and give me a written response with the next steps?\n\nRelevant public findings:\n${records}\n\nThank you,\n[your name]`;
+   options=[resources.tenant,agency];checklist=['Check who will receive your request. Water-provider contacts are not landlord contacts.','Keep a copy of the request and their reply.','Ask local tenant assistance about rules that apply to your situation.'];
   }else if(lane==='followup'){
    title=answers.goal==='visit'?'Your appointment request is ready':'Your follow-up is ready';description='Add the earlier contact and date below. If the first contact cannot help, use the official agency directory to find the next route.';subject=answers.goal==='visit'?'Request for an appointment about a water concern':'Follow-up: water testing or pipe information request';
-   body=`Hello,\n\nI am following up on a water concern I sent to ${clean(answers.contact,200)||'[previous contact]'} on ${clean(answers.date,30)||'[date of earlier request]'}.\n\nMy earlier request: ${clean(answers.request,1200)||'[what you asked for]'}\n\nPlease confirm receipt, share a reference number, and tell me who is responsible for the next step and when I can expect an update.${answers.goal==='visit'?' I would also like to request a phone or in-person appointment. Please confirm the location and available times before I travel.':''}\n\nRelevant public findings:\n${records}\n\n${scope}\n\nAddress: [your address, if needed]\nName: [your name]`;
+   body=`Hello,\n\nI am following up on a water concern I sent to ${clean(answers.contact,200)||'[previous contact]'} on ${clean(answers.date,30)||'[date of earlier request]'}.\n\nMy earlier request: ${clean(answers.request,1200)||'[what you asked for]'}\n\nPlease confirm receipt, share a reference number, and tell me who is responsible for the next step and when I can expect an update.${answers.goal==='visit'?' I would also like to request a phone or in-person appointment. Please confirm the location and available times before I travel.':''}\n\nRelevant public findings:\n${records}\n\nAddress: [your address, if needed]\nName: [your name]`;
    options=[agency];checklist=['Keep the original message, date, and any reference number.','Verify the next contact on the official agency site.','An appointment is only booked when the office confirms it.'];
   }else if(lane==='explain'){
    title='Your results, in plain language';description='Choose “Talk this through” to ask follow-up questions aloud. The AI can explain the findings and help prepare your next action.';subject='Questions about my water results';
@@ -62,5 +62,14 @@
   }
   return {lane,title,description,subject,body,options,checklist,source_note:'The organization must confirm who it can help, what it covers, and any appointment. Nothing has been sent.'};
  }
- return {labels,resources,stateAgencies,context,prepare,url};
+ function cleanDraft(body){return String(body||'').split(/\n\s*\n/).filter(p=>!/^\s*(?:Please note:|Evidence note:|Nothing has been sent(?: or booked)?\.?$)/i.test(p)).join('\n\n');}
+ function forAddress(plan,address,recipient){
+  const out={...plan,body:cleanDraft(plan.body)};if(plan.lane==='neighbors')return out;
+  address=clean(address,300).replace(/[\r\n]/g,' ').trim();
+  if(address){out.body=out.body.replace(/\[your address(?:, if needed)?\]/gi,()=>address);if(!out.body.includes(address))out.body+='\n\nAddress: '+address;
+   if(!out.subject.includes(address))out.subject=(out.subject+' — '+address).slice(0,180);}
+  if(recipient?.name)out.body=out.body.replace(/^Hello,/,()=>('Hello '+clean(recipient.name,200)+','));
+  return out;
+ }
+ return {labels,resources,stateAgencies,context,prepare,url,cleanDraft,forAddress};
 });

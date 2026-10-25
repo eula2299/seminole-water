@@ -50,7 +50,8 @@ function providerContacts(data){
     const phone=pick(fields,['PHONE_NUMBER','PhoneNumber','PWSPhone','Phone']);
     const email=pick(fields,['EMAIL_ADDR','EmailAddress','Email']);
     const admin=pick(fields,['ADMIN_NAME','AdminName','ContactName']);
-    out.push({pwsid,name,phone,email,admin});
+    const source_url=(system.records||[]).map(x=>x.source?.url||x.source?.source_url).find(x=>typeof x==='string'&&x.startsWith('https://'))||null;
+    out.push({pwsid,name,phone,email,admin,source_url});
   }
   return out;
 }

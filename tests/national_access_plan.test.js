@@ -52,7 +52,7 @@ test('private well access plan never substitutes public utility assistance for a
 
 test('provider contact extraction is public-system scoped and bounded',()=>{
  const contacts=providerContacts({provider:{candidates:[{pwsid:'TX7654321',name:'Fixture Utility'}]},systems:[{pwsid:'TX7654321',records:[{data:{PHONE_NUMBER:'512-555-0101',ADMIN_NAME:'Fixture Admin',EMAIL_ADDR:'admin@example.gov'}}]}]});
- assert.deepEqual(contacts,[{pwsid:'TX7654321',name:'Fixture Utility',phone:'512-555-0101',email:'admin@example.gov',admin:'Fixture Admin'}]);
+ assert.deepEqual(contacts,[{pwsid:'TX7654321',name:'Fixture Utility',phone:'512-555-0101',email:'admin@example.gov',admin:'Fixture Admin',source_url:null}]);
 });
 
 test('targeted test list is bounded and deduplicated',()=>{

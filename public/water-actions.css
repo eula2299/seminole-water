@@ -2,3 +2,5 @@
 
 @media(max-width:650px){.action-plan-clean .water-actions{margin-left:-8px;margin-right:-8px;padding:18px 12px}.action-plan-clean{padding-left:12px;padding-right:12px}.water-actions input,.water-actions select,.water-actions textarea{font-size:16px}}
 .clean-step>a,.clean-option-row>a{display:inline-block;margin:8px 16px 0 0}
+
+.action-contact{padding:14px;background:#f0f7f4;border-radius:10px;margin:12px 0}.action-contact label{display:grid;gap:8px}.action-contact select{width:100%;min-width:0;max-width:100%;padding:10px;font:inherit}.action-contact>a{display:inline-block;margin:6px 16px 0 0}.action-contact p{margin:6px 0}

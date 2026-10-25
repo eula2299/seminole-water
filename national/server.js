@@ -5,7 +5,7 @@ const {EvidenceError,REGION_CODES}=require('./evidence');
 const {HTML,CLIENT}=require('./ui');
 const {clientKey,readJson,HttpInputError}=require('./http_safety');
 const seo=require('./seo');
-function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false,metrics=null,voice=null,testingCatalog=require('./testing_catalog')}={}){
+function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false,metrics=null,voice=null,testingCatalog=require('./testing_catalog'),contacts=require('./action_contacts').createContactService()}={}){
  const buckets=new Map();let active=0;
  const security={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; script-src 'self' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; connect-src 'self' wss://www.ismywaterok.com wss://ismywaterok.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com; img-src 'self' https://*.google-analytics.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",'Permissions-Policy':'geolocation=(), camera=(), microphone=(self)'};
  function send(res,status,body,type='application/json; charset=utf-8',headers={}){res.writeHead(status,{...security,'Content-Type':type,...headers});res.end(type.startsWith('application/json')?JSON.stringify(body):body);}
@@ -15,6 +15,13 @@ function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false,m
    const u=new URL(req.url,'http://localhost');
    const voiceFiles={'/water-actions-data.js':'application/javascript; charset=utf-8','/water-actions.js':'application/javascript; charset=utf-8','/water-actions.css':'text/css; charset=utf-8','/water-voice.js':'application/javascript; charset=utf-8','/water-voice-worklet.js':'application/javascript; charset=utf-8','/water-voice.css':'text/css; charset=utf-8'};
    if(req.method==='GET'&&voiceFiles[u.pathname])return send(res,200,require('node:fs').readFileSync(require('node:path').join(__dirname,'..','public',u.pathname.slice(1)),'utf8'),voiceFiles[u.pathname],{'Cache-Control':'public, max-age=300'});
+   if(req.method==='POST'&&u.pathname==='/api/national/action-contact'){
+    if(req.headers.origin&&req.headers.origin!=='https://'+req.headers.host&&req.headers.origin!=='http://'+req.headers.host)return send(res,403,{message:'Origin not permitted.'});
+    if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||''))return send(res,415,{message:'Send application/json.'});
+    if(!allowed(req))return send(res,429,{message:'Please try again shortly.'});
+    const body=await readJson(req,2048);if(!body||typeof body.token!=='string'||!Object.hasOwn(require('../public/water-actions-data').labels,body.lane))return send(res,400,{message:'Choose a help option.'});
+    return send(res,200,await contacts.resolve(body.token,body.lane,body.goal));
+   }
    if(req.method==='GET'&&u.pathname==='/api/national/voice-config')return send(res,200,voice?.config()||{enabled:false});
    if(req.method==='GET'&&(u.pathname==='/national'||u.pathname==='/national/')){res.writeHead(301,{Location:'/',...security});return res.end();}
    if(req.method==='GET'&&u.pathname==='/'){return send(res,200,HTML,'text/html; charset=utf-8',{'Cache-Control':'public, max-age=300, stale-while-revalidate=3600'});}
@@ -31,6 +38,7 @@ function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false,m
     if(!REGION_CODES.includes(state)||!['public','private-well','unknown'].includes(supply))return send(res,400,{message:'Choose your U.S. state and water source.'});
     const data={address:{status:'not-verified',state,city},supply:{type:supply,evidence:'user-reported'},systems:[],provider:{candidates:[]},current_advisories:{records:[]}};
     data.resident_report={private_well:supply==='private-well',findings:[],access_plan:require('./access_plan').buildAccessPlan(data,{privateWell:supply==='private-well'})};
+    data.action_token=contacts.remember(data);
     if(voice){const token=voice.remember(data);if(token)data.voice_token=token;}
     testingCatalog.refresh().catch(()=>{});return send(res,200,data);
    }
@@ -43,7 +51,7 @@ function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false,m
    // This handler is also mounted on the gateway, so bound its body-read time
    // independently of the standalone server's transport settings.
    const bodyTimer=setTimeout(()=>req.destroy(),10000);bodyTimer.unref();
-   try{const body=await readJson(req,8192);clearTimeout(bodyTimer);const result=await engine.lookup(body);testingCatalog.refresh().catch(()=>{});if(metrics)try{await metrics.record(result.resident_report,body.request_id);}catch{console.error("Potential savings could not be recorded");}if(voice){const token=voice.remember(result);if(token)result.voice_token=token;}return send(res,200,result);}finally{clearTimeout(bodyTimer);active--;}
+   try{const body=await readJson(req,8192);clearTimeout(bodyTimer);const result=await engine.lookup(body);result.action_token=contacts.remember(result);testingCatalog.refresh().catch(()=>{});if(metrics)try{await metrics.record(result.resident_report,body.request_id);}catch{console.error("Potential savings could not be recorded");}if(voice){const token=voice.remember(result);if(token)result.voice_token=token;}return send(res,200,result);}finally{clearTimeout(bodyTimer);active--;}
   }catch(e){const expected=e instanceof EvidenceError||e instanceof HttpInputError;if(!res.headersSent)send(res,expected?e.status:500,{error:expected?e.code:'INTERNAL_ERROR',message:expected?e.message:'Lookup failed. No water-safety conclusion was made.'});else res.end();}
  });
  server.on('upgrade',(req,socket,head)=>{if(!voice?.upgrade(req,socket,head))socket.destroy();});
