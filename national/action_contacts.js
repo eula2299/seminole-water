@@ -20,11 +20,11 @@ function extract(page){
  const html=page.html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi,' '),found=[],links=[];
  for(const m of html.matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)){
   const href=decode(m[1]),label=decode(m[2].replace(/<[^>]+>/g,' ')).trim();
-  if(/^mailto:/i.test(href)){let value;try{value=decodeURIComponent(href.slice(7).split('?')[0]);}catch{continue;}if(email(value)&&!/(?:privacy|webmaster|accessibility|press|media|noreply|no-reply|careers|recruit|security|abuse)/i.test(value+' '+label))found.push({email:value,label});}
-  else{try{const u=new URL(href,page.url);if(safeUrl(u.href)&&host(u.href)===host(page.url)&&/contact|customer.service|water.quality|water.testing/i.test(label+' '+u.pathname)&&!/[.#](pdf|jpg|png|zip)$/i.test(u.pathname))links.push(u.href);}catch{}}
+  if(/^mailto:/i.test(href)){let value;try{value=decodeURIComponent(href.slice(7).split('?')[0]);}catch{continue;}if(email(value)&&!/(?:privacy|webmaster|accessibility|press|media|noreply|no-reply|careers|recruit|security|abuse|librarian|geographic|\bgis\b)/i.test(value+' '+label))found.push({email:value,label});}
+  else{try{const u=new URL(href,page.url);if(safeUrl(u.href)&&host(u.href)===host(page.url)&&!/geographic|\bgis\b|privacy|accessibility|press|media|careers/i.test(label+' '+u.pathname)&&(/water|drinking|testing|laboratory|customer.service/i.test(label+' '+u.pathname)||/^contact(?:\s+us|\s+information|\s+details)?$/i.test(label.trim()))&&!/[.#](pdf|jpg|png|zip)$/i.test(u.pathname))links.push(u.href);}catch{}}
  }
  const text=decode(html.replace(/<[^>]+>/g,' '));
- for(const m of text.matchAll(/[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi)){if(email(m[0])&&!/(privacy|webmaster|accessibility|press|media|noreply|careers|security|abuse)/i.test(m[0]))found.push({email:m[0],label:''});}
+ for(const m of text.matchAll(/[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi)){if(email(m[0])&&!/(privacy|webmaster|accessibility|press|media|noreply|careers|security|abuse|librarian|geographic|\bgis\b)/i.test(m[0]))found.push({email:m[0],label:''});}
  return {emails:[...new Map(found.map(x=>[x.email.toLowerCase(),x])).values()].slice(0,8),links:[...new Set(links)].slice(0,3)};
 }
 function createContactService({fetchPage=readPage,now=Date.now}={}){
@@ -55,9 +55,9 @@ function createContactService({fetchPage=readPage,now=Date.now}={}){
    let discovered=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
    if(!discovered.length&&!contacts.length&&c.agency&&!sources.some(x=>x.url===c.agency.url)){sources.push(c.agency);discovered=await discover(c.agency);}
    const ordered=lane==='afford'?[...discovered,...contacts]:[...contacts,...discovered];
-   const unique=[...new Map(ordered.map(x=>[x.email.toLowerCase(),{...x,recommended:false}])).values()].slice(0,8);
+   const seen=new Map();for(const x of ordered)if(!seen.has(x.email.toLowerCase()))seen.set(x.email.toLowerCase(),{...x,recommended:false});const unique=[...seen.values()].slice(0,8);
    const preferred=lane==='afford'&&discovered.length?discovered:contacts.length?contacts:discovered;
-   const top=preferred[0];if(top&&preferred.filter(x=>x.name===top.name).length===1&&!top.ambiguous){const match=unique.find(x=>x.email===top.email);if(match)match.recommended=true;}
+   const top=preferred[0];if(top&&new Set(preferred.filter(x=>x.name===top.name).map(x=>x.email.toLowerCase())).size===1&&!top.ambiguous){const match=unique.find(x=>x.email===top.email);if(match)match.recommended=true;}
    return {status:unique.length?'found':'contact-page',contacts:unique,routes:sources.map(x=>({name:x.title,url:x.url,phone:x.phone||null})),note:lane==='rent'?'These are water-provider or water-help contacts, not a verified landlord.':null};
   }finally{active--;}
  }

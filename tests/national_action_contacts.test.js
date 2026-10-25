@@ -36,3 +36,10 @@ test('HTTP lookup issues a contact token and the contact endpoint rejects untrus
  const response=await fetch(base+'/api/national/action-contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:data.action_token,lane:'rent',url:'http://127.0.0.1/private'})});assert.equal(response.status,200);assert.equal((await response.json()).contacts[0].email,'water@example.gov');
  const blocked=await fetch(base+'/api/national/action-contact',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://evil.example'},body:JSON.stringify({token:data.action_token,lane:'rent'})});assert.equal(blocked.status,403);
 });
+
+test('unrelated agency departments are excluded and repeated inboxes keep their original source',async()=>{
+ const page=extract({url:'https://water.example.gov/water',html:'<a href="/gis/contact">Contact Geographic Information Systems (GIS)</a><a href="mailto:GIS.Librarian@example.gov">GIS staff</a><a href="/contact-us">Contact Us</a>'});assert.deepEqual(page.links,['https://water.example.gov/contact-us']);assert.deepEqual(page.emails,[]);
+ const data=structuredClone(report);data.resident_report.access_plan.provider_contacts=[];
+ const service=createContactService({fetchPage:async url=>({url,html:'<a href="mailto:water@example.gov">Water help</a><a href="/contact-us">Contact Us</a>'})});
+ const r=await service.resolve(service.remember(data),'afford');assert.equal(r.contacts.length,1);assert.equal(r.contacts[0].recommended,true);assert.equal(r.contacts[0].source_url,'https://floridadep.gov/water/source-drinking-water');
+});
