@@ -311,5 +311,6 @@
   "homeInsurance": "Seguro anual de la vivienda ($)",
   "retirementAssets": "Dinero y bienes en cuentas de jubilación ($)",
   "otherAssets": "Otros bienes, incluidas cuentas corrientes y de ahorro ($)",
-  "estimatedRepair": "Costo estimado de reparación, si lo sabes ($)"
+  "estimatedRepair": "Costo estimado de reparación, si lo sabes ($)",
+  "downloadReady": "Tu archivo está listo. Usa este enlace si la descarga no comenzó."
 }

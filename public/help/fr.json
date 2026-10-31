@@ -311,5 +311,6 @@
   "homeInsurance": "Assurance habitation annuelle ($)",
   "retirementAssets": "Valeur des comptes d’épargne-retraite ($)",
   "otherAssets": "Autres avoirs, dont comptes courants et épargne ($)",
-  "estimatedRepair": "Coût estimé des réparations, si connu ($)"
+  "estimatedRepair": "Coût estimé des réparations, si connu ($)",
+  "downloadReady": "Votre fichier est prêt. Utilisez ce lien si le téléchargement n’a pas commencé."
 }

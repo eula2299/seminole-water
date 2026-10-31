@@ -32,9 +32,11 @@
       memory.action_token = saved.action_token;
     }
   } catch {}
-  try {
-    config = await api("/api/help/config");
-  } catch {}
+  const configReady = api("/api/help/config")
+    .then((value) => {
+      config = value;
+    })
+    .catch(() => {});
   function el(tag, text, cls) {
     const x = document.createElement(tag);
     if (text !== undefined) x.textContent = text;
@@ -139,7 +141,7 @@
       type === "textarea" ? "textarea" : "input",
     );
     if (type !== "textarea") input.type = type;
-    if(type==='number')input.step='any';
+    if (type === "number") input.step = "any";
     input.value = value ?? "";
     input.maxLength = type === "textarea" ? 8000 : 300;
     label.append(input);
@@ -529,7 +531,8 @@
     }));
   }
   function aiHelp(parent, kind, getText, apply) {
-    const d = detail(parent, "aiTitle", (p) => {
+    const d = detail(parent, "aiTitle", async (p) => {
+      await configReady;
       text(p, "aiDescription");
       link(p, "aiPrivacy", "https://ai.google.dev/gemini-api/terms", "source");
       if (!config.ai) {
@@ -1117,7 +1120,8 @@
     });
     return d;
   }
-  function repairIntake(saved = {}) {
+  async function repairIntake(saved = {}) {
+    await configReady;
     page("repairForm", "formIntro", repairs);
     text(main, "formEligibility", "card");
     const spec = config.forms.find((f) => f.id === "usda-rd3550-35");
@@ -1199,7 +1203,7 @@
       const inputs = {};
       for (const f of basic)
         inputs[f.name] = field(main, f.key, f.type || "text", values[f.name]);
-      const extra = detail(main, "financeHelp", () => {});
+      const extra = detail(main, "details", () => {});
       for (const f of finance) {
         inputs[f.name] = field(extra, f.key, f.type || "text", values[f.name]);
         if (f.type === "number") {
@@ -1350,7 +1354,8 @@
       );
     });
   }
-  function groupForm() {
+  async function groupForm() {
+    await configReady;
     page("joint", "jointIntro", rights);
     const title = field(main, "groupTitle", "text", ""),
       request = field(main, "groupText", "textarea", "");
@@ -1720,6 +1725,7 @@
   }
   function chrome() {
     document.getElementById("language").value = I.language;
+    document.getElementById("language").disabled = false;
     document
       .getElementById("large")
       .setAttribute("aria-label", t("largerText"));
@@ -1731,6 +1737,7 @@
     foot.replaceChildren(el("p", t("footer")));
   }
   document.getElementById("language").addEventListener("change", async (e) => {
+    e.target.disabled = true;
     try {
       const before = I.snapshot();
       await I.set(e.target.value);
@@ -1749,6 +1756,8 @@
       chrome();
     } catch {
       toast(t("error"));
+    } finally {
+      e.target.disabled = false;
     }
   });
   document.getElementById("large").addEventListener("click", (e) => {

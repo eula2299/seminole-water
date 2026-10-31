@@ -1,6 +1,6 @@
 window.WaterHelpDocuments = (() => {
   "use strict";
-  let pdf, ocr;
+  let pdf, ocr, downloadUrl;
   const loadScript = (src) =>
     new Promise((resolve, reject) => {
       const script = document.createElement("script");
@@ -167,15 +167,25 @@ window.WaterHelpDocuments = (() => {
     return new Blob([await doc.save()], { type: "application/pdf" });
   }
   function download(data, name, type = "text/plain;charset=utf-8") {
+    if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+    document.getElementById("water-help-download-ready")?.remove();
     const blob = data instanceof Blob ? data : new Blob([data], { type }),
       url = URL.createObjectURL(blob),
       a = document.createElement("a");
+    downloadUrl = url;
     a.href = url;
     a.download = name;
-    document.body.append(a);
+    a.textContent = (window.WaterHelpI18n?.t("download") || "Download") + " · " + name;
+    a.className = "button quiet";
+    const ready = document.createElement("section");
+    ready.id = "water-help-download-ready";
+    ready.className = "card soft";
+    const message = document.createElement("p");
+    message.textContent = window.WaterHelpI18n?.t("downloadReady") ||
+      "Your file is ready. Use this link if the download did not start.";
+    ready.append(message, a);
+    (document.getElementById("main") || document.body).append(ready);
     a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
   async function copy(value) {
     if (navigator.clipboard?.writeText) {

@@ -7,6 +7,7 @@
   if (!hub) return;
   const choice = document.getElementById("water-help-language");
   choice.value = I.language;
+  choice.disabled = false;
   let reportContext = null;
   const addressValues = () => ({
     address: document.getElementById("address")?.value || "",

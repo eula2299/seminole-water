@@ -6,11 +6,14 @@ window.WaterHelpI18n = (() => {
   async function set(lang) {
     if (!supported.includes(lang)) lang = "en";
     if (!Object.keys(english).length) {
-      const r = await fetch("/help/en.json", {cache:'no-cache'});
+      const r = await fetch("/help/en.json", { cache: "no-cache" });
       if (!r.ok) throw Error("LANGUAGE_UNAVAILABLE");
       english = await r.json();
     }
-    const r = lang === "en" ? null : await fetch("/help/" + lang + ".json", {cache:'no-cache'});
+    const r =
+      lang === "en"
+        ? null
+        : await fetch("/help/" + lang + ".json", { cache: "no-cache" });
     if (r && !r.ok) throw Error("LANGUAGE_UNAVAILABLE");
     dictionary = r ? await r.json() : english;
     language = lang;

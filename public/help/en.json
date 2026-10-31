@@ -311,5 +311,6 @@
   "homeInsurance": "Yearly home insurance ($)",
   "retirementAssets": "Money and assets in retirement accounts ($)",
   "otherAssets": "Other assets, including checking and savings accounts ($)",
-  "estimatedRepair": "Estimated repair cost, if known ($)"
+  "estimatedRepair": "Estimated repair cost, if known ($)",
+  "downloadReady": "Your file is ready. Use this link if the download did not start."
 }
