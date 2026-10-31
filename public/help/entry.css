@@ -1,0 +1,126 @@
+.water-help-entry {
+  margin: 32px 0 42px;
+  padding: 28px 0;
+  border-top: 1px solid #d7e4de;
+}
+.water-help-entry h2 {
+  font-size: 30px;
+  letter-spacing: -0.7px;
+  margin: 0 0 9px;
+}
+.water-help-entry > p {
+  max-width: 670px;
+  color: #496761;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.water-help-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+.water-help-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 18px;
+  border: 1px solid #ccded5;
+  border-radius: 12px;
+  background: white;
+  text-decoration: none;
+  color: #174d46;
+  line-height: 1.4;
+  min-height: 145px;
+}
+.water-help-tile strong {
+  font-size: 18px;
+}
+.water-help-tile span {
+  font-size: 14px;
+  color: #496761;
+}
+.water-help-tile:hover {
+  background: #ecf6ef;
+  border-color: #287466;
+}
+.water-help-entry a:focus-visible {
+  outline: 3px solid #b37418;
+  outline-offset: 4px;
+}
+.water-help-language {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.water-help-language select {
+  min-height: 44px;
+  padding: 7px;
+  border: 1px solid #adc4b9;
+  border-radius: 6px;
+  color: #184e45;
+  background: #fff;
+  max-width: 150px;
+}
+.water-help-more {
+  display: inline-block;
+  margin-top: 18px;
+  font-weight: 700;
+  color: #185c4b;
+}
+.water-help-translate {
+  margin: 20px 0;
+  padding: 18px;
+  border: 1px solid #cbded5;
+  border-radius: 10px;
+  background: #f2f7f3;
+}
+.water-help-translate label {
+  display: block;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.water-help-translate input {
+  width: auto;
+  margin-inline-end: 8px;
+}
+.water-help-translate button {
+  min-height: 44px;
+  padding: 10px 16px;
+}
+.water-help-translate p {
+  font-size: 14px;
+}
+@media (max-width: 850px) {
+  .water-help-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 500px) {
+  .water-help-grid {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+  .water-help-tile {
+    min-height: 90px;
+    padding: 18px;
+  }
+  .topbar nav {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .water-help-entry {
+    padding-top: 22px;
+  }
+  .water-help-entry h2 {
+    font-size: 26px;
+  }
+}
+@media print {
+  .water-help-entry,
+  .water-help-language,
+  .water-help-translate {
+    display: none;
+  }
+}

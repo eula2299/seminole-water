@@ -6,6 +6,7 @@ const {HTML,CLIENT}=require('./ui');
 const {clientKey,readJson,HttpInputError}=require('./http_safety');
 const seo=require('./seo');
 function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false,metrics=null,voice=null,testingCatalog=require('./testing_catalog'),contacts=require('./action_contacts').createContactService()}={}){
+ const help=require('../justice/server').createHelpHandler({trustProxy});
  const buckets=new Map();let active=0;
  const security={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; script-src 'self' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; connect-src 'self' wss://www.ismywaterok.com wss://ismywaterok.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com; img-src 'self' https://*.google-analytics.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",'Permissions-Policy':'geolocation=(), camera=(), microphone=(self)'};
  function send(res,status,body,type='application/json; charset=utf-8',headers={}){res.writeHead(status,{...security,'Content-Type':type,...headers});res.end(type.startsWith('application/json')?JSON.stringify(body):body);}
@@ -13,6 +14,7 @@ function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false,m
  const server=http.createServer(async(req,res)=>{
   try{
    const u=new URL(req.url,'http://localhost');
+   if(await help(req,res,u))return;
    const voiceFiles={'/water-actions-data.js':'application/javascript; charset=utf-8','/water-actions.js':'application/javascript; charset=utf-8','/water-actions.css':'text/css; charset=utf-8','/water-voice.js':'application/javascript; charset=utf-8','/water-voice-worklet.js':'application/javascript; charset=utf-8','/water-voice.css':'text/css; charset=utf-8'};
    if(req.method==='GET'&&voiceFiles[u.pathname])return send(res,200,require('node:fs').readFileSync(require('node:path').join(__dirname,'..','public',u.pathname.slice(1)),'utf8'),voiceFiles[u.pathname],{'Cache-Control':'public, max-age=300'});
    if(req.method==='POST'&&u.pathname==='/api/national/action-contact'){
@@ -55,6 +57,7 @@ function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false,m
   }catch(e){const expected=e instanceof EvidenceError||e instanceof HttpInputError;if(!res.headersSent)send(res,expected?e.status:500,{error:expected?e.code:'INTERNAL_ERROR',message:expected?e.message:'Lookup failed. No water-safety conclusion was made.'});else res.end();}
  });
  server.on('upgrade',(req,socket,head)=>{if(!voice?.upgrade(req,socket,head))socket.destroy();});
+ server.on('close',()=>{Promise.resolve(help.close()).catch(()=>{});});
  server.headersTimeout=10000;server.requestTimeout=25000;server.keepAliveTimeout=5000;
  return server;
 }

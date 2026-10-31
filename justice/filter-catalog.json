@@ -1,0 +1,482 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-31",
+  "currency": "USD",
+  "research_status": "verified_snapshot_not_live_inventory",
+  "prices_exclude": [
+    "tax",
+    "unverified shipping",
+    "installation",
+    "electricity",
+    "water"
+  ],
+  "products": [
+    {
+      "id": "culligan-zerop07",
+      "name": "Culligan ZeroWater 7-Cup Pitcher",
+      "brand": "Culligan",
+      "model": "ZEROP07",
+      "type": "pitcher",
+      "price": 24.99,
+      "price_type": "one_time",
+      "currency": "USD",
+      "available": true,
+      "purchase_url": "https://shop.culligan.com/products/7-cup-zerowater-pitcher?variant=52823895081279",
+      "price_source": "https://shop.culligan.com/products/7-cup-zerowater-pitcher.js",
+      "included_cartridges": 1,
+      "replacement_family": "culligan-zerof",
+      "no_plumbing": true,
+      "wall_power_required": false,
+      "certified_claims": [
+        "lead",
+        "nitrate",
+        "nitrite",
+        "hexavalent_chromium",
+        "mercury",
+        "cadmium",
+        "copper",
+        "fluoride",
+        "chlorine",
+        "PFOA",
+        "PFOS",
+        "PFHxS",
+        "PFNA",
+        "PFHpA",
+        "PFBS",
+        "PFDA"
+      ],
+      "pfas_analytes": [
+        "PFOA",
+        "PFOS",
+        "PFHxS",
+        "PFNA",
+        "PFHpA",
+        "PFBS",
+        "PFDA"
+      ],
+      "pfas_scope_note": "The performance sheet names these seven substances within its grouped PFAS claim. This is not a claim about every PFAS compound.",
+      "certification": "IAPMO R&T to NSF/ANSI 42, 53 and 401 for listed claims.",
+      "performance_source": "https://shop.culligan.com/cdn/shop/files/Culligan_ZWTech_PerformanceData_062326Updated.pdf?v=7946913076530606398",
+      "certificate_source": "https://shop.culligan.com/cdn/shop/files/W-17155_06-26-2026_Certificate.pdf?v=4925804285449367920",
+      "shipping": "Official page says free shipping over $55; shipping below that amount not verified.",
+      "limitations": [
+        "Certified cartridge capacity is only 20 gallons.",
+        "No inspected arsenic or microbiological purification claim.",
+        "New Culligan cartridges do not fit legacy ZeroWater pitchers.",
+        "A larger pitcher does not increase cartridge life."
+      ],
+      "checked_at": "2026-10-31"
+    },
+    {
+      "id": "culligan-zerop10",
+      "name": "Culligan ZeroWater 10-Cup Pitcher",
+      "brand": "Culligan",
+      "model": "ZEROP10",
+      "type": "pitcher",
+      "price": 34.99,
+      "price_type": "one_time",
+      "currency": "USD",
+      "available": true,
+      "purchase_url": "https://shop.culligan.com/products/10-cup-zerowater-pitcher?variant=52823831740735",
+      "price_source": "https://shop.culligan.com/products/10-cup-zerowater-pitcher.js",
+      "included_cartridges": 1,
+      "replacement_family": "culligan-zerof",
+      "no_plumbing": true,
+      "wall_power_required": false,
+      "certified_claims": [
+        "lead",
+        "nitrate",
+        "nitrite",
+        "hexavalent_chromium",
+        "mercury",
+        "cadmium",
+        "copper",
+        "fluoride",
+        "chlorine",
+        "PFOA",
+        "PFOS",
+        "PFHxS",
+        "PFNA",
+        "PFHpA",
+        "PFBS",
+        "PFDA"
+      ],
+      "pfas_analytes": [
+        "PFOA",
+        "PFOS",
+        "PFHxS",
+        "PFNA",
+        "PFHpA",
+        "PFBS",
+        "PFDA"
+      ],
+      "pfas_scope_note": "The performance sheet names these seven substances within its grouped PFAS claim. This is not a claim about every PFAS compound.",
+      "certification": "IAPMO R&T to NSF/ANSI 42, 53 and 401 for listed claims.",
+      "performance_source": "https://shop.culligan.com/cdn/shop/files/Culligan_ZWTech_PerformanceData_062326Updated.pdf?v=7946913076530606398",
+      "certificate_source": "https://shop.culligan.com/cdn/shop/files/W-17155_06-26-2026_Certificate.pdf?v=4925804285449367920",
+      "shipping": "Official page says free shipping over $55; shipping below that amount not verified.",
+      "limitations": [
+        "Certified cartridge capacity is only 20 gallons.",
+        "No inspected arsenic or microbiological purification claim.",
+        "New Culligan cartridges do not fit legacy ZeroWater pitchers.",
+        "A larger pitcher does not increase cartridge life."
+      ],
+      "checked_at": "2026-10-31"
+    },
+    {
+      "id": "brita-denali-elite",
+      "name": "Brita Denali 6-Cup Pitcher with Elite Filter",
+      "brand": "Brita",
+      "model": "OB62",
+      "type": "pitcher",
+      "price": 35.99,
+      "price_type": "official_listed_price",
+      "currency": "USD",
+      "available": null,
+      "availability_note": "Official listed price verified; individual retailer inventory not verified.",
+      "purchase_url": "https://www.brita.com/products/brita-denali-pitcher-elite/",
+      "price_source": "https://www.brita.com/products/brita-denali-pitcher-elite/",
+      "included_cartridges": 1,
+      "replacement_family": "brita-ob06",
+      "no_plumbing": true,
+      "wall_power_required": false,
+      "certified_claims": [
+        "lead",
+        "mercury",
+        "cadmium",
+        "chlorine",
+        "asbestos",
+        "benzene",
+        "microplastics"
+      ],
+      "pfas_analytes": [],
+      "certification": "IAPMO/WQA certification to applicable NSF/ANSI standards; exact certifier varies by pitcher and claim. Do not describe Denali as NSF International-certified based on other pitcher models.",
+      "performance_source": "https://www.brita.com/support/performance-data/brita-elite/",
+      "shipping": "unknown",
+      "limitations": [
+        "Current inspected performance sheet does not list PFAS, arsenic or nitrate.",
+        "Replace at 120 gallons or approximately 6 months; hard water can shorten life."
+      ],
+      "checked_at": "2026-10-31"
+    },
+    {
+      "id": "pur-pfm150w",
+      "name": "PUR Horizontal Faucet System, White",
+      "brand": "PUR",
+      "model": "PFM150W",
+      "type": "faucet_mount",
+      "price": null,
+      "price_type": "not_published_in_inspected_official_page",
+      "currency": "USD",
+      "available": null,
+      "availability_note": "Official Buy Now page exists; retailer price and stock must be checked.",
+      "purchase_url": "https://www.pur.com/shop/faucet-systems/horizontal-fm-white/",
+      "price_source": "https://www.pur.com/shop/faucet-systems/horizontal-fm-white/",
+      "included_cartridges": 1,
+      "replacement_family": "pur-rf3375",
+      "no_plumbing": false,
+      "installation_note": "Removable faucet attachment; compatible faucet/aerator required. No under-sink supply-line work.",
+      "wall_power_required": false,
+      "certified_claims": [
+        "lead",
+        "mercury",
+        "chlorine",
+        "microplastics",
+        "benzene",
+        "trihalomethanes"
+      ],
+      "pfas_analytes": [],
+      "pfas_scope_note": "The October 2025 performance sheet includes a grouped PFAS reduction claim but does not enumerate individual PFAS analytes in the inspected document. Excluded from analyte matching until an explicit list is verified; do not treat the empty array as evidence the filter has no PFAS claim.",
+      "certification": "Current October 2025 performance sheet: IAPMO R&T to NSF/ANSI 42, 53 and 401.",
+      "performance_source": "https://www.pur.com/wp-content/uploads/NEW-PDS_RF3375_FM_28OCT25.pdf",
+      "shipping": "unknown",
+      "limitations": [
+        "100 gallons or 3 months.",
+        "No inspected nitrate or arsenic claim.",
+        "Does not filter microbes.",
+        "Confirm faucet compatibility before purchase.",
+        "New and legacy cartridges have different performance sheets; check packaging against the linked current sheet."
+      ],
+      "checked_at": "2026-10-31"
+    },
+    {
+      "id": "aquasana-aq-mf-1",
+      "name": "Aquasana Claryum Direct Connect",
+      "brand": "Aquasana",
+      "model": "AQ-MF-1",
+      "type": "under_sink",
+      "price": 124.99,
+      "price_type": "sale",
+      "regular_price": 249.99,
+      "currency": "USD",
+      "available": true,
+      "purchase_url": "https://www.aquasana.com/under-sink-water-filters/claryum-direct-connect-100329886.html",
+      "price_source": "https://www.aquasana.com/under-sink-water-filters/claryum-direct-connect-100329886.html",
+      "included_cartridges": 1,
+      "replacement_family": "aquasana-aq-mf-1-r",
+      "no_plumbing": false,
+      "installation_note": "Connects to the existing cold-water supply under the sink; no separate faucet.",
+      "wall_power_required": false,
+      "certified_claims": [
+        "lead",
+        "PFOA",
+        "PFOS",
+        "mercury",
+        "chlorine",
+        "chloramine",
+        "microplastics",
+        "asbestos",
+        "cysts",
+        "benzene",
+        "trihalomethanes"
+      ],
+      "pfas_analytes": [
+        "PFOA",
+        "PFOS"
+      ],
+      "certification": "IAPMO R&T to NSF/ANSI 42, 53 and 401.",
+      "performance_source": "https://www.aquasana.com/on/demandware.static/-/Sites-aquasana-Library/default/dwee35f142/PDF/AQ-MF-1_Performance_Data.pdf",
+      "shipping": "Sale page advertises free shipping; checkout eligibility not verified.",
+      "limitations": [
+        "784 gallons or 6 months.",
+        "No inspected nitrate, arsenic or fluoride claim.",
+        "Renters may need permission for supply-line changes.",
+        "PFOA/PFOS certification is not a claim about all PFAS.",
+        "Not for microbiologically unsafe water without adequate disinfection."
+      ],
+      "checked_at": "2026-10-31"
+    },
+    {
+      "id": "aquatru-carafe",
+      "name": "AquaTru Carafe with VOC Carbon Filter",
+      "brand": "AquaTru",
+      "model": "AT100",
+      "purchase_sku": "90AT100AT01",
+      "type": "countertop_reverse_osmosis",
+      "price": 375.0,
+      "price_type": "one_time",
+      "currency": "USD",
+      "available": true,
+      "purchase_url": "https://aquatru.com/products/carafe-countertop?variant=47255713448150",
+      "price_source": "https://aquatru.com/products/carafe-countertop.js",
+      "included_cartridges": 3,
+      "replacement_family": "aquatru-carafe",
+      "no_plumbing": true,
+      "wall_power_required": true,
+      "power": "120 V AC",
+      "certified_claims": [
+        "lead",
+        "pentavalent_arsenic",
+        "nitrate",
+        "nitrite",
+        "fluoride",
+        "hexavalent_chromium",
+        "PFOA",
+        "PFOS",
+        "PFNA",
+        "PFHxS",
+        "PFHpA",
+        "chlorine",
+        "chloramine",
+        "microplastics"
+      ],
+      "pfas_analytes": [
+        "PFOA",
+        "PFOS",
+        "PFNA",
+        "PFHxS",
+        "PFHpA"
+      ],
+      "certification": "IAPMO R&T to NSF/ANSI 42, 53, 58, 372 and 401 for listed claims.",
+      "performance_source": "https://cdn.shopify.com/s/files/1/0758/4550/1142/files/AQT_PerfDataSheet_Carafe_09.25_R5_WEB.pdf?v=1778563455",
+      "shipping": "Calculated at checkout; amount unknown.",
+      "limitations": [
+        "High upfront cost; include only when supported contaminants and setup fit the household.",
+        "Arsenic claim applies to pentavalent arsenic, not all arsenic forms.",
+        "Arsenic treatment requires detectable free chlorine at inlet or proof that arsenic is pentavalent; chloramine alone is insufficient.",
+        "Manufacturer does not recommend untreated hardness above 10 gpg / 171 mg/L.",
+        "Needs electricity and produces reject water.",
+        "Not for microbiologically unsafe water without appropriate disinfection."
+      ],
+      "checked_at": "2026-10-31"
+    }
+  ],
+  "replacement_families": {
+    "culligan-zerof": {
+      "element": "ZEROFXX",
+      "capacity_gallons_each": 20,
+      "max_months": null,
+      "replacement_rule": "At 20 gallons, or earlier if the manufacturer replacement indicator reaches TDS 6. A TDS reading is not a contaminant-specific safety test.",
+      "performance_source": "https://shop.culligan.com/cdn/shop/files/Culligan_ZWTech_PerformanceData_062326Updated.pdf?v=7946913076530606398",
+      "price_source": "https://shop.culligan.com/products/zerowater-replacement-filter.js",
+      "offers": [
+        {
+          "sku": "ZEROF02",
+          "count": 2,
+          "price": 36.99,
+          "available": true,
+          "subscription": false,
+          "url": "https://shop.culligan.com/products/zerowater-replacement-filter?variant=51160900043071",
+          "checked_at": "2026-10-31"
+        },
+        {
+          "sku": "ZEROF03",
+          "count": 3,
+          "price": 47.99,
+          "available": true,
+          "subscription": false,
+          "url": "https://shop.culligan.com/products/zerowater-replacement-filter?variant=51160900075839",
+          "checked_at": "2026-10-31"
+        },
+        {
+          "sku": "ZEROF04",
+          "count": 4,
+          "price": 61.99,
+          "available": true,
+          "subscription": false,
+          "url": "https://shop.culligan.com/products/zerowater-replacement-filter?variant=50306568061247",
+          "checked_at": "2026-10-31"
+        },
+        {
+          "sku": "ZEROF06",
+          "count": 6,
+          "price": 89.99,
+          "available": true,
+          "subscription": false,
+          "url": "https://shop.culligan.com/products/zerowater-replacement-filter?variant=51160900108607",
+          "checked_at": "2026-10-31"
+        }
+      ],
+      "checked_at": "2026-10-31"
+    },
+    "brita-ob06": {
+      "element": "OB06",
+      "capacity_gallons_each": 120,
+      "max_months": 6,
+      "performance_source": "https://www.brita.com/support/performance-data/brita-elite/",
+      "offers": [
+        {
+          "count": 1,
+          "price": 19.99,
+          "available": null,
+          "subscription": false,
+          "url": "https://www.brita.com/products/brita-elite-replacement-filters/",
+          "checked_at": "2026-10-31"
+        },
+        {
+          "count": 2,
+          "price": 32.99,
+          "available": null,
+          "subscription": false,
+          "url": "https://www.brita.com/products/brita-elite-replacement-filters/",
+          "checked_at": "2026-10-31"
+        }
+      ],
+      "checked_at": "2026-10-31"
+    },
+    "pur-rf3375": {
+      "element": "RF-3375",
+      "capacity_gallons_each": 100,
+      "max_months": 3,
+      "performance_source": "https://www.pur.com/wp-content/uploads/NEW-PDS_RF3375_FM_28OCT25.pdf",
+      "offers": [
+        {
+          "count": 1,
+          "price": null,
+          "available": null,
+          "subscription": false,
+          "url": "https://www.pur.com/shop/replacement-filters/pur-faucet-filter/",
+          "checked_at": "2026-10-31"
+        }
+      ],
+      "checked_at": "2026-10-31"
+    },
+    "aquasana-aq-mf-1-r": {
+      "element": "AQ-MF-1-R",
+      "capacity_gallons_each": 784,
+      "max_months": 6,
+      "performance_source": "https://www.aquasana.com/on/demandware.static/-/Sites-aquasana-Library/default/dwee35f142/PDF/AQ-MF-1_Performance_Data.pdf",
+      "offers": [
+        {
+          "count": 1,
+          "price": 91.99,
+          "available": true,
+          "subscription": false,
+          "url": "https://www.aquasana.com/water-filter-replacements/under-sink-water-filter-replacements/claryum-direct-connect-replacement-cartridge-100329887.html",
+          "checked_at": "2026-10-31"
+        }
+      ],
+      "optional_subscription_price": 78.19,
+      "subscription_name": "Water for Life",
+      "checked_at": "2026-10-31"
+    },
+    "aquatru-carafe": {
+      "elements": [
+        {
+          "sku": "10AT100SF01",
+          "name": "Carafe Pre/Carbon",
+          "price": 29.95,
+          "count": 1,
+          "capacity_gallons": 300,
+          "max_months": 6,
+          "available": true,
+          "subscription": false,
+          "url": "https://aquatru.com/products/carafe-pre-carbon-filter",
+          "price_source": "https://aquatru.com/products/carafe-pre-carbon-filter.js",
+          "checked_at": "2026-10-31"
+        },
+        {
+          "sku": "10AT100VF01",
+          "name": "Carafe VOC Carbon",
+          "price": 39.95,
+          "count": 1,
+          "capacity_gallons": 300,
+          "max_months": 12,
+          "available": true,
+          "subscription": false,
+          "url": "https://aquatru.com/products/carafe-voc-carbon-filter",
+          "price_source": "https://aquatru.com/products/carafe-voc-carbon-filter.js",
+          "checked_at": "2026-10-31"
+        },
+        {
+          "sku": "10AT100RF01",
+          "name": "Carafe Reverse Osmosis",
+          "price": 59.95,
+          "count": 1,
+          "capacity_gallons": 600,
+          "max_months": 24,
+          "available": true,
+          "subscription": false,
+          "url": "https://aquatru.com/products/carafe-reverse-osmosis-filter",
+          "price_source": "https://aquatru.com/products/carafe-reverse-osmosis-filter.js",
+          "checked_at": "2026-10-31"
+        }
+      ],
+      "performance_source": "https://cdn.shopify.com/s/files/1/0758/4550/1142/files/AQT_PerfDataSheet_Carafe_09.25_R5_WEB.pdf?v=1778563455",
+      "checked_at": "2026-10-31"
+    }
+  },
+  "evidence_notes": [
+    "Only official manufacturer pages, performance sheets, manufacturer-hosted certification documents and official public product JSON were used.",
+    "Shopify product JSON provided exact variant prices, SKUs and availability for Culligan and AquaTru.",
+    "Certification applies to the complete specified system and genuine matching replacement elements, under the conditions in the performance sheet.",
+    "Claim arrays are selected verified contaminants relevant to matching, not exhaustive performance-sheet transcriptions.",
+    "Empty PFAS analyte arrays must be interpreted together with the product limitations and scope note.",
+    "PUR grouped PFAS claim is excluded from analyte matching because its inspected performance sheet does not explicitly enumerate individual analytes.",
+    "No claim is made that these are universally the cheapest products or that certified reduction guarantees a safe concentration in every household.",
+    "A filtered-water TDS reading does not establish that specific health contaminants are absent.",
+    "For cost estimates, round actual purchased replacement packs, subtract included cartridges, and use whichever replacement limit occurs first: volume or elapsed time. Do not prorate a multipack as if its cartridges can be purchased individually.",
+    "Do not convert unknown prices or shipping to zero. Do not automatically select subscriptions. Keep estimated savings separate from assistance actually received."
+  ],
+  "excluded_products": [
+    {
+      "model": "AQ-SFRO2-CHR",
+      "name": "Aquasana SmartFlow Reverse Osmosis, Chrome",
+      "available": false,
+      "price": 224.99,
+      "reason": "Fresh official product page says out of stock; search snippets retained stale in-stock status and a different price.",
+      "source": "https://www.aquasana.com/reverse-osmosis-water-filters/smart-flow-reverse-osmosis/chrome-100385796.html",
+      "checked_at": "2026-10-31"
+    }
+  ]
+}
