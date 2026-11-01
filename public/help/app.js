@@ -260,10 +260,11 @@
     tile(tiles, "repairs", "pipeHelpHint", repairs);
     tile(tiles, "rights", "advocacyHint", rights);
     tile(tiles, "formHelp", "formHelpHint", X.forms);
-    button(main,"findLocalHelp",()=>X.local(),"quiet");
-    button(main,"allTools",X.directory,"quiet");
-    button(main,"plainGuides",X.guideLibrary,"quiet");
-    button(main, "progress", () => navigate(progress), "quiet");
+    const moreHelp = box(main, "actions");
+    button(moreHelp,"findLocalHelp",()=>X.local(),"quiet");
+    button(moreHelp,"allTools",X.directory,"quiet");
+    button(moreHelp,"plainGuides",X.guideLibrary,"quiet");
+    button(moreHelp, "progress", () => navigate(progress), "quiet");
     detail(main, "privacyDetails", (d) => {
       text(d, "privacy");
       text(d, "aiData");
