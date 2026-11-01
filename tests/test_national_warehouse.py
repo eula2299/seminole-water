@@ -303,3 +303,51 @@ class CapacityRecoveryTests(unittest.TestCase):
     W.loop(stop=Stop(),store_factory=Storage,discover_fn=lambda:[])
    self.assertEqual(compliance.calls,2);self.assertNotIn('compliance',W.STATE['errors'])
   finally:W.STATE.clear();W.STATE.update(saved)
+
+class PublicationRecoveryTests(unittest.TestCase):
+ def test_busy_error_preserves_expiry_and_preflight_never_writes(self):
+  client=MemoryS3();lease={'owner':'existing','expires':1234};client.put_object(Key='v2/publication-lease.json',Body=json.dumps(lease).encode())
+  store=W.Store(client=client,bucket='test',max_total=10000);serial=client.serial
+  with mock.patch.object(W.time,'time',return_value=1200):
+   with self.assertRaises(W.PublicationBusy) as raised:store.check_publication_lease()
+   self.assertEqual(raised.exception.expires,1234)
+   with self.assertRaises(W.PublicationBusy) as raised:
+    with store.publication_lock():self.fail('Must not acquire active lease')
+   self.assertEqual(raised.exception.expires,1234)
+  self.assertEqual(client.serial,serial)
+  with mock.patch.object(W.time,'time',return_value=1234):store.check_publication_lease()
+ def test_loop_waits_for_renewed_lease_before_any_expensive_occurrence_or_compliance_work(self):
+  clock=[0];calls=[];saved=copy.deepcopy(W.STATE);client=MemoryS3()
+  def lease(expires):client.put_object(Key='v2/publication-lease.json',Body=json.dumps({'owner':'publisher','expires':expires}).encode())
+  lease(1006);store=W.Store(client=client,bucket='test',max_total=10000)
+  class Stop:
+   def is_set(self):return clock[0]>=16
+   def wait(self,seconds):
+    clock[0]+=2
+    if clock[0]==4:lease(1012)
+  class Compliance:
+   def status(self):return {'retained_association_rows':5}
+   def refresh(self):calls.append(('compliance',clock[0]))
+  try:
+   W.STATE['errors']={}
+   with tempfile.TemporaryDirectory() as t,mock.patch.object(W,'ROOT',pathlib.Path(t)),mock.patch.object(W.time,'monotonic',side_effect=lambda:clock[0]),mock.patch.object(W.time,'time',side_effect=lambda:1000+clock[0]),mock.patch.object(W,'ingest',side_effect=lambda store,item:calls.append((item['id'],clock[0]))),mock.patch.object(W,'ENVIRONMENTAL_ARCHIVE',None),mock.patch.object(W,'WELL_ARCHIVE',None),mock.patch.object(W,'COMPLIANCE_ARCHIVE',Compliance()),mock.patch.dict(W.os.environ,{'WAREHOUSE_WQP_ENABLED':'false','WAREHOUSE_WELLS_ENABLED':'false'}):
+    W.loop(stop=Stop(),store_factory=lambda:store,discover_fn=lambda:[{'id':'ucmr5'}])
+   self.assertEqual(calls,[('ucmr5',12),('compliance',12)])
+   self.assertNotIn('ucmr5',W.STATE['errors']);self.assertNotIn('compliance',W.STATE['errors'])
+   self.assertIn('last_publication_retry_at',W.STATE)
+  finally:W.STATE.clear();W.STATE.update(saved)
+ def test_early_lease_release_is_detected_within_one_minute_without_downloads_while_held(self):
+  clock=[0];calls=[];saved=copy.deepcopy(W.STATE);client=MemoryS3()
+  def lease(expires):client.put_object(Key='v2/publication-lease.json',Body=json.dumps({'owner':'publisher','expires':expires}).encode())
+  lease(2800);store=W.Store(client=client,bucket='test',max_total=10000)
+  class Stop:
+   def is_set(self):return clock[0]>=80
+   def wait(self,seconds):
+    clock[0]+=10
+    if clock[0]==20:lease(0)
+  try:
+   W.STATE['errors']={}
+   with tempfile.TemporaryDirectory() as t,mock.patch.object(W,'ROOT',pathlib.Path(t)),mock.patch.object(W.time,'monotonic',side_effect=lambda:clock[0]),mock.patch.object(W.time,'time',side_effect=lambda:1000+clock[0]),mock.patch.object(W,'ingest',side_effect=lambda store,item:calls.append(clock[0])),mock.patch.object(W,'ENVIRONMENTAL_ARCHIVE',None),mock.patch.object(W,'WELL_ARCHIVE',None),mock.patch.object(W,'COMPLIANCE_ARCHIVE',None),mock.patch.dict(W.os.environ,{'WAREHOUSE_WQP_ENABLED':'false','WAREHOUSE_WELLS_ENABLED':'false','WAREHOUSE_COMPLIANCE_ENABLED':'false'}):
+    W.loop(stop=Stop(),store_factory=lambda:store,discover_fn=lambda:[{'id':'ucmr5'}])
+   self.assertEqual(calls,[60]);self.assertNotIn('ucmr5',W.STATE['errors'])
+  finally:W.STATE.clear();W.STATE.update(saved)
