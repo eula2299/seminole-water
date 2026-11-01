@@ -12,6 +12,7 @@ window.WaterHelpLocal={create(c){
   function routes(data){
    if(!data.region)return;
    const section=box(output);section.append(el('h2',t('officialHelp')+' · '+data.region.name));
+   for(const office of data.local_offices||[]){const row=box(section,'official-route');link(row,office.title,office.url,'button quiet');}
    const order={assistance:['social','water','consumer'],meetings:['local','state'],pipes:['water','local'],repairs:['water','social','local'],bill:['consumer','social','water'],support:['water','health','consumer']}[kind.value];
    for(const key of order){const route=data.region.routes[key];if(!route)continue;const row=box(section,'official-route');link(row,'agency_'+key,route.url,'button quiet');row.append(el('p',route.title,'fine'));}
    if(['pipes','repairs'].includes(kind.value))button(section,'requestInspection',()=>c.requestWizard('inspection'),'quiet');
@@ -22,7 +23,7 @@ window.WaterHelpLocal={create(c){
   async function run(){
    if(!state.value||city.value.trim().length<2){toast(t('required'));return;}
    const thisRun=++generation;output.replaceChildren();busy.textContent=t('findingLocalHelp');
-   const direct=await api('/api/help/agencies?'+new URLSearchParams({state:state.value,tribal:String(tribal.checked)}));if(thisRun!==generation)return;routes(direct);
+   const direct=await api('/api/help/agencies?'+new URLSearchParams({state:state.value,city:city.value.trim(),tribal:String(tribal.checked)}));if(thisRun!==generation)return;routes(direct);
    try{
     const data=await api('/api/help/local',{city:city.value.trim(),state:state.value,kind:kind.value,language:I.language});if(thisRun!==generation)return;
     if(data.items.length){const section=box(output);section.append(el('h2',t('nearYou')));
