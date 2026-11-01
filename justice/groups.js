@@ -109,11 +109,13 @@ function createGroups({
         body.name.length > 100
       )
         throw Object.assign(Error("INVALID_SUPPORTER"), { status: 400 });
-      await access(id, secret);
+      const request = await access(id, secret);
       const supporter = {
         name: body.name.trim(),
         date: new Date().toISOString(),
         id: token(),
+        request_hash: hash(JSON.stringify({title:request.title,request:request.request})),
+        consent_version: "support-request-v1",
       };
       const r = await db.query(
         "UPDATE water_help_groups SET supporters=supporters || $3::jsonb WHERE id=$1 AND invite_hash=$2 AND expires_at>now() AND jsonb_array_length(supporters)<200 RETURNING id",
@@ -121,7 +123,7 @@ function createGroups({
       );
       if (!r.rowCount)
         throw Object.assign(Error("GROUP_FULL"), { status: 409 });
-      return { recorded: true, submitted_to_official: false };
+      return { recorded: true, submitted_to_official: false, receipt: {id:supporter.id,date:supporter.date,request_hash:supporter.request_hash} };
     },
     async remove(id, secret) {
       await access(id, secret, true);

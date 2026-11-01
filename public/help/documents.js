@@ -201,5 +201,46 @@ window.WaterHelpDocuments = (() => {
     area.remove();
     if (!done) throw Error("COPY_UNAVAILABLE");
   }
-  return { read, fillForm, download, copy };
+  async function inspectForm(file) {
+    if (!file || file.size > 10 * 1024 * 1024 || !/\.pdf$/i.test(file.name)) throw Error('FILE_TYPE');
+    if (!window.PDFLib) await loadScript('/help/vendor/pdf-lib.min.js');
+    const bytes = await file.arrayBuffer();
+    const doc = await PDFLib.PDFDocument.load(bytes);
+    if (doc.getPageCount() > 40) throw Error('TOO_MANY_PAGES');
+    const fields = doc.getForm().getFields().map((f, i) => {
+      const kind = ['PDFTextField','PDFCheckBox','PDFDropdown','PDFRadioGroup','PDFOptionList'].find(name=>f instanceof PDFLib[name]) || 'unsupported';
+      const rawName=f.getName();
+      const usefulName=!/^(?:text|field|fill|check.?box|radio|undefined|untitled)[_ .-]*\d*$/i.test(rawName) && /[a-zA-Z]{3}/.test(rawName);
+      const label = f.acroField.getAlternateName?.() || (usefulName ? rawName.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/[_]+/g,' ').replace(/Row\s*\d+$/i,'').replace(/^\d+\s*/, '').trim() : '');
+      const sensitive = /social.?security\s*(?:number|no|#)|\bssn\b|signature|sign.here|certif|attest|penalty|routing|bank.account/i.test(f.getName()+' '+label);
+      const selection=f.getSelected?.();
+      return { id: f.getName(), label: label || '', number: i+1,
+        type: kind === 'PDFTextField' ? 'text' : kind === 'PDFCheckBox' ? 'checkbox' : ['PDFDropdown','PDFRadioGroup','PDFOptionList'].includes(kind) ? 'choice' : 'unsupported',
+        options: f.getOptions?.() || [], sensitive, value: f.getText?.() ?? (Array.isArray(selection)?selection[0]:selection) ?? f.isChecked?.() ?? '',
+        maxLength: f.getMaxLength?.() || 2000, readOnly: f.isReadOnly?.() || false };
+    }).filter(f => f.type !== 'unsupported' && !f.readOnly);
+    if (fields.length > 200) throw Error('TOO_MANY_FIELDS');
+    return { bytes, fields, name: file.name };
+  }
+  async function fillUploadedForm(spec, values) {
+    const doc = await PDFLib.PDFDocument.load(spec.bytes);
+    if (!window.fontkit) await loadScript('/help/vendor/fontkit.umd.min.js');
+    doc.registerFontkit(window.fontkit);
+    const r = await fetch('/help/fonts/DejaVuSans.ttf');
+    if (!r.ok) throw Error('FONT_UNAVAILABLE');
+    const font = await doc.embedFont(await r.arrayBuffer(), {subset:true});
+    const form = doc.getForm();
+    for (const info of spec.fields) {
+      if (info.sensitive || !(info.id in values)) continue;
+      const f = form.getField(info.id), value = values[info.id];
+      if (info.type === 'text') {
+        if (String(value).length > info.maxLength) throw Error('ANSWER_TOO_LONG');
+        f.setText(String(value));
+      } else if (info.type === 'checkbox') value ? f.check() : f.uncheck();
+      else if (info.type === 'choice' && info.options.includes(value)) f.select(value);
+    }
+    form.updateFieldAppearances(font);
+    return new Blob([await doc.save()], {type:'application/pdf'});
+  }
+  return { read, fillForm, inspectForm, fillUploadedForm, download, copy };
 })();

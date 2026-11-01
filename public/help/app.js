@@ -5,9 +5,10 @@
     V = WaterHelpVault,
     D = WaterHelpDocuments;
   await I.set(I.preferred());
-  const t = (k, v) => I.t(k, v),
+  const t = (k, v) => I.t(V.isSessionOnly?.() && k === "saved" ? "keptForNow" : V.isSessionOnly?.() && k === "save" ? "keepForVisit" : k, v),
     main = document.getElementById("main");
-  let config = { ai: false, groups: false, forms: [] },
+  let X;
+  let config = { ai: false, groups: false, promises: false, forms: [] },
     catalog = null,
     current = () => home(),
     reading = false;
@@ -22,7 +23,6 @@
     const saved = JSON.parse(
       sessionStorage.getItem("water-help-context") || "null",
     );
-    sessionStorage.removeItem("water-help-context");
     if (saved && saved.expires > Date.now()) {
       for (const key of ["address", "city", "state"])
         memory.location[key] = String(saved.location?.[key] || "").slice(
@@ -30,7 +30,8 @@
           200,
         );
       memory.action_token = saved.action_token;
-    }
+      if(saved.brief && typeof saved.brief === "object") memory.brief = saved.brief;
+    } else sessionStorage.removeItem("water-help-context");
   } catch {}
   const configReady = api("/api/help/config")
     .then((value) => {
@@ -88,7 +89,8 @@
       try {
         await fn();
       } catch (e) {
-        toast(t(e.message === "CHECK_FIRST" ? "checkFirst" : "error"));
+        if(e.message === "VAULT_LOCKED" && X) await X.vault(fn);
+        else toast(t(e.message === "CHECK_FIRST" ? "checkFirst" : "error"));
       } finally {
         b.disabled = false;
       }
@@ -124,6 +126,7 @@
     reading = false;
     main.replaceChildren();
     if (back) button(main, "back", back, "back");
+    if(X && title!=="advocate") button(main,"askAdvocate",()=>X.advocate(title),"context-help quiet");
     heading(main, title, "h1");
     if (intro) text(main, intro, "lead");
     main.focus({ preventScroll: true });
@@ -132,7 +135,7 @@
   }
   function navigate(fn) {
     current = fn;
-    fn();
+    return fn();
   }
   function field(parent, key, type = "text", value = "", hint) {
     const label = el("label", undefined, "field");
@@ -241,14 +244,24 @@
     page("home", "intro", null);
     main.prepend(el("p", t("free"), "eyebrow"));
     const lead = box(main, "card soft");
-    heading(lead, "address");
-    text(lead, "addressHint");
-    link(lead, "address", "/#lookup-form", "button");
-    const tiles = box(main, "tiles");
-    tile(tiles, "report", "reportHint", reportUpload, 1);
-    tile(tiles, "costs", "costsHint", costs, 2);
-    tile(tiles, "repairs", "repairsHint", repairs, 3);
-    tile(tiles, "rights", "rightsHint", rights, 4);
+    if(memory.location.address){
+      heading(lead,"usingAddress");
+      lead.append(el("p",Object.values(memory.location).filter(Boolean).join(", ")));
+      link(lead,"changeAddress","/#lookup-form","button quiet");
+    }else{
+      heading(lead, "address");
+      text(lead, "addressHint");
+      link(lead, "address", "/#lookup-form", "button");
+    }
+    const tiles = box(main, "tiles home-tiles");
+    tile(tiles, "report", "reportHint", reportUpload);
+    tile(tiles, "filters", "filtersHint", filterForm);
+    tile(tiles, "moneyHelp", "moneyHelpHint", costs);
+    tile(tiles, "repairs", "pipeHelpHint", repairs);
+    tile(tiles, "rights", "advocacyHint", rights);
+    tile(tiles, "formHelp", "formHelpHint", X.forms);
+    button(main,"allTools",X.directory,"quiet");
+    button(main,"plainGuides",X.guideLibrary,"quiet");
     button(main, "progress", () => navigate(progress), "quiet");
     detail(main, "privacyDetails", (d) => {
       text(d, "privacy");
@@ -257,9 +270,13 @@
   }
   function costs() {
     page("costs");
+    localOptions(main);
     const tiles = box(main, "tiles");
     tile(tiles, "filters", "filtersHint", filterForm);
     tile(tiles, "bill", "billHint", billUpload);
+    tile(tiles,"rateCheck","billHint",X.billRates);
+    tile(tiles,"maintenance","maintenanceHint",X.maintenance);
+    tile(tiles,"assistanceTracker","progressHint",X.assistance);
     tile(tiles, "assistance", "assistanceHint", () =>
       requestWizard("assistance"),
     );
@@ -269,17 +286,22 @@
     page("repairs");
     const tiles = box(main, "tiles");
     tile(tiles, "pipes", "pipesHint", pipeForm);
+    tile(tiles,"pipeMap","pipeMapIntro",X.pipeMaps);
     tile(tiles, "inspection", "inspectionHint", () =>
       requestWizard("inspection"),
     );
     tile(tiles, "repairForm", "repairFormHint", repairIntake);
+    tile(tiles, "repairStatus", "repairStatusIntro", X.repairStatus);
     tile(tiles, "progress", "progressHint", progress);
   }
   function rights() {
     page("rights");
     const tiles = box(main, "tiles");
     tile(tiles, "complaint", "complaintHint", () => requestWizard("complaint"));
-    tile(tiles, "treatment", "treatmentHint", () => requestWizard("treatment"));
+    tile(tiles, "treatment", "treatmentHint", X.treatment);
+    tile(tiles,"complaintForms","complaintFormsIntro",X.complaints);
+    tile(tiles,"publicPromises","publicPromisesIntro",X.commitments);
+    tile(tiles,"escalation","escalationIntro",X.escalation);
     tile(tiles, "meetings", "meetingsHint", meetingForm);
     tile(tiles, "joint", "jointHint", groupForm);
   }
@@ -293,8 +315,9 @@
     heading(panel, "uploadTitle");
     const file = field(panel, "file", "file", "", "fileHelp");
     file.accept = ".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv";
+    const manualText = detail(panel,"pasteInstead",()=>{});
     const words = field(
-      panel,
+      manualText,
       "text",
       "textarea",
       memory[kind + "Text"],
@@ -308,15 +331,15 @@
     );
     const status = el("p", "", "muted");
     panel.append(status);
-    button(
-      panel,
-      "readFile",
-      async () => {
+    let readingFile = false;
+    async function readSelected() {
+        if(readingFile)return;
         if (!file.files[0]) {
           file.focus();
           return;
         }
         status.textContent = t("working");
+        readingFile = true;file.disabled = true;
         try {
           words.value = await D.read(
             file.files[0],
@@ -324,15 +347,18 @@
             (n) => (status.textContent = t("working") + " " + n + "%"),
           );
           memory[kind + "Text"] = words.value;
-          status.textContent = t("reviewText");
-          words.focus();
+          if(!words.value.trim())throw Error("EMPTY_DOCUMENT");
+          onContinue(words.value);
         } catch {
           status.textContent = t("readFileError");
+          manualText.open = true;
+        } finally {
+          readingFile = false;file.disabled = false;
         }
-      },
-      "quiet",
-    );
-    const row = actions(panel);
+    }
+    file.addEventListener("change",readSelected);
+    text(panel,"readsAutomatically","fine");
+    const row = actions(manualText);
     button(row, kind === "lab" ? "findResults" : "continue", () => {
       memory[kind + "Text"] = words.value;
       onContinue(words.value);
@@ -365,9 +391,28 @@
       if (!memory.labRows.length) {
         toast(t("noResults"));
         memory.labRows = [emptyRow()];
+        return reviewLab(0);
       }
-      reviewLab(0);
+      reviewLabSummary();
     });
+  }
+  function reviewLabSummary(){
+    page("review","reviewText",reportUpload);
+    text(main,"reportLimit","fine");
+    for(const [index,row] of memory.labRows.entries()){
+      const b=box(main);b.append(el("h2",t(row.name)||t("analyte")),el("p",[row.qualifier,row.value,row.unit].filter(v=>v!==null&&v!=="").join(" ")));
+      if(row.quote)detail(b,"original",row.quote);
+      if(!row.unit || row.value===null)text(b,"notStated","fine");
+      button(b,"edit",()=>reviewLab(index),"quiet");
+    }
+    const checked=check(main,"checkedAllResults");
+    button(main,"explainResults",()=>{
+      if(!checked.checked){checked.focus();throw Error("CHECK_FIRST");}
+      memory.labRows=L.validateRows(memory.labRows.map(row=>({...row,confirmed:true})));
+      reportResults();
+    });
+    button(main,"addResult",()=>{memory.labRows.push(emptyRow());reviewLab(memory.labRows.length-1);},"quiet");
+    aiHelp(main,"lab",()=>memory.labText,result=>{memory.labRows=L.validateRows(result.rows);reviewLabSummary();});
   }
   const emptyRow = () => ({
     name: "",
@@ -689,6 +734,7 @@
       const a = actions(b);
       if (recommended) link(a, "seller", p.purchase_url, "button");
       link(a, "proof", p.performance_source, "button quiet");
+      if(recommended) button(a,"maintenance",()=>X.maintenance(p,catalog.replacement_families[p.replacement_family],query.gallons),"quiet");
       detail(b, "cartridges", (d) => {
         if (p.cost) {
           d.append(
@@ -740,7 +786,22 @@
     button(main, "assistance", () => requestWizard("assistance"), "quiet");
   }
   function billUpload() {
-    documentInput("bill", (words) => billReview(L.parseBill(words)));
+    documentInput("bill", (words) => billSummary(L.parseBill(words)));
+  }
+  function billSummary(bill){
+    if(bill.amount_due===null || !bill.charges.length)return billReview(bill);
+    memory.bill=bill;
+    page("bill","reviewText",billUpload);
+    const b=box(main);b.append(el("h2",t("amountDue")+": "+money(bill.amount_due)));
+    if(bill.due_date)b.append(el("p",t("dueDate")+": "+bill.due_date));
+    for(const charge of bill.charges)b.append(el("p",charge.label+": "+money(charge.amount)));
+    const confirmed=check(b,"billComplete");
+    button(b,"checkBill",()=>{
+      if(!confirmed.checked){confirmed.focus();throw Error("CHECK_FIRST");}
+      const data={...bill,all_charges_confirmed:true};billResult(data,L.billMath(data));
+    });
+    button(b,"edit",()=>billReview(bill),"quiet");
+    aiHelp(main,"bill",()=>memory.billText);
   }
   function billReview(bill) {
     page("bill", "billIntro", billUpload);
@@ -963,7 +1024,21 @@
     }
     draw();
   }
-  function requestWizard(kind, initial = {}) {
+  function publicContext(){
+    const p=memory.brief||{},lines=[];
+    if(memory.location.address)lines.push(t("street")+": "+Object.values(memory.location).filter(Boolean).join(", "));
+    if(p.provider)lines.push(t("waterProvider")+": "+p.provider);
+    if(p.findings?.length){lines.push(t("reportLimit"));for(const f of p.findings.slice(0,5))lines.push([f.name,f.result,f.scope,f.date,f.source_url].filter(Boolean).join(" · "));}
+    if(p.tests?.length)lines.push(t("substances")+": "+p.tests.join(", "));
+    return lines.join("\n");
+  }
+  function localOptions(parent){
+    const options=(memory.brief?.options||[]).filter(o=>o && typeof o.url==="string").slice().sort((a,b)=>(a.price??Infinity)-(b.price??Infinity)).slice(0,4);
+    if(!options.length)return;
+    const b=box(parent,"card soft");heading(b,"helpAlreadyFound");
+    for(const o of options){const row=box(b,"result");row.append(el("h3",o.title),el("p",[o.test,o.price===0?t("free"):o.price==null?t("costUnknown"):money(o.price)].filter(Boolean).join(" · ")));if(o.note)row.append(el("p",o.note,"fine"));link(row,"portal",o.url,"button quiet");button(row,"prepareRequest",()=>requestWizard("assistance",{recipient:o.title,facts:[publicContext(),o.title,o.test,o.url].filter(Boolean).join("\n")}),"quiet");}
+  }
+  function requestWizard(kind, initial = {}, edit = false) {
     const base = {
       lab: "labQuestions",
       bill: "billQuestions",
@@ -974,10 +1049,11 @@
       followup: "followupQuestions",
     };
     const values = {
-      facts: initial.facts || "",
+      facts: initial.facts || (kind==="lab"&&memory.labRows.length?memory.labRows.map(r=>[r.name,r.qualifier,r.value,r.unit,r.sample_date].filter(v=>v!==null&&v!=="").join(" ")).join("\n"):publicContext()),
       request: t(base[kind] || "repairQuestions"),
       ...initial,
     };
+    if(!edit && values.facts && ["assistance","inspection","repair","lab","bill"].includes(kind))return letter(kind,values);
     const fields = [
       {
         key: "whatHappened",
@@ -1013,7 +1089,7 @@
     );
   }
   function letter(kind, v) {
-    page("reviewLetter", "letterIntro", () => requestWizard(kind, v));
+    page("reviewLetter", "letterIntro", () => requestWizard(kind, v, true));
     const parts = [
       t("letterSubject"),
       v.recipient || "",
@@ -1050,77 +1126,40 @@
     aiHelp(main, "letter", () => draft.value);
   }
   function officeLinks(parent, kind) {
-    const d = detail(parent, "sendTo", (p) => {
-      text(p, "officeNote");
-      if (memory.action_token)
-        button(
-          p,
-          "sendTo",
-          async () => {
-            const lane =
-              {
-                assistance: "afford",
-                repair: "rent",
-                inspection: "rent",
-                lab: "explain",
-                bill: "followup",
-                treatment: "followup",
-                complaint: "followup",
-              }[kind] || "followup";
-            const result = await api("/api/national/action-contact", {
-              token: memory.action_token,
-              lane,
-              goal: kind === "repair" ? "repair" : undefined,
-            });
-            const found = box(p, "card soft");
-            for (const contact of result.contacts || []) {
-              found.append(el("p", contact.name), el("p", contact.email));
-              if (contact.source_url) link(found, "source", contact.source_url);
-              button(
-                found,
-                "copy",
-                async () => {
-                  await D.copy(contact.email);
-                  toast(t("copied"));
-                },
-                "quiet",
-              );
-            }
-            for (const route of result.routes || []) {
-              const row = el("p", route.name + " ");
-              link(row, "portal", route.url);
-              found.append(row);
-            }
-            if (!found.children.length) text(found, "sourceUnavailable");
-          },
-          "quiet",
-        );
-      const urls = [
-        [
-          "waterOffice",
-          "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data",
-        ],
-        ["housingOffice", "https://www.usa.gov/tenant-rights"],
-        [
-          "legalAid",
-          "https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help",
-        ],
+    const d = detail(parent, "sendTo", p => {
+      text(p,"officeNote");
+      const found=box(p,"card soft");
+      const show = async () => {
+        if(!memory.action_token){found.remove();return;}
+        found.replaceChildren(el("p",t("working")));
+        try{
+          const lane={assistance:"afford",repair:"rent",inspection:"rent",lab:"explain"}[kind]||"followup";
+          const result=await api("/api/national/action-contact",{token:memory.action_token,lane,goal:kind==="repair"?"repair":undefined});
+          found.replaceChildren();
+          for(const contact of result.contacts||[]){
+            const row=box(found,"result");row.append(el("h3",contact.name),el("p",contact.email));
+            if(contact.source_url)link(row,"source",contact.source_url);
+            button(row,"copy",async()=>{await D.copy(contact.email);toast(t("copied"));},"quiet");
+          }
+          for(const route of result.routes||[]){const row=el("p",route.name+" ");link(row,"portal",route.url);found.append(row);}
+          if(!found.children.length)text(found,"sourceUnavailable");
+        }catch{found.replaceChildren(el("p",t("sourceUnavailable")));}
+      };
+      show();
+      const urls=[
+        ["waterOffice",memory.brief?.agency?.url||"https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"],
+        ["housingOffice","https://www.usa.gov/tenant-rights"],
+        ["legalAid","https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help"]
       ];
-      if (kind === "treatment" || kind === "complaint")
-        urls.push([
-          "civilRights",
-          "https://www.epa.gov/external-civil-rights/filing-discrimination-complaint-against-recipient-epa-funds",
-        ]);
-      for (const [k, url] of urls) {
-        const row = el("p");
-        link(row, k, url);
-        p.append(row);
-      }
-      text(p, "nextOfficeHelp", "fine");
+      if(kind==="treatment"||kind==="complaint")urls.push(["civilRights","https://www.epa.gov/external-civil-rights/filing-discrimination-complaint-against-recipient-epa-funds"]);
+      for(const [key,url] of urls){const row=el("p");link(row,key,url);p.append(row);}
+      text(p,"nextOfficeHelp","fine");
     });
+    d.open=true;
     return d;
   }
   async function repairIntake(saved = {}) {
+    saved={residence_address:Object.values(memory.location).filter(Boolean).join(", "),...saved};
     await configReady;
     page("repairForm", "formIntro", repairs);
     text(main, "formEligibility", "card");
@@ -1316,6 +1355,8 @@
         link(a, "calendar", event.url, "button quiet");
         if (event.agenda) link(a, "agenda", event.agenda, "button quiet");
         link(a, "signup", data.signup_source, "button quiet");
+        X.reminder(a,{title:event.title,date:event.date,description:event.location+' · '+event.url,url:event.url});
+        if(event.deadline)X.reminder(a,{title:t("deadline")+' · '+event.title,date:event.deadline.date,time:event.deadline.time,timezone:event.deadline.timezone,description:t("confirmDeadline"),url:event.deadline.source});
         button(
           a,
           "writeComment",
@@ -1459,6 +1500,7 @@
             t("notVerifiedSignatures"),
         );
         officeLinks(main, "complaint");
+        button(main,"submissionHelp",()=>X.submission({kind:"group",title:data.title,document:data.request+"\n\n"+supporters}),"quiet");
         button(
           main,
           "deleteGroup",
@@ -1496,6 +1538,7 @@
     }
   }
   async function progress() {
+    if((await V.state()).locked)return X.vault(progress);
     page("progress", "progressIntro");
     const items = await V.list(),
       total = items.reduce((n, i) => n + (L.amount(i.received) || 0), 0);
@@ -1506,6 +1549,8 @@
       editStep({ kind: "request", title: "", status: "prepared", events: [] }),
     );
     button(a, "backup", backupForm, "quiet");
+    if(!V.isSessionOnly())button(a,"lockVault",()=>{V.lock();X.vault(progress);},"quiet");
+    else text(main,"sessionOnlyWarning","card warning");
     if (!items.length) text(main, "emptyProgress", "empty");
     for (const item of items) {
       const b = box(main);
@@ -1513,8 +1558,11 @@
         el("h2", item.title),
         el("span", t(item.status || "prepared"), "badge"),
       );
-      if (item.follow_date)
+      if (item.follow_date) {
         b.append(el("p", t("followDate") + ": " + item.follow_date));
+        X.reminder(b,{title:item.title,date:item.follow_date,description:item.document||""});
+      }
+      if(item.promise_id)button(b,"updatePromise",()=>X.updatePromise(item.promise_id,item.owner_key),"quiet");
       if (item.promised) b.append(el("p", item.promised));
       const a = actions(b);
       button(a, "edit", () => editStep(item), "quiet");
@@ -1723,6 +1771,7 @@
       "quiet",
     );
   }
+  X=WaterHelpExtended.create({I,L,V,D,main,page,el,text,box,field,select,check,button,link,actions,detail,save,toast,api,tile,money,requestWizard,home,editStep,progress,configReady,getConfig:()=>config,costs,repairs,rights,repairIntake,billUpload,wizard,pipeForm,reportUpload,filterForm,meetingForm,groupForm,getLocation:()=>({...memory.location}),publicContext,localOptions});
   function chrome() {
     document.getElementById("language").value = I.language;
     document.getElementById("language").disabled = false;
@@ -1806,6 +1855,19 @@
       "/help/repairs": repairs,
       "/help/rights": rights,
       "/help/progress": progress,
+      "/help/forms":X.forms,
+      "/help/tools":X.directory,
+      "/help/filters":filterForm,
+      "/help/bills":billUpload,
+      "/help/maintenance":X.maintenance,
+      "/help/assistance":X.assistance,
+      "/help/advocate":X.advocate,
+      "/help/promises":()=>hash.get("id")&&hash.get("key")?X.updatePromise(hash.get("id"),hash.get("key")):X.commitments(),
+      "/help/complaints":X.complaints,
+      "/help/escalation":X.escalation,
+      "/help/guides":X.guideLibrary,
+      "/help/status":X.repairStatus,
+      "/help/pipes":pipeForm,
     };
     current = route[location.pathname] || home;
     current();

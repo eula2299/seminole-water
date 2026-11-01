@@ -5,6 +5,8 @@ const { readJson, clientKey } = require("../national/http_safety");
 const { createAi } = require("./ai");
 const { createGroups } = require("./groups");
 const sources = require("./sources");
+const extended = require("./extended-sources");
+const { createPromises } = require("./promises");
 const root = path.resolve(__dirname, "..");
 const staticFiles = {};
 for (const file of [
@@ -17,6 +19,8 @@ for (const file of [
   "vault.js",
   "entry.js",
   "entry.css",
+  "extended.js",
+  "extended-logic.js",
 ])
   staticFiles["/help/" + file] = path.join(root, "public/help", file);
 for (const language of ["en", "es", "fr", "pt", "ht", "ar"])
@@ -71,6 +75,7 @@ for (const name of [
 function createHelpHandler({
   ai = createAi(),
   groups = createGroups(),
+  promises = createPromises(),
   fetcher = fetch,
   trustProxy = false,
 } = {}) {
@@ -126,6 +131,19 @@ function createHelpHandler({
         "/help/rights",
         "/help/progress",
         "/help/join",
+        "/help/forms",
+        "/help/tools",
+        "/help/filters",
+        "/help/bills",
+        "/help/assistance",
+        "/help/maintenance",
+        "/help/advocate",
+        "/help/promises",
+        "/help/escalation",
+        "/help/complaints",
+        "/help/guides",
+        "/help/status",
+        "/help/pipes",
       ];
       if (
         req.method === "GET" &&
@@ -163,6 +181,7 @@ function createHelpHandler({
       if (req.method === "GET" && u.pathname === "/api/help/config") {
         send(res, 200, {
           ai: ai.enabled,
+          promises: await promises.available(),
           groups: groups.available ? await groups.available() : groups.enabled,
           languages: Object.keys(ai.languages),
           forms: require("./local-sources.json").forms.map((f) => ({
@@ -190,6 +209,9 @@ function createHelpHandler({
         );
         return true;
       }
+      if (req.method === "GET" && u.pathname === "/api/help/rates") {send(res,200,{rates:extended.rates});return true;}
+      if (req.method === "GET" && u.pathname === "/api/help/advocacy") {send(res,200,{routes:extended.routes,complaints:extended.complaints});return true;}
+      if (req.method === "GET" && u.pathname === "/api/help/status-sources") {send(res,200,{providers:extended.statusProviders});return true;}
       if (req.method !== "POST") {
         send(res, 404, { error: "NOT_FOUND" });
         return true;
@@ -236,6 +258,18 @@ function createHelpHandler({
         if (body.consent !== true)
           throw Object.assign(Error("CONSENT_REQUIRED"), { status: 400 });
         send(res, 200, await ai.analyze(body));
+      } else if (u.pathname === "/api/help/advocate") {
+        if(body.consent!==true)throw Object.assign(Error("CONSENT_REQUIRED"),{status:400});
+        send(res,200,await ai.advocate(body));
+      } else if (u.pathname === "/api/help/request-status") {
+        send(res,200,await extended.requestStatus(body,fetcher));
+      } else if (u.pathname === "/api/help/promises/list") {
+        send(res,200,await promises.list(body));
+      } else if (u.pathname === "/api/help/promises") {
+        send(res,201,await promises.create(body));
+      } else if (/^\/api\/help\/promises\/[A-Za-z0-9_-]+\/update$/.test(u.pathname)) {
+        const id=u.pathname.split("/")[4];
+        send(res,200,await promises.update(id,String(req.headers["x-help-key"]||""),body));
       } else if (u.pathname === "/api/help/translate") {
         if (body.consent !== true)
           throw Object.assign(Error("CONSENT_REQUIRED"), { status: 400 });
@@ -272,7 +306,7 @@ function createHelpHandler({
     }
     return true;
   }
-  handler.close = () => groups.close();
+  handler.close = () => Promise.all([groups.close(),promises.close()]);
   return handler;
 }
 module.exports = { createHelpHandler, staticFiles };

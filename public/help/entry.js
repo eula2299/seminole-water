@@ -17,6 +17,7 @@
   window.addEventListener("water-report-ready", (e) => {
     reportContext = {
       action_token: e.detail?.action_token,
+      brief: e.detail?.help_context,
       location: addressValues(),
     };
   });
@@ -34,6 +35,7 @@
         "water-help-context",
         JSON.stringify({
           location: current,
+          brief: reportContext && JSON.stringify(current) === JSON.stringify(reportContext.location) ? reportContext.brief : null,
           action_token:
             reportContext &&
             JSON.stringify(current) === JSON.stringify(reportContext.location)
@@ -88,7 +90,7 @@
     }
     const state = document.getElementById("state");
     if (state) {
-      state.options[0].textContent = t("state");
+      state.options[0].textContent = ({en:"State",es:"Estado",fr:"État",pt:"Estado",ht:"Eta",ar:"الولاية"})[I.language];
       state.setAttribute("aria-label", t("state"));
     }
     const note = document.getElementById("address-help");

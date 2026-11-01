@@ -1,0 +1,613 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-11-01",
+  "scope": "Read-only primary-source research for complaint preparation, official submission handoffs and honest water-system/inventory coverage. No submissions were made.",
+  "sources": {
+    "epa_primacy": {
+      "title": "EPA Primacy Agency Drinking Water Data",
+      "url": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data",
+      "page_updated": "2026-04-29",
+      "checked_at": "2026-11-01"
+    },
+    "echo_primacy": {
+      "title": "EPA ECHO Safe Drinking Water Act resources and FAQs",
+      "url": "https://echo.epa.gov/help/sdwa-faqs",
+      "checked_at": "2026-11-01"
+    },
+    "naruc_directory": {
+      "title": "NARUC Regulatory Commissions",
+      "url": "https://www.naruc.org/about-naruc/our-mission/regulatory-commissions/",
+      "checked_at": "2026-11-01"
+    },
+    "naruc_role": {
+      "title": "NARUC Contact Us",
+      "url": "https://www.naruc.org/contact-us/",
+      "checked_at": "2026-11-01"
+    },
+    "doj_directory": {
+      "title": "DOJ Civil Rights Offices of Federal Agencies",
+      "url": "https://www.justice.gov/crt/fcs/Agency-OCR-Offices",
+      "checked_at": "2026-11-01"
+    },
+    "epa_complaint": {
+      "title": "Filing a Discrimination Complaint Against a Recipient of EPA Funds",
+      "url": "https://www.epa.gov/external-civil-rights/filing-discrimination-complaint-against-recipient-epa-funds",
+      "page_updated": "2026-10-07",
+      "checked_at": "2026-11-01"
+    },
+    "epa_general_contact": {
+      "title": "Contact Us About External Civil Rights",
+      "url": "https://www.epa.gov/external-civil-rights/forms/contact-us-about-external-civil-rights",
+      "checked_at": "2026-11-01"
+    },
+    "epa_louisiana": {
+      "title": "Notice of Compliance with Permanent Injunction in Louisiana v. EPA et al",
+      "url": "https://www.epa.gov/external-civil-rights/notice-compliance-permanent-injunction-louisiana-v-epa-et-al",
+      "checked_at": "2026-11-01"
+    },
+    "fl_form": {
+      "title": "Florida PSC Consumer Complaint Form",
+      "url": "https://www.floridapsc.com/consumer-complaint-form",
+      "checked_at": "2026-11-01"
+    },
+    "fl_form_bundle": {
+      "title": "Public JavaScript served by the Florida PSC form; current component, labels and validators inspected read-only",
+      "url": "https://www.floridapsc.com/main.0905aeb02b80ec2c.js",
+      "note": "Versioned bundle URL may change. Recheck the form’s current script before refreshing field mappings.",
+      "checked_at": "2026-11-01"
+    },
+    "fl_help": {
+      "title": "How to Use the PSC Online Complaints Form",
+      "url": "https://www.floridapsc.com/pscfiles/website-files/HTML/ComplaintsHelp.html",
+      "note": "Official help is older than the current Angular form. Receipt behavior was not tested by submitting.",
+      "checked_at": "2026-11-01"
+    },
+    "fl_scope": {
+      "title": "When to Call the PSC, 2026 brochure",
+      "url": "https://www.floridapsc.com/pscfiles/website-files/PDF/Publications/Consumer/Brochure/When_to_Call_the_PSC.pdf",
+      "checked_at": "2026-11-01"
+    },
+    "fl_about": {
+      "title": "Florida PSC About / how to contact consumer assistance",
+      "url": "https://www.floridapsc.com/about",
+      "checked_at": "2026-11-01"
+    },
+    "fl_tracking": {
+      "title": "Florida PSC Complaint Activity Tracking System",
+      "url": "https://www.floridapsc.com/complaint-activity-tracking-system",
+      "checked_at": "2026-11-01"
+    },
+    "fl_company_directory": {
+      "title": "Florida PSC companies regulated",
+      "url": "https://www.floridapsc.com/master-commission-directory",
+      "checked_at": "2026-11-01"
+    },
+    "doj_portal": {
+      "title": "DOJ Civil Rights reporting portal and receipt information",
+      "url": "https://civilrights.justice.gov/",
+      "checked_at": "2026-11-01"
+    },
+    "doj_form": {
+      "title": "DOJ Civil Rights online report, step 1",
+      "url": "https://civilrights.justice.gov/report/",
+      "checked_at": "2026-11-01"
+    },
+    "doj_pdf": {
+      "title": "DOJ Report a civil rights violation, official linked PDF",
+      "url": "https://www.justice.gov/crt/media/1414576/dl?inline=",
+      "printed_omb_expiration": "2026-08-31",
+      "checked_at": "2026-11-01"
+    },
+    "epa_inventory": {
+      "title": "EPA SDWIS Service Line Inventory",
+      "url": "https://sdwis.epa.gov/ords/sfdw_pub/r/sfdw/sdwis_fed_reports_public/service-line-inventory",
+      "checked_at": "2026-11-01"
+    },
+    "epa_inventory_guidance": {
+      "title": "Planning and Developing a Service Line Inventory",
+      "url": "https://www.epa.gov/ground-water-and-drinking-water/planning-and-developing-service-line-inventory",
+      "page_updated": "2026-03-11",
+      "checked_at": "2026-11-01"
+    },
+    "epa_inventory_public_access": {
+      "title": "EPA Guidance for Developing and Maintaining a Service Line Inventory",
+      "url": "https://nepis.epa.gov/Exe/ZyPURL.cgi?Dockey=P1015IQ2.txt",
+      "checked_at": "2026-11-01"
+    },
+    "epa_lcri_fact_sheet": {
+      "title": "Final LCRI technical fact sheet: service-line inventory and replacement requirements",
+      "url": "https://www.epa.gov/system/files/documents/2024-10/final_lcri_fact-sheet_service-line-inventory.pdf",
+      "checked_at": "2026-11-01"
+    },
+    "epa_service_areas": {
+      "title": "EPA Public Water System Service Areas",
+      "url": "https://www.epa.gov/ground-water-and-drinking-water/public-water-system-service-areas",
+      "page_updated": "2026-08-10",
+      "checked_at": "2026-11-01"
+    },
+    "epa_service_layer": {
+      "title": "EPA Water System Boundaries, Final layer 0",
+      "url": "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Water_System_Boundaries/FeatureServer/0",
+      "checked_at": "2026-11-01"
+    },
+    "epa_service_dictionary": {
+      "title": "Public Water System Service Areas Version 3.0 Data Dictionary, March 2026",
+      "url": "https://www.epa.gov/system/files/documents/2026-03/data-dictionary_v3_03162026.pdf",
+      "checked_at": "2026-11-01"
+    },
+    "epa_service_download": {
+      "title": "EPA published current boundary data download",
+      "url": "https://github.com/USEPA/ORD_SAB_Model/raw/refs/heads/main/Version_History/PWS_Boundaries_Latest.zip",
+      "note": "Linked by EPA; bulk archive download was not validated in this research.",
+      "checked_at": "2026-11-01"
+    }
+  },
+  "directories": [
+    {
+      "id": "drinking_water_regulators",
+      "name": "State, territory and tribal drinking-water programs",
+      "url": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data",
+      "publisher": "US EPA",
+      "use_for": [
+        "Public-water quality questions",
+        "State monitoring records",
+        "Finding the primary drinking-water regulator"
+      ],
+      "coverage": "State/territory drinking-water program and available database links; includes Navajo Nation.",
+      "limitations": [
+        "Wyoming and District of Columbia do not hold primacy; EPA administers it.",
+        "EPA implements SDWA on tribal lands except Navajo Nation.",
+        "Not a private-well regulator directory or a guarantee every linked database is current.",
+        "A state database may have more detail and newer information than federal SDWIS."
+      ],
+      "implementation": "Offer the directory and label the appropriate agency; do not send every complaint to a utility rate commission.",
+      "source_ids": [
+        "epa_primacy",
+        "echo_primacy"
+      ]
+    },
+    {
+      "id": "utility_commissions",
+      "name": "State utility commissions",
+      "url": "https://www.naruc.org/about-naruc/our-mission/regulatory-commissions/",
+      "publisher": "National Association of Regulatory Utility Commissioners",
+      "publisher_type": "Official commission association, not a federal regulator",
+      "use_for": [
+        "Utility billing or service disputes within each commission’s authority"
+      ],
+      "coverage": "50 states and District of Columbia, with territory entries and other regulatory organizations.",
+      "limitations": [
+        "NARUC does not adjudicate utility complaints.",
+        "A commission may not regulate the resident’s water provider; municipal, county, cooperative and private systems have different rules."
+      ],
+      "implementation": "Use as an agency directory, then verify the provider against that commission’s regulated-company list before selecting a complaint route.",
+      "source_ids": [
+        "naruc_directory",
+        "naruc_role",
+        "fl_scope"
+      ]
+    },
+    {
+      "id": "federal_civil_rights",
+      "name": "Federal civil-rights complaint offices",
+      "url": "https://www.justice.gov/crt/fcs/Agency-OCR-Offices",
+      "publisher": "US Department of Justice",
+      "use_for": [
+        "Finding the federal agency with a relevant civil-rights program"
+      ],
+      "coverage": "Federal agency civil-rights offices and filing links; directs uncertain users to DOJ.",
+      "limitations": [
+        "Some directory agency names and links are older than destination pages; use the current agency’s own submission instructions.",
+        "A directory entry does not establish jurisdiction or that discrimination occurred."
+      ],
+      "implementation": "Offer EPA for alleged discrimination by EPA financial-assistance recipients; offer the DOJ directory when the funding agency is unknown.",
+      "source_ids": [
+        "doj_directory",
+        "epa_complaint"
+      ]
+    }
+  ],
+  "supported_complaint_routes": [
+    {
+      "id": "epa_external_civil_rights",
+      "name": "EPA External Civil Rights Division complaint",
+      "route_type": "Signed written complaint submitted by user through email or postal mail",
+      "official_url": "https://www.epa.gov/external-civil-rights/filing-discrimination-complaint-against-recipient-epa-funds",
+      "official_blank_pdf": null,
+      "form_note": "The current EPA filing page requires a signed written complaint; it does not link a standard complaint PDF or a complaint web form. A site-generated letter must not be labeled an official EPA form.",
+      "required_information": [
+        {
+          "field": "sender_identity",
+          "requirement": "Identify the sender."
+        },
+        {
+          "field": "sender_contact",
+          "requirement": "Provide contact information; telephone and/or email are suggested."
+        },
+        {
+          "field": "signature",
+          "requirement": "Include the sender’s signature; accepted electronic-signature formats were not specified on the inspected page."
+        },
+        {
+          "field": "respondent",
+          "requirement": "Identify the entity alleged to have discriminated."
+        },
+        {
+          "field": "facts_and_discrimination_basis",
+          "requirement": "Explain the acts and why they involve prohibited discrimination, intimidation or retaliation."
+        },
+        {
+          "field": "last_incident_date",
+          "requirement": "Needed to assess the filing period; use the last alleged discriminatory act."
+        }
+      ],
+      "jurisdiction": [
+        "Respondent must receive EPA financial assistance.",
+        "A person or organization may complain for someone else.",
+        "The allegations must concern a civil-rights law EPA enforces."
+      ],
+      "exclusions_and_limits": [
+        "A water problem alone does not establish unlawful discrimination.",
+        "EPA says it can investigate only entities receiving EPA financial assistance.",
+        "EPA’s general External Civil Rights contact web form expressly is not for filing discrimination complaints.",
+        "Louisiana has a specific injunction limiting disparate-impact and cumulative-impact enforcement; it is not a blanket exclusion of all Louisiana civil-rights complaints."
+      ],
+      "deadline": {
+        "days": 180,
+        "calendar_days": true,
+        "from": "Last alleged discriminatory act",
+        "extension": "EPA may consider an extension for good cause; do not reject a user automatically or promise an extension."
+      },
+      "submit": {
+        "email": "ECRD_Complaints@epa.gov",
+        "postal_address": "U.S. Environmental Protection Agency, Office of Civil Rights and Adjudication, External Civil Rights Division, Mail Code 1201A, 1200 Pennsylvania Avenue NW, Washington, DC 20460",
+        "phone_for_questions": "202-564-3316"
+      },
+      "accessibility": {
+        "free_language_or_disability_assistance_email": "LanguageInterpretationTranslationRequest@epa.gov",
+        "note": "Current EPA filing page offers free interpretation/translation and disability accommodations. Translated pages can retain older contact details; prefer current English submission details."
+      },
+      "receipt": {
+        "automatic_confirmation_verified": false,
+        "case_number_mechanism": "No automatic receipt or case-number mechanism specified on the inspected filing page.",
+        "capture_after_real_submission": [
+          "Sent date",
+          "Destination",
+          "Sent-message or postal delivery evidence",
+          "EPA acknowledgment or case number when received"
+        ],
+        "do_not_claim": "Generating a PDF, opening email or downloading a letter does not mean the complaint was filed."
+      },
+      "implementable_flow": [
+        "Ask short questions covering required information and user-described facts.",
+        "Create a reviewable complaint letter with a signature area.",
+        "Have the user review/sign and submit through the official route.",
+        "Save a copy and let the user attach actual submission evidence."
+      ],
+      "source_ids": [
+        "epa_complaint",
+        "epa_general_contact",
+        "epa_louisiana"
+      ]
+    },
+    {
+      "id": "florida_psc_water",
+      "name": "Florida PSC regulated water/wastewater complaint",
+      "route_type": "Official online form with user completion and CAPTCHA",
+      "official_url": "https://www.floridapsc.com/consumer-complaint-form",
+      "official_blank_pdf": null,
+      "eligibility_gate": [
+        "Select Water & Wastewater (industry value SW).",
+        "Confirm that the exact utility appears in the PSC company selector; county selection alone is not enough.",
+        "PSC advises trying to resolve the problem with the company first and allowing it time to correct it."
+      ],
+      "jurisdiction": "Investor-owned water/wastewater companies within PSC jurisdiction; current 2026 brochure describes 40 counties. Do not hard-code older 38-county lists.",
+      "covered_issue_examples": [
+        "Rates/charges",
+        "Meter or billing accuracy",
+        "Quality of service"
+      ],
+      "excluded_issue_examples": [
+        "Municipally owned or county-owned water/wastewater utilities",
+        "Water treatment companies",
+        "Taxes",
+        "Damage claims",
+        "Water clarity or pressure (brochure points to DEP)",
+        "Bulk water/wastewater sales",
+        "Water lines beyond the point of connection"
+      ],
+      "fields": [
+        {
+          "official_field_key": "company",
+          "meaning": "Regulated utility selected from the official list",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "complaintType",
+          "meaning": "Type of complaint",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "county",
+          "meaning": "County filter for water/wastewater utilities",
+          "required_by_current_client_validation": false
+        },
+        {
+          "official_field_key": "fName",
+          "meaning": "First name",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "lName",
+          "meaning": "Last name",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "phone",
+          "meaning": "Telephone",
+          "required_by_current_client_validation": false
+        },
+        {
+          "official_field_key": "email",
+          "meaning": "Email address",
+          "required_by_current_client_validation": false
+        },
+        {
+          "official_field_key": "address",
+          "meaning": "Contact home address",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "city",
+          "meaning": "Contact city",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "state",
+          "meaning": "Contact state",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "zip",
+          "meaning": "Contact ZIP",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "prevContact",
+          "meaning": "Whether PSC was already contacted",
+          "required_by_current_client_validation": false
+        },
+        {
+          "official_field_key": "serviceName",
+          "meaning": "Name on the service account",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "serviceNumber",
+          "meaning": "Utility account number",
+          "required_by_current_client_validation": false
+        },
+        {
+          "official_field_key": "serviceAddress",
+          "meaning": "Service street address",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "serviceCity",
+          "meaning": "Service city",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "serviceState",
+          "meaning": "Service state",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "serviceZip",
+          "meaning": "Service ZIP",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "details",
+          "meaning": "Complaint description",
+          "required_by_current_client_validation": true
+        },
+        {
+          "official_field_key": "warmTransactionOption",
+          "meaning": "Destination: PSC or company when offered",
+          "required_by_current_client_validation": false
+        }
+      ],
+      "complaint_type_values_for_non_telecom": [
+        "Delay in Service",
+        "Improper Billing",
+        "Repairs",
+        "Service Outage",
+        "Other Complaints"
+      ],
+      "field_notes": [
+        "The live public Angular component requires contact and service state even though the visible labels are not starred.",
+        "Email is optional but validated as an email if supplied.",
+        "Contact/service ZIP inputs use a five-digit mask.",
+        "Account number is optional in current client validation.",
+        "The official form can copy contact details to service details; the user must check the result.",
+        "Current defaults include FL, Delay in Service and PSC; an assistant should not accept these silently for the user.",
+        "There is no attachment field in the inspected component. Do not claim that attaching evidence to this site attaches it to the PSC complaint."
+      ],
+      "submit": {
+        "destination_choices": "PSC; some companies offer direct company delivery. The user must review the actual destination.",
+        "captcha": "Official page invokes reCAPTCHA; hand off to the user.",
+        "automatic_submission_supported": false,
+        "external_submission_tested": false
+      },
+      "receipt": {
+        "official_help": "Official help tells users to save the tracking number after submitting.",
+        "current_component_observation": "The current form displays the server response message and clears the form after success; no live submission was attempted.",
+        "tracking_url": "https://www.floridapsc.com/complaint-activity-tracking-system",
+        "tracking_search_options": [
+          "Company name",
+          "Company code",
+          "Complaint number"
+        ],
+        "capture_after_real_submission": [
+          "Actual submission date",
+          "Chosen destination",
+          "Displayed tracking/complaint number",
+          "Confirmation screenshot or receipt"
+        ]
+      },
+      "privacy": "The official form warns that submitted information may be publicly disclosed under Florida public-records law. Tell the user before the official handoff; do not describe the external complaint as private.",
+      "fallback": {
+        "email": "contact@psc.state.fl.us",
+        "consumer_phone": "800-342-3552",
+        "postal_address": "Florida Public Service Commission, Office of Consumer Assistance & Outreach, 2540 Shumard Oak Boulevard, Tallahassee, FL 32399-0850"
+      },
+      "implementable_flow": [
+        "Collect and review the mapped fields locally.",
+        "Provide a copyable field summary and open the official form.",
+        "Let the user choose company, destination and complete CAPTCHA/submission.",
+        "Prompt for the actual complaint number and receipt afterward."
+      ],
+      "source_ids": [
+        "fl_form",
+        "fl_form_bundle",
+        "fl_help",
+        "fl_scope",
+        "fl_about",
+        "fl_tracking",
+        "fl_company_directory"
+      ]
+    }
+  ],
+  "additional_fallback": {
+    "id": "doj_civil_rights_report",
+    "official_url": "https://civilrights.justice.gov/report/",
+    "purpose": "General federal civil-rights intake when an agency is unclear; DOJ may refer or be unable to help.",
+    "verified_fields": "Optional name/contact; active-duty servicemember status question is required in current online step 1. Later sections cover main concern, location, personal characteristics, date, description and review.",
+    "receipt": "DOJ says successful online submission yields a confirmation number; follow-up should cite that number.",
+    "response_limit": "DOJ does not guarantee updates or individual assistance.",
+    "pdf_url": "https://www.justice.gov/crt/media/1414576/dl?inline=",
+    "pdf_caution": "The official linked PDF and inspected online footer display OMB expiration 2026-08-31, earlier than this check. Do not silently rehost it as an up-to-date autofill form; prefer the agency’s current live page and ask DOJ about current materials if needed.",
+    "source_ids": [
+      "doj_portal",
+      "doj_form",
+      "doj_pdf"
+    ]
+  },
+  "coverage": {
+    "property_level_inventory": {
+      "nationwide_property_material_api_verified": false,
+      "what_is_available": "Utilities/primacy agencies maintain inventories; address-level maps and machine-readable availability vary. No nationwide property-level pipe-material lookup was verified in this research.",
+      "required_inventory_elements": [
+        "All service lines",
+        "Lead / galvanized requiring replacement / non-lead / unknown classification",
+        "Separate utility/customer portions where ownership is split",
+        "Location identifiers for lead and galvanized-requiring-replacement lines"
+      ],
+      "public_access_limit": "Initial LCRR inventories need not publish an exact street address; a meaningful location identifier can be used. Systems serving more than 50,000 people must post inventories online; smaller systems can provide another public-access method.",
+      "implementation": "Use a verified utility inventory for a confirmed property match. Otherwise offer a record/inspection request. Never infer material from a nearby line, regional prevalence, absence of a hit, or an unknown classification.",
+      "source_ids": [
+        "epa_inventory_guidance",
+        "epa_inventory_public_access",
+        "epa_lcri_fact_sheet"
+      ]
+    },
+    "national_service_line_counts": {
+      "name": "EPA SDWIS Service Line Inventory",
+      "url": "https://sdwis.epa.gov/ords/sfdw_pub/r/sfdw/sdwis_fed_reports_public/service-line-inventory",
+      "granularity": "Water-system aggregate, not household/property",
+      "join_key": "PWS ID",
+      "reported_categories": [
+        "Lead",
+        "Galvanized requiring replacement",
+        "Lead status unknown",
+        "Non-lead"
+      ],
+      "scope": "Community and non-transient non-community water systems; voluntarily reported transient systems can also appear.",
+      "limitations": [
+        "Federal figures depend on state/primacy reporting.",
+        "Non-lead count reporting is not required until November 1, 2027; some states already report it, so current totals can undercount.",
+        "The dashboard is dynamic. The fresh text-only response showed zero placeholders before a period/data load; do not turn these into zero-line assertions.",
+        "No stable documented public bulk/API endpoint for these inventory counts was verified here."
+      ],
+      "implementable_now": "Link the official inventory dashboard and ask the user to select their confirmed system. A future adapter needs a separately validated data export/API and reporting-period handling.",
+      "public_label": "Reported pipe counts for this water system — not the material at your home.",
+      "source_ids": [
+        "epa_inventory"
+      ]
+    },
+    "national_service_area_match": {
+      "name": "EPA Public Water System Service Areas, Version 3",
+      "released": "2026-03",
+      "official_map": "https://gispub.epa.gov/serviceareas",
+      "layer_url": "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Water_System_Boundaries/FeatureServer/0",
+      "query_endpoint": "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Water_System_Boundaries/FeatureServer/0/query",
+      "query_parameters": {
+        "f": "json",
+        "where": "1=1",
+        "geometry": "longitude,latitude",
+        "geometryType": "esriGeometryPoint",
+        "inSR": 4326,
+        "spatialRel": "esriSpatialRelIntersects",
+        "outFields": "PWSID,PWS_Name,Symbology_Field,Verification_Status,Data_Source,Modification_Method",
+        "returnGeometry": false
+      },
+      "supported_response_formats": [
+        "JSON",
+        "GeoJSON",
+        "PBF"
+      ],
+      "max_record_count": 2000,
+      "coverage_statement": "EPA describes more than 44,000 community systems, about 99% of their reported served population, and about 80,000 non-community service areas (roughly 84% of active non-community systems). This is not 99% address-level pipe coverage.",
+      "metadata_to_preserve": [
+        "PWSID",
+        "PWS_Name",
+        "Symbology_Field",
+        "Verification_Status",
+        "Original_Data_Provider",
+        "Data_Provider_Type",
+        "Data_Source",
+        "Modification_Method",
+        "Feature_Type",
+        "Original_Data_Created_Date"
+      ],
+      "limitations": [
+        "Boundaries can be modeled estimates or system/state sourced and can contain errors.",
+        "A blank verification field is not verification.",
+        "An area can contain private wells or another unmapped system.",
+        "Many tribal and territorial systems remain unmapped; EPA’s current page says non-community coverage excludes Guam.",
+        "Boundaries derived from a lead-service-line inventory remain service-area polygons; they do not disclose this home’s pipe material.",
+        "Keep multiple intersecting candidates and seek provider confirmation; do not silently choose a nearby or first result."
+      ],
+      "verified_read_only_example": {
+        "point": {
+          "longitude": -104.9903,
+          "latitude": 39.7392
+        },
+        "purpose": "Public Denver city-center point; no user address",
+        "result": {
+          "PWSID": "CO0116001",
+          "PWS_Name": "DENVER WATER BOARD",
+          "Symbology_Field": "System Sourced",
+          "Verification_Status": "",
+          "Modification_Method": "Used service area"
+        },
+        "checked_at": "2026-11-01"
+      },
+      "implementable_now": "Query the public layer to suggest candidate providers. Show source/type and ask the resident to confirm using a bill, landlord or utility before joining regulatory or inventory records.",
+      "source_ids": [
+        "epa_service_areas",
+        "epa_service_layer",
+        "epa_service_dictionary",
+        "epa_service_download"
+      ]
+    }
+  },
+  "implementation_boundaries": [
+    "These are preparation and official-handoff routes, not proof of a filed complaint.",
+    "Only use user-provided facts; do not infer a protected characteristic, discrimination finding, funding eligibility or legal violation.",
+    "Store a draft, actual submission and official acknowledgment as distinct events.",
+    "Recheck agency contacts, forms and deadlines before refreshing or publishing a route.",
+    "No account was created, CAPTCHA bypassed, complaint submitted, email sent, or external data changed during this research."
+  ]
+}

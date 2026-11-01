@@ -124,3 +124,22 @@
     display: none;
   }
 }
+/* Preview revision: keep the address check and new help tools together. */
+.hero { grid-template-columns: 1fr; gap: 0; padding: 28px 0 22px; }
+.hero h1 { font-size: clamp(32px, 4vw, 44px); max-width: 940px; letter-spacing: -1.4px; line-height: 1.12; margin-bottom: 14px; }
+.hero .intro { max-width: 850px; font-size: 17px; }
+.hero .eyebrow { margin-bottom: 12px; }
+.hero .water-art, .hero .who-chips { display: none; }
+.search-card { margin-bottom: 18px; padding: 22px 24px; box-shadow: 0 4px 18px #183d3308; }
+.address-state-row { grid-template-columns: minmax(180px, 1.3fr) minmax(130px, .75fr) minmax(130px, .65fr) auto; }
+.water-help-entry { margin: 18px 0 30px; padding-top: 20px; }
+.water-help-entry h2 { font-size: 25px; }
+.water-help-entry > p { font-size: 16px; margin: 0; max-width: 860px; }
+.water-help-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 16px; }
+.water-help-tile { min-height: 110px; padding: 17px 18px; gap: 6px; }
+.water-help-tile strong { font-size: 17px; }
+.water-help-tile span { font-size: 14px; }
+.topbar nav { align-items: center; }
+@media(max-width: 900px) { .address-state-row { grid-template-columns: 1fr 1fr; } }
+@media(max-width: 650px) { .water-help-grid {grid-template-columns:1fr 1fr;} .topbar nav {gap:10px;} .water-help-language select {max-width:110px;} }
+@media(max-width: 480px) { .address-state-row,.water-help-grid {grid-template-columns:1fr;} .hero{padding-top:24px;} .hero h1{font-size:34px;} .search-top{flex-wrap:wrap;} .topbar{align-items:flex-start;} .topbar nav{flex-wrap:wrap;} }

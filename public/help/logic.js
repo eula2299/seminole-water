@@ -191,16 +191,16 @@
       );
     const charges = [];
     for (const line of source.split(/\r?\n/)) {
-      if (/total|amount due|balance|previous|payment|credit/i.test(line))
+      if (/total|amount due|balance due|current balance|new balance/i.test(line))
         continue;
-      const m = line.match(/^\s*(.{2,65}?)\s+\$?([\d,]+\.\d{2})\s*$/);
+      const m = line.match(/^\s*(.{2,65}?)\s+([($\-\s]*[\d,]+\.\d{2}\)?)(?:\s+(CR))?\s*$/i);
       if (
         m &&
-        /water|sewer|storm|service|base|fee|tax|waste|usage|charge/i.test(m[1])
+        /water|sewer|storm|service|base|fee|tax|waste|usage|charge|payment|credit|previous balance|balance forward/i.test(m[1])
       )
         charges.push({
           label: m[1].trim(),
-          amount: Number(m[2].replace(/,/g, "")),
+          amount: Number(m[2].replace(/[^\d.]/g, "")) * (m[3] || /[-(]/.test(m[2]) || /payment|credit/i.test(m[1]) ? -1 : 1),
           quote: line,
         });
     }

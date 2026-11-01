@@ -47,7 +47,7 @@
     "sync:national": "node national/sync.js --source all",
     "start:national": "node national/server.js",
     "start:seminole": "node platform.js",
-    "dev": "node justice/dev.js",
+    "dev": "NODE_USE_ENV_PROXY=1 node justice/dev.js",
     "test:help": "node --test tests/help_*.test.js"
   },
   "dependencies": {
@@ -64,6 +64,7 @@
     "node": ">=22"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.14",
     "fake-indexeddb": "6.2.4"
   }
 }
