@@ -58,3 +58,41 @@ test('uploaded PDF form fills ordinary answers while leaving signature and gover
  const filled=await D.fillUploadedForm(spec,{Applicant:'Fictional Test Resident',Signature:'should not be inserted',SSN:'should not be inserted'});
  const result=await PDFLib.PDFDocument.load(await filled.arrayBuffer());assert.equal(result.getForm().getTextField('Applicant').getText(),'Fictional Test Resident');assert.equal(result.getForm().getTextField('Signature').getText(),undefined);assert.equal(result.getForm().getTextField('SSN').getText(),undefined);
 });
+test('Denver separates three water charges using confirmed class, dates, meter and winter allowance',()=>{
+ const rate=S.rates.find(r=>r.model==='denver-single-family');
+ const b={unit:'gallons',usage:25000,waterCharge:132.95,readDate:'2026-06-01',scopeConfirmed:true,serviceClass:'inside_city',meterSize:'0.625',winterThreshold:5000,usageStart:'2026-05-01',usageEnd:'2026-05-31',droughtCharge:27.5,fixedCharge:20.91};
+ const check=E.auditBill(b,rate).rateCheck;
+ assert.deepEqual(check.breakdown,{base:132.95,drought:27.5,fixed:20.91,total:181.36,volumes:[5000,15000,5000],droughtApplies:true});
+ assert.equal(check.lines.drought.difference,0);assert.equal(check.lines.fixed.difference,0);
+ for(const extra of [{winterThreshold:''},{winterThreshold:4999},{winterThreshold:15001},{serviceClass:''},{meterSize:''},{usageStart:'2026-04-30'},{usageEnd:'2026-06-02'},{usageStart:'2026-02-30'},{readDate:'2027-01-01'},{scopeConfirmed:false}])assert.equal(E.auditBill({...b,...extra},rate).rateCheck,null,JSON.stringify(extra));
+ const before=E.auditBill({...b,readDate:'2026-05-01',usageStart:'2026-04-01',usageEnd:'2026-04-30'},rate).rateCheck;
+ assert.equal(before.breakdown.drought,0);
+ for(const [usage,volumes] of [[0,[0,0,0]],[5000,[5000,0,0]],[20000,[5000,15000,0]],[20001,[5000,15000,1]]])assert.deepEqual(E.auditBill({...b,usage},rate).rateCheck.breakdown.volumes,volumes);
+ assert.equal(E.auditBill({...b,serviceClass:'outside_city_read_and_bill'},rate).rateCheck.breakdown.base,133.2);
+ assert.equal(E.auditBill({...b,serviceClass:'outside_city_total_service'},rate).rateCheck.breakdown.base,192.35);
+ assert.equal(E.auditBill({...b,waterCharge:-5,droughtCharge:-2},rate).rateCheck.charged,-5);
+ assert.equal(E.auditBill({...b,waterCharge:-5,droughtCharge:-2},rate).rateCheck.lines.drought.difference,-29.5);
+ assert.equal(E.auditBill({...b,winterThreshold:15000},rate).rateCheck.breakdown.base,99.7);
+});
+test('help AI budget persists across instances and never exceeds its shared daily cap',async()=>{
+ const {createAiBudget}=require('../justice/ai-budget');
+ const db=new PGlite(),pool={query:(q,p)=>db.query(q,p)};
+ const first=createAiBudget({pool}),second=createAiBudget({pool});
+ try{
+  assert.equal(first.shared,true);
+  assert.equal(await first.take(3),true);assert.equal(await second.take(3),true);
+  const answers=await Promise.all([first.take(3),second.take(3),first.take(3)]);
+  assert.equal(answers.filter(Boolean).length,1);
+  const restarted=createAiBudget({pool});assert.equal(await restarted.take(3),false);
+  assert.equal((await db.query('SELECT calls FROM water_help_ai_budget')).rows[0].calls,3);
+  assert.equal(await first.take(0),false);
+ }finally{await db.close();}
+});
+test('AI never calls its provider when the shared budget is exhausted or unavailable',async()=>{
+ const {createAi}=require('../justice/ai');let calls=0;
+ for(const take of [async()=>false,async()=>{throw Error('DB offline');}]){
+  const ai=createAi({key:'synthetic-test',fetcher:async()=>{calls++;throw Error('unexpected');},budget:{shared:true,take,close:async()=>{}}});
+  await assert.rejects(ai.analyze({kind:'lab',text:'Synthetic lab report'}));
+ }
+ assert.equal(calls,0);
+});

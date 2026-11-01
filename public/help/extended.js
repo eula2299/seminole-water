@@ -123,18 +123,36 @@ window.WaterHelpExtended = { create(c) {
     const rate=data.rates[0];if(!rate){text(b,'notConnected');return;}
     const scope=check(b,'rateScope'),readDate=field(b,'readDate','date',today()),usage=field(b,'meterUsage','number'),water=field(b,'waterCharge','number');
     const intro=el('p',t('rateScopeDetails'),'fine');b.prepend(intro);const source=link(b,'officialRates',rate.source,'source');
+    const denver=box(b);denver.hidden=true;
+    const serviceClass=select(denver,'denverClass',[['','choose'],['inside_city','denverInside'],['outside_city_read_and_bill','denverReadBill'],['outside_city_total_service','denverTotal']]);
+    const meterSize=select(denver,'meterInches',[['','choose'],...Object.keys(data.rates.find(r=>r.model==='denver-single-family')?.fixed||{}).sort((a,b)=>Number(a)-Number(b)).map(v=>[v,v])]);
+    const winterThreshold=field(denver,'winterThreshold','number');winterThreshold.min=5000;winterThreshold.max=15000;
+    const usageStart=field(denver,'usageStart','date'),usageEnd=field(denver,'usageEnd','date');
+    const droughtCharge=field(denver,'droughtCharge','number'),fixedCharge=field(denver,'fixedCharge','number');
+    text(denver,'denverDetails','fine');
+    link(denver,'officialRates',data.rates.find(r=>r.model==='denver-single-family')?.drought_source,'source');
     const extra=detail(b,'checkMeter',()=>{}),start=field(extra,'meterStart','number'),end=field(extra,'meterEnd','number'),days=field(extra,'billDays','number'),oldUsage=field(extra,'previousUsage','number'),oldDays=field(extra,'previousDays','number');
-    utility.addEventListener('change',()=>{const r=data.rates.find(r=>r.id===utility.value);intro.textContent=t('rateScopeDetails');if(source)source.href=r.source;});
+    let output;
+    function resultLine(parent,tag,key,value){const node=el(tag);node.append(el('span',t(key)),document.createTextNode(': '+value));parent.append(node);}
+    utility.addEventListener('change',()=>{const r=data.rates.find(r=>r.id===utility.value);denver.hidden=r.model!=='denver-single-family';intro.textContent=t(denver.hidden?'rateScopeDetails':'denverScope');usage.closest('label').querySelector('span').textContent=t(denver.hidden?'meterUsage':'gallonsUsed');if(source)source.href=r.source;scope.checked=false;usage.value='';water.value='';output?.remove();});
     button(b,'checkBill',()=>{
       const rate=data.rates.find(r=>r.id===utility.value);
-      const result=E.auditBill({unit:rate.unit,readDate:readDate.value,scopeConfirmed:scope.checked,usage:usage.value,waterCharge:water.value,start:start.value,end:end.value,days:days.value,previousUsage:oldUsage.value,previousDays:oldDays.value},rate);
-      const out=box(main,'card soft');
-      if(result.rateCheck){out.append(el('h2',t('expectedWater')+': '+money(result.rateCheck.expected)),el('p',t('difference')+': '+money(result.rateCheck.difference)));}
+      const result=E.auditBill({unit:rate.unit,readDate:readDate.value,scopeConfirmed:scope.checked,usage:usage.value,waterCharge:water.value,start:start.value,end:end.value,days:days.value,previousUsage:oldUsage.value,previousDays:oldDays.value,serviceClass:serviceClass.value,meterSize:meterSize.value,winterThreshold:winterThreshold.value,usageStart:usageStart.value,usageEnd:usageEnd.value,droughtCharge:droughtCharge.value,fixedCharge:fixedCharge.value},rate);
+      output?.remove();const out=box(main,'card soft');output=out;out.setAttribute('role','status');
+      if(result.rateCheck){resultLine(out,'h2','expectedWater',money(result.rateCheck.expected));resultLine(out,'p','difference',money(result.rateCheck.difference));}
       else text(out,'rateNotCompared');
+      if(result.rateCheck?.breakdown){
+        const parts=result.rateCheck.breakdown;
+        for(const kind of ['drought','fixed']){
+          resultLine(out,'p',kind+'Charge',money(parts[kind]));
+          const line=result.rateCheck.lines[kind];if(line)resultLine(out,'p','difference',money(line.difference));
+        }
+        resultLine(out,'p','supportedWaterTotal',money(parts.total));
+      }
       for(const issue of result.issues)text(out,issue.code);
       if(!result.issues.length&&result.rateCheck)text(out,'noMathIssue');
       text(out,'billNotVerdict','fine');
-      button(out,'askBillQuestion',()=>requestWizard('bill',{facts:t('waterCharge')+': '+water.value+'\n'+t('meterUsage')+': '+usage.value+' '+rate.unit+'\n'+t('expectedWater')+': '+(result.rateCheck?.expected??t('notStated'))+'\n'+rate.source}));
+      button(out,'askBillQuestion',()=>requestWizard('bill',{facts:t('waterCharge')+': '+water.value+'\n'+t(rate.model==='denver-single-family'?'gallonsUsed':'meterUsage')+': '+usage.value+' '+rate.unit+'\n'+t('expectedWater')+': '+(result.rateCheck?.expected??t('notStated'))+'\n'+rate.source}));
     });
     button(main,'bill',c.billUpload,'quiet');
   }

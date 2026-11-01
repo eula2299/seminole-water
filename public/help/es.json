@@ -552,5 +552,19 @@
   "officialReady": "Los enlaces oficiales están listos.",
   "cityOnlySearch": "La búsqueda solo usa tu ciudad, estado y tema. No incluye tu dirección ni tus documentos.",
   "choose": "Elige",
-  "chooseState": "Estado o territorio"
+  "chooseState": "Estado o territorio",
+  "denverClass": "Tipo de servicio que figura en tu factura",
+  "denverInside": "Dentro de la ciudad de Denver",
+  "denverReadBill": "Fuera de la ciudad — Read & Bill",
+  "denverTotal": "Fuera de la ciudad — Total Service",
+  "meterInches": "Tamaño del medidor en pulgadas, según tu factura",
+  "winterThreshold": "Tu límite confirmado del nivel 1 en galones",
+  "usageStart": "Primer día de consumo de esta factura",
+  "usageEnd": "Último día de consumo de esta factura",
+  "droughtCharge": "Cargo por sequía (opcional)",
+  "fixedCharge": "Cargo fijo de agua (opcional)",
+  "supportedWaterTotal": "Cargos de agua esperados que se muestran aquí",
+  "denverScope": "Denver Water, una vivienda, factura mensual normal de 2026. Introduce los galones y el cargo por consumo sin los cargos por sequía ni los fijos. Otros servicios, créditos y saldos anteriores van aparte.",
+  "denverDetails": "Usa el tipo de servicio, tamaño del medidor y límite de consumo invernal confirmados por Denver Water. El límite es de 5,000–15,000 galones. Introduce las fechas de consumo, no la de pago. Si la factura cruza el 1 de mayo, pide a la compañía que explique el cargo por sequía.",
+  "gallonsUsed": "Agua consumida (galones de EE. UU.)"
 }

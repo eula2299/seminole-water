@@ -552,5 +552,19 @@
   "officialReady": "Your official office links are ready.",
   "cityOnlySearch": "Only your city, state and topic are used for this search. Your street address and documents are not included.",
   "choose": "Choose",
-  "chooseState": "State or territory"
+  "chooseState": "State or territory",
+  "denverClass": "Service type printed on your bill",
+  "denverInside": "Inside City of Denver",
+  "denverReadBill": "Outside city — Read & Bill",
+  "denverTotal": "Outside city — Total Service",
+  "meterInches": "Meter size in inches, from your bill",
+  "winterThreshold": "Your confirmed Tier 1 limit in gallons",
+  "usageStart": "First day of water use on this bill",
+  "usageEnd": "Last day of water use on this bill",
+  "droughtCharge": "Drought charge (optional)",
+  "fixedCharge": "Fixed water charge (optional)",
+  "supportedWaterTotal": "Expected water charges shown here",
+  "denverScope": "Denver Water, one home, regular monthly bill in 2026. Enter gallons and the water-use charge before drought and fixed charges. Other services, credits and old balances stay separate.",
+  "denverDetails": "Use the service type, meter size and winter-use limit confirmed by Denver Water. The limit is 5,000–15,000 gallons. Enter the dates of water use, not the payment date. A bill crossing May 1 needs the utility to explain how drought pricing applies.",
+  "gallonsUsed": "Water used (US gallons)"
 }

@@ -191,6 +191,7 @@ function createHelpHandler({
       if (req.method === "GET" && u.pathname === "/api/help/config") {
         send(res, 200, {
           ai: ai.enabled,
+          ai_budget_scope: ai.budgetScope || "process",
           promises: await promises.available(),
           groups: groups.available ? await groups.available() : groups.enabled,
           languages: Object.keys(ai.languages),
@@ -317,7 +318,7 @@ function createHelpHandler({
     }
     return true;
   }
-  handler.close = () => Promise.all([groups.close(),promises.close()]);
+  handler.close = () => Promise.all([groups.close(),promises.close(),ai.close?.()]);
   return handler;
 }
 module.exports = { createHelpHandler, staticFiles };

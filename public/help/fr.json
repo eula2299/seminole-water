@@ -552,5 +552,19 @@
   "officialReady": "Vos liens officiels sont prêts.",
   "cityOnlySearch": "Cette recherche utilise seulement votre ville, votre État et votre sujet. Elle n’inclut ni votre adresse ni vos documents.",
   "choose": "Choisir",
-  "chooseState": "État ou territoire"
+  "chooseState": "État ou territoire",
+  "denverClass": "Type de service indiqué sur votre facture",
+  "denverInside": "Dans la ville de Denver",
+  "denverReadBill": "Hors de la ville — Read & Bill",
+  "denverTotal": "Hors de la ville — Total Service",
+  "meterInches": "Taille du compteur en pouces, sur votre facture",
+  "winterThreshold": "Votre limite confirmée du palier 1 en gallons",
+  "usageStart": "Premier jour de consommation de cette facture",
+  "usageEnd": "Dernier jour de consommation de cette facture",
+  "droughtCharge": "Frais de sécheresse (facultatif)",
+  "fixedCharge": "Frais fixes d’eau (facultatif)",
+  "supportedWaterTotal": "Frais d’eau attendus présentés ici",
+  "denverScope": "Denver Water, une maison, facture mensuelle normale de 2026. Saisissez les gallons et les frais de consommation sans les frais fixes ni de sécheresse. Les autres services, crédits et anciens soldes restent séparés.",
+  "denverDetails": "Utilisez le type de service, la taille du compteur et la limite hivernale confirmés par Denver Water. La limite est de 5,000–15,000 gallons. Indiquez les dates de consommation, pas de paiement. Si la période couvre le 1er mai, demandez au fournisseur comment les frais de sécheresse sont appliqués.",
+  "gallonsUsed": "Eau utilisée (gallons américains)"
 }

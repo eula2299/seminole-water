@@ -1,0 +1,37 @@
+{
+  "checked_at": "2026-11-01",
+  "method": "Authenticated Railway app console, read-only PostgreSQL metadata and count queries; Railway UI and public status",
+  "workspace_plan": "Hobby",
+  "volume_bytes": 5000000000,
+  "volume_used_bytes": 4296146944,
+  "database_bytes": 3001890495,
+  "records_table_bytes": 2324799488,
+  "records_index_bytes": 668180480,
+  "wal_bytes": 1073741824,
+  "unpublished_records": 0,
+  "published_sources": [
+    "sdwis",
+    "ucmr5"
+  ],
+  "failed_run_records": 0,
+  "archive_stored_bytes": 249997103745,
+  "archive_budget_bytes": 250000000000,
+  "active_archive_bytes": 21575354447,
+  "archive_note": "Difference between active indexes and all stored bytes does not establish deletable data; raw evidence and other retained assets must be inventoried before deletion.",
+  "plan": {
+    "status": "NOT AUTHORIZED: user requires no additional spending; investigate storage reuse and compaction within existing capacity",
+    "database_volume_gb": 10,
+    "database_import_budget_bytes": 7000000000,
+    "archive_budget_gb": 300,
+    "peak_estimate": "Current 3.0 GB database plus an approximately equally sized incoming generation plus ~1.1 GB WAL and operational headroom. Recheck actual source size and disk before each import; stop before reserve is consumed.",
+    "subscription": "Pro $20/month minimum includes $20 resource usage; current Hobby $5 minimum",
+    "volume_price_usd_per_gb_month": 0.15,
+    "archive_price_usd_per_gb_month": 0.015,
+    "no_deletion": true
+  },
+  "prices_sources": [
+    "https://docs.railway.com/pricing/plans",
+    "https://docs.railway.com/volumes/reference",
+    "https://docs.railway.com/storage-buckets/billing"
+  ]
+}
