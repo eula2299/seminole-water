@@ -14,6 +14,9 @@ window.WaterHelpLocal={create(c){
    const section=box(output);section.append(el('h2',t('officialHelp')+' · '+data.region.name));
    const order={assistance:['social','water','consumer'],meetings:['local','state'],pipes:['water','local'],repairs:['water','social','local'],bill:['consumer','social','water'],support:['water','health','consumer']}[kind.value];
    for(const key of order){const route=data.region.routes[key];if(!route)continue;const row=box(section,'official-route');link(row,'agency_'+key,route.url,'button quiet');row.append(el('p',route.title,'fine'));}
+   if(['pipes','repairs'].includes(kind.value))button(section,'requestInspection',()=>c.requestWizard('inspection'),'quiet');
+   if(kind.value==='meetings')button(section,'writeComment',()=>c.requestWizard('meeting'),'quiet');
+   if(kind.value==='assistance')button(section,'assistance',()=>c.requestWizard('assistance'),'quiet');
    if(data.tribal){link(section,'tribalHelp',data.tribal.url,'button quiet');for(const tribe of data.tribes||[])for(const route of Object.values(tribe.routes||{}))link(section,tribe.name,route.url,'source');}
   }
   async function run(){
