@@ -33,5 +33,15 @@
     "https://docs.railway.com/pricing/plans",
     "https://docs.railway.com/volumes/reference",
     "https://docs.railway.com/storage-buckets/billing"
-  ]
+  ],
+  "no_cost_alternative": {
+    "status": "reader and bounded lossless compaction implemented; production compaction pending verification",
+    "wqp_index_count": 9108,
+    "wqp_index_bytes": 164704489472,
+    "sample_original_bytes": 63344640,
+    "sample_gzip_bytes": 8282919,
+    "sample_roundtrip_equal": true,
+    "method": "Keep every object key and published decoded SHA-256; atomically replace only the compressed representation, verify readback, retain rollback bytes until verification. No raw evidence, receipt or record is deleted. Existing 250 GB budget remains.",
+    "postgres_note": "Separate database ceiling remains; this archive compaction does not reclaim PostgreSQL disk."
+  }
 }

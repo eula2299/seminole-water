@@ -96,3 +96,10 @@ Help-AI daily attempts now use an atomic PostgreSQL counter when DATABASE_URL is
 Property pipe inventory reads reject truncated or malformed responses. Multiple exact-address records return `ambiguous`, preserving the records without choosing one pipe material. The resident flow continues to official local help.
 
 See `docs/water-help-acceptance.json` for the maintained feature/source/verification inventory and `docs/storage-investigation-2026-11-01.json` for measured capacity and the approval-dependent plan. These do not assert nationwide completion.
+
+
+### Storage without a plan upgrade
+
+`national.warehouse.Store` can read and write losslessly compressed WQP spatial indexes. The existing object key and receipt's SHA-256 refer to the **decoded** SQLite bytes. Stored-object metadata records the codec, decoded size and SHA-256. Reads bound decompression at 64 MB and verify the decoded hash before opening the index. Original uncompressed objects remain readable.
+
+`python -m national.compact_indexes --limit 10` previews only published checkpoint indexes. `--apply` performs bounded, lease-protected, conditional replacements on the existing non-versioned Railway store. Each replacement verifies the original receipt hash, compress/decompress equality and downloaded readback. A failed readback restores the identical original using the replacement ETag. No receipt, record or object key is deleted. Deploy reader support before running it. For rollback, restore decoded objects with this reader before deploying an older reader. The 250 GB budget remains unchanged; source data and Parquet files are untouched. Compaction reduces storage consumption but ordinary hosting resource metering still applies. PostgreSQL requires a separate solution.
