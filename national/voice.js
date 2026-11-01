@@ -45,10 +45,11 @@ function toolAction(report,call){
  return {action:plan};
 }
 
-function createVoiceService({env=process.env,now=Date.now,upstreamFactory=url=>new WebSocket(url,{handshakeTimeout:15000,maxPayload:1048576}),durationMs=900000,maxConcurrent=2,maxDaily=200}={}){
+function createVoiceService({env=process.env,now=Date.now,upstreamFactory=url=>new WebSocket(url,{handshakeTimeout:15000,maxPayload:1048576}),durationMs=900000,maxConcurrent=2,maxDaily=200,budget=null}={}){
  const reports=new Map(),rates=new Map(),calls=new Set(); let day='',daily=0;
  const wss=new WebSocketServer({noServer:true,maxPayload:8192,perMessageDeflate:false});
  const enabled=()=>env.GEMINI_VOICE_ENABLED==='true'&&!!env.GEMINI_API_KEY;
+ const sharedBudget=budget||require('./voice_budget').createVoiceBudget({connectionString:enabled()?env.DATABASE_URL:null});
  function clean(){for(const[k,v]of reports)if(v.expires<now())reports.delete(k);for(const[k,v]of rates)if(v.expires<now())rates.delete(k);}
  function remember(data){if(!enabled())return null;clean();if(reports.size>=256)reports.delete(reports.keys().next().value);const key=id();reports.set(key,{report:voiceReport(data),expires:now()+1800000,calls:0,active:false});return key;}
  function allowed(req){clean();const key=clientKey(req,!!env.RAILWAY_ENVIRONMENT_ID);if(!rates.has(key)&&rates.size>=10000)return false;const r=rates.get(key)||{n:0,expires:now()+3600000};r.n++;rates.set(key,r);return r.n<=6;}
@@ -62,10 +63,10 @@ function createVoiceService({env=process.env,now=Date.now,upstreamFactory=url=>n
   wss.handleUpgrade(req,socket,head,client=>connect(client));return true;
  }
  function connect(client){
-  let upstream=null,entry=null,ready=false,finished=false,bytes=0,toolCount=0,selectedLane=null,windowStart=now(),resumeHandle=null,reconnects=0,started=false,deadline=0;
+  let upstream=null,entry=null,ownsEntry=false,ready=false,finished=false,admitting=false,bytes=0,toolCount=0,selectedLane=null,windowStart=now(),resumeHandle=null,reconnects=0,started=false,deadline=0;
   const timers=[];
   const send=value=>{if(client.readyState===WebSocket.OPEN){if(client.bufferedAmount>1048576){finish('The connection is too slow. Please try again.');return;}client.send(JSON.stringify(value));}};
-  function finish(message){if(finished)return;finished=true;if(message&&client.readyState===WebSocket.OPEN)client.send(JSON.stringify({type:'ended',message}));timers.forEach(clearTimeout);if(entry)entry.active=false;calls.delete(finish);if(upstream){upstream.removeAllListeners('message');upstream.close();timers.push(setTimeout(()=>upstream.terminate(),1000).unref());}client.close();setTimeout(()=>client.terminate(),1000).unref();}
+  function finish(message){if(finished)return;finished=true;if(message&&client.readyState===WebSocket.OPEN)client.send(JSON.stringify({type:'ended',message}));timers.forEach(clearTimeout);if(entry&&ownsEntry)entry.active=false;calls.delete(finish);if(upstream){upstream.removeAllListeners('message');upstream.close();timers.push(setTimeout(()=>upstream.terminate(),1000).unref());}client.close();setTimeout(()=>client.terminate(),1000).unref();}
   calls.add(finish);
   timers.push(setTimeout(()=>{if(!started)finish('The AI could not connect. Please try again later.');},20000).unref());
   function reconnect(){
@@ -99,8 +100,9 @@ function createVoiceService({env=process.env,now=Date.now,upstreamFactory=url=>n
     upstream.on('close',()=>{if(!finished&&upstream===connection){if(started&&resumeHandle)reconnect();else finish('The call ended. Your results and next steps are still here.');}});
   }
   client.on('error',()=>finish());client.on('close',()=>finish());
-  client.on('message',(raw,binary)=>{
+  client.on('message',async(raw,binary)=>{
    if(finished)return;
+   if(admitting){if(!binary){try{if(JSON.parse(raw.toString())?.type==='end')finish();}catch{finish();}}return;}
    if(!upstream){
     let msg;try{msg=JSON.parse(raw.toString());}catch{return finish('The call could not start.');}
     if(!msg||typeof msg!=='object'||Array.isArray(msg))return finish('The call could not start.');
@@ -108,7 +110,12 @@ function createVoiceService({env=process.env,now=Date.now,upstreamFactory=url=>n
     if(binary||msg.type!=='start'||msg.consent!==true||!entry||entry.expires<now())return finish('Run your address lookup again before starting a call.');
     if(entry.active||entry.calls>=3)return finish('This report has reached its call limit. Please try again later.');
     const today=new Date(now()).toISOString().slice(0,10);if(day!==today){day=today;daily=0;}if(daily>=maxDaily)return finish('Calls are paused for today. Please try again tomorrow. Your results and next steps are still here.');
-    entry.active=true;entry.calls++;daily++;selectedLane=actions.labels[msg.lane]?msg.lane:null;
+    entry.active=true;ownsEntry=true;entry.calls++;daily++;admitting=true;selectedLane=actions.labels[msg.lane]?msg.lane:null;
+    try{
+     if(!await sharedBudget.take(maxDaily))return finish('Calls are paused for today. Please try again tomorrow. Your results and next steps are still here.');
+    }catch{return finish('The call could not connect. Please try again later. Your results and next steps are still here.');}
+    finally{admitting=false;}
+    if(finished)return;
     // Fixed provider/model, server-owned instructions and evidence. The client
     // cannot redirect this socket, change models, inject tools or replace data.
     openUpstream();
@@ -132,6 +139,6 @@ function createVoiceService({env=process.env,now=Date.now,upstreamFactory=url=>n
    }
   });
  }
- return {remember,upgrade,config:()=>({enabled:enabled(),duration_seconds:durationMs/1000,provider:'Google Gemini',free_tier:true}),close:()=>{for(const finish of calls)finish('The voice service is restarting.');reports.clear();wss.close();},_reports:reports};
+ return {remember,upgrade,config:()=>({enabled:enabled(),duration_seconds:durationMs/1000,provider:'Google Gemini',free_tier:true,budget_scope:sharedBudget.shared?'deployment':'process'}),close:()=>{for(const finish of calls)finish('The voice service is restarting.');reports.clear();wss.close();return sharedBudget.close();},_reports:reports};
 }
 module.exports={createVoiceService,voiceReport,INSTRUCTIONS,toolAction,TOOLS};

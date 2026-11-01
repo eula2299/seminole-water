@@ -91,6 +91,7 @@ function createWarehouse({connectionString=process.env.DATABASE_URL,pool}={}) {
   const r=await query(`SELECT DISTINCT ON (r.pwsid) r.pwsid,r.data->>'name' AS name,r.data->>'state' AS state,r.data->>'city' AS city,true AS active
    FROM national_water.records r JOIN national_water.sources s ON s.active_run=r.run_id
    WHERE r.kind='system' AND r.data->>'state'=$1 AND r.data->>'active'='true' AND r.data->>'system_type'='CWS'
+    AND (left(r.pwsid,2)=$1 OR left(r.pwsid,2) ~ '^[0-9]{2}$')
     AND (($2<>'' AND upper(trim(r.data->>'city'))=upper($2)) OR ($3<>'' AND left(r.data->>'zip',5)=$3))
    ORDER BY r.pwsid LIMIT 50`,[state,String(city).trim().slice(0,100),/^\d{5}/.test(zip)?zip.slice(0,5):'']);
   return r.rows;

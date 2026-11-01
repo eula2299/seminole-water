@@ -12,9 +12,9 @@
       credentials: 'same-origin',
       ...options,
       headers: options.body ? { 'Content-Type': 'application/json', ...(options.headers || {}) } : (options.headers || {})
-    });
+    }).catch(() => { throw new Error(t('Please check your connection and try again.', 'Revise su conexión e inténtelo de nuevo.')); });
     let data = {};
-    try { data = await response.json(); } catch {}
+    try { data = await response.json(); } catch { throw new Error(t('We could not finish that. Please try again.', 'No pudimos completar esto. Inténtelo de nuevo.')); }
     if (!response.ok) throw new Error(data.error || t('Something went wrong.', 'Algo salió mal.'));
     return data;
   }
@@ -63,7 +63,7 @@
   }
 
   async function handleGoogleCredential(response) {
-    if (!response?.credential) return status(t('Google did not return a sign-in credential.', 'Google no devolvió una credencial de acceso.'), 'error');
+    if (!response?.credential) return status(t('Google sign-in could not be completed. Please try again.', 'No se pudo ingresar con Google. Inténtelo de nuevo.'), 'error');
     status(t('Signing in with Google…', 'Ingresando con Google…'));
     try {
       const data = await api('/api/auth/google', { method: 'POST', body: JSON.stringify({ credential: response.credential }) });
@@ -80,7 +80,7 @@
     const container = $('#google-primary');
     if (!container) return;
     if (!state.config?.google_enabled || !state.config?.google_client_id) {
-      container.innerHTML = `<div class="google-setup-note"><strong>${t('Google sign-in is ready in the code but needs the production Google Client ID.', 'El acceso con Google está listo en el código, pero necesita el Client ID de producción.')}</strong><span>${t('Email sign-in still works below.', 'El acceso por correo sigue funcionando abajo.')}</span></div>`;
+      container.innerHTML = `<div class="google-setup-note"><strong>${t('Please use email to sign in below.', 'Use su correo electrónico para ingresar abajo.')}</strong></div>`;
       return;
     }
     try {

@@ -133,6 +133,7 @@ window.WaterHelpExtended = { create(c) {
     link(denver,'officialRates',data.rates.find(r=>r.model==='denver-single-family')?.drought_source,'source');
     const extra=detail(b,'checkMeter',()=>{}),start=field(extra,'meterStart','number'),end=field(extra,'meterEnd','number'),days=field(extra,'billDays','number'),oldUsage=field(extra,'previousUsage','number'),oldDays=field(extra,'previousDays','number');
     let output;
+    b.addEventListener('input',()=>output?.remove());
     function resultLine(parent,tag,key,value){const node=el(tag);node.append(el('span',t(key)),document.createTextNode(': '+value));parent.append(node);}
     utility.addEventListener('change',()=>{const r=data.rates.find(r=>r.id===utility.value);denver.hidden=r.model!=='denver-single-family';intro.textContent=t(denver.hidden?'rateScopeDetails':'denverScope');usage.closest('label').querySelector('span').textContent=t(denver.hidden?'meterUsage':'gallonsUsed');if(source)source.href=r.source;scope.checked=false;usage.value='';water.value='';output?.remove();});
     button(b,'checkBill',()=>{
@@ -152,7 +153,14 @@ window.WaterHelpExtended = { create(c) {
       for(const issue of result.issues)text(out,issue.code);
       if(!result.issues.length&&result.rateCheck)text(out,'noMathIssue');
       text(out,'billNotVerdict','fine');
-      button(out,'askBillQuestion',()=>requestWizard('bill',{facts:t('waterCharge')+': '+water.value+'\n'+t(rate.model==='denver-single-family'?'gallonsUsed':'meterUsage')+': '+usage.value+' '+rate.unit+'\n'+t('expectedWater')+': '+(result.rateCheck?.expected??t('notStated'))+'\n'+rate.source}));
+      button(out,'askBillQuestion',()=>{
+        const facts=[t('waterProvider')+': '+rate.name,t('readDate')+': '+readDate.value,t('waterCharge')+': '+water.value,t(rate.model==='denver-single-family'?'gallonsUsed':'meterUsage')+': '+usage.value+' '+rate.unit,t('expectedWater')+': '+(result.rateCheck?.expected??t('notStated'))];
+        if(rate.model==='denver-single-family'){
+          facts.push(t('denverClass')+': '+serviceClass.selectedOptions[0].textContent,t('meterInches')+': '+meterSize.value,t('winterThreshold')+': '+winterThreshold.value,t('usageStart')+': '+usageStart.value,t('usageEnd')+': '+usageEnd.value);
+          for(const kind of ['drought','fixed'])if(result.rateCheck?.lines[kind]){const line=result.rateCheck.lines[kind];facts.push(t(kind+'Charge')+': '+money(line.charged),t('difference')+': '+money(line.difference));}
+        }
+        facts.push(rate.source);requestWizard('bill',{facts:facts.join('\n')});
+      });
     });
     button(main,'bill',c.billUpload,'quiet');
   }
@@ -201,8 +209,8 @@ window.WaterHelpExtended = { create(c) {
       try{data=await api('/api/help/request-status',{number:number.value,year:year.value});}
       catch{out.replaceChildren(el('p',t('sourceUnavailable')));return;}
       out.replaceChildren();if(!data.records.length)text(out,'caseNotFound');
-      for(const r of data.records){const b=box(out);b.append(el('h2',r.number+' · '+r.subject),el('p',t('officeRecord')+': '+r.status+' · '+r.office),el('p',t('lastUpdated')+': '+(r.updated||t('notStated'))));text(b,'statusDelay','fine');link(b,'source',data.source,'source');
-        button(b,'save',()=>ensure(async()=>{await V.put({kind:'repair',title:r.number+' · '+r.subject,status:'followup',office_status:r.status,office_checked_at:data.checked_at,source:data.source,document:JSON.stringify(r,null,2),events:[]});toast(t('saved'));}),'quiet');}
+      for(const r of data.records){const b=box(out);b.append(el('h2',r.number+' · '+r.subject),el('p',t('officeRecord')+': '+r.status+' · '+r.office),el('p',t('lastUpdated')+': '+(r.updated?new Date(r.updated).toLocaleString(I.language):t('notStated'))));text(b,'statusDelay','fine');link(b,'source',data.source,'source');
+        button(b,'save',()=>ensure(async()=>{await V.put({kind:'repair',title:r.number+' · '+r.subject,status:'followup',office_status:r.status,office_checked_at:data.checked_at,source:data.source,document:[r.number+' · '+r.subject,t('officeRecord')+': '+r.status+' · '+r.office,t('lastUpdated')+': '+(r.updated?new Date(r.updated).toLocaleString(I.language):t('notStated')),data.source].join('\n'),events:[]});toast(t('saved'));}),'quiet');}
     });
     search.append(out);
     for(const provider of data.providers){const b=box(main);b.append(el('h2',provider.name));text(b,'statusOfficial');link(b,'checkOfficialStatus',provider.url,'button');}

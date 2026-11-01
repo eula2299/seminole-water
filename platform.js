@@ -6,6 +6,7 @@ const path = require('node:path');
 const { fork } = require('node:child_process');
 const { CommunityStore, normalizeEmail, validEmail } = require('./lib/community_store');
 const { CommunityMailer } = require('./lib/community_mailer');
+const { publicErrorBody } = require('./lib/public_errors');
 const {createNationalRuntime}=require('./national/runtime');
 const httpSafety=require('./national/http_safety');
 const national=createNationalRuntime();
@@ -63,7 +64,7 @@ function commonHeaders(res) {
 function json(res, status, body, headers = {}) {
   commonHeaders(res);
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...headers });
-  res.end(JSON.stringify(body));
+  res.end(JSON.stringify(publicErrorBody(status, body)));
 }
 
 function redirect(res, location) {

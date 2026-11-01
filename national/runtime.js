@@ -31,6 +31,6 @@ function createNationalRuntime(){
  // must not prevent future imports. The worker skips sources checked this week.
  timer=setInterval(refresh,60*60*1000);timer.unref();
  const ready=warehouse.initialize().then(()=>refresh()).catch(error=>console.error('National warehouse initialization unavailable:',error.code||error.name));
- return {server,engine,voice,ready,async close(){voice.close();closed=true;clearInterval(timer);worker?.kill('SIGTERM');await warehouse.close();await metrics.close();}};
+ return {server,engine,voice,ready,async close(){closed=true;clearInterval(timer);worker?.kill('SIGTERM');await voice.close();await warehouse.close();await metrics.close();}};
 }
 module.exports={createNationalRuntime};

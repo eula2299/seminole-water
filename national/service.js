@@ -88,7 +88,7 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
   const localState=input.state||address?.state,localCity=input.city||address?.components?.city;
   if(!candidates.length&&!local?.length&&input.supply_type!=='private-well'&&warehouse?.findLocalSystems&&localState&&localCity&&(!input.city||!input.state))local=await stage('matched-city-water-systems',()=>warehouse.findLocalSystems({state:localState,city:localCity,zip:input.zip||address?.components?.zip||''}));
   if(!candidates.length&&input.supply_type!=='private-well'&&Array.isArray(local)&&local.length){
-   candidates=local.filter(r=>validPwsid(r.pwsid)&&r.state===localState&&r.active===true).map(r=>({...r,provenance:'published-local-directory',household_connection_verified:false}));
+   candidates=local.filter(r=>validPwsid(r.pwsid)&&r.state===localState&&r.active===true&&(!REGION_CODES.includes(r.pwsid.slice(0,2))||r.pwsid.startsWith(localState))).map(r=>({...r,provenance:'published-local-directory',household_connection_verified:false}));
    if(candidates.length){boundaryStatus='local-directory-candidates';providerMethod='local-directory';}
   }
   const ids=[...new Set(candidates.map(x=>x.pwsid))],selected=(input.pwsid?[input.pwsid]:ids).slice(0,4),systems=[];
