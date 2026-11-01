@@ -4,7 +4,7 @@ The archive retains source records, NOT independently sampled households. Neithe
 record counts nor statistical summaries are a certification of current safety.
 """
 from __future__ import annotations
-import contextlib, datetime as dt, hashlib, io, json, os, pathlib, re, shutil, socket, sqlite3, tempfile, threading, time, urllib.parse, uuid, zipfile
+import contextlib, datetime as dt, gzip, hashlib, io, json, os, pathlib, re, shutil, socket, sqlite3, tempfile, threading, time, urllib.parse, uuid, zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 try:
  from .catalog import discover, download
@@ -216,7 +216,7 @@ class Store:
      self.client.put_object(Bucket=self.bucket,Key=key,Body=body,IfMatch=self.lease['etag'])
     except Exception:pass # The lease expires if cleanup cannot reach storage.
     self.lease=None
- def write(self,key,body,size,content_type='application/octet-stream'):
+ def write(self,key,body,size,content_type='application/octet-stream',metadata=None):
   if size>5_000_000_000:raise ValueError('Object exceeds bounded single-upload size')
   with self.lease_lock:
    if not self.lease or self.lease['lost']:raise ValueError('Storage publication lease unavailable')
@@ -224,21 +224,68 @@ class Store:
    self.pending_bytes+=size
   try:
    # Single PUTs do not leave billable multipart fragments on interruption.
-   self.client.put_object(Bucket=self.bucket,Key=key,Body=body,ContentLength=size,ContentType=content_type)
+   self.client.put_object(Bucket=self.bucket,Key=key,Body=body,ContentLength=size,ContentType=content_type,**({'Metadata':metadata} if metadata else {}))
   finally:
    with self.lease_lock:self.pending_bytes-=size
  def put_json(self,key,value):
   body=json.dumps(value,allow_nan=False).encode();self.write(key,body,len(body),'application/json')
  def put(self,key,path):
+  if self.is_compactable_index(key) and path.stat().st_size<=64_000_000:
+   raw=path.read_bytes();packed=gzip.compress(raw,compresslevel=6,mtime=0)
+   if len(packed)<len(raw):
+    self.write(key,packed,len(packed),metadata=self.codec_metadata(raw));return
   with open(path,'rb') as body:self.write(key,body,path.stat().st_size)
+ @staticmethod
+ def is_compactable_index(key):return key.startswith('wqp/v1/data/') and key.endswith('/spatial.sqlite')
+ @staticmethod
+ def codec_metadata(raw):return {'water-storage-codec':'gzip-v1','water-decoded-size':str(len(raw)),'water-decoded-sha256':hashlib.sha256(raw).hexdigest()}
  def verify_size(self,key,size):
-  if int(self.client.head_object(Bucket=self.bucket,Key=key)['ContentLength'])!=size:raise ValueError('Retained object size differs from its receipt')
+  head=self.client.head_object(Bucket=self.bucket,Key=key);metadata=head.get('Metadata',{})
+  actual=int(metadata['water-decoded-size']) if metadata.get('water-storage-codec')=='gzip-v1' and self.is_compactable_index(key) else int(head['ContentLength'])
+  if actual!=size:raise ValueError('Retained object size differs from its receipt')
  def get(self,key,path,sha):
   if path.exists() and digest(path)==sha:return
   path.parent.mkdir(parents=True,exist_ok=True);temporary=path.with_suffix('.part')
-  self.client.download_file(self.bucket,key,str(temporary))
-  if digest(temporary)!=sha:temporary.unlink(missing_ok=True);raise ValueError('Object checksum mismatch')
-  temporary.replace(path)
+  head=self.client.head_object(Bucket=self.bucket,Key=key) if self.is_compactable_index(key) else {}
+  metadata=head.get('Metadata',{})
+  codec=metadata.get('water-storage-codec')
+  if codec and codec!='gzip-v1':raise ValueError('Unknown storage codec')
+  if codec:
+   size=int(metadata.get('water-decoded-size','-1'))
+   if not 0<=size<=64_000_000 or int(head.get('ContentLength',64000001))>64_000_000 or metadata.get('water-decoded-sha256')!=sha:raise ValueError('Invalid compressed index receipt')
+  try:
+   self.client.download_file(self.bucket,key,str(temporary))
+   if codec:
+    if temporary.stat().st_size>64_000_000:raise ValueError('Compressed index exceeds limit')
+    with gzip.open(temporary,'rb') as f:raw=f.read(size+1)
+    if len(raw)!=size or hashlib.sha256(raw).hexdigest()!=sha:raise ValueError('Decoded index checksum mismatch')
+    temporary.write_bytes(raw)
+   if digest(temporary)!=sha:raise ValueError('Object checksum mismatch')
+   temporary.replace(path)
+  finally:temporary.unlink(missing_ok=True)
+ def compact_index(self,key,sha):
+  # Change representation only. Keep the exact original decoded bytes, key and receipt.
+  if self.provider!='railway':raise ValueError('Compaction requires the verified non-versioned Railway store')
+  if not self.is_compactable_index(key) or not re.fullmatch('[0-9a-f]{64}',sha):raise ValueError('Invalid index identity')
+  with self.publication_lock(),tempfile.TemporaryDirectory() as directory:
+   head=self.client.head_object(Bucket=self.bucket,Key=key)
+   if head.get('Metadata',{}).get('water-storage-codec')=='gzip-v1':return 0
+   if not 0<int(head['ContentLength'])<=64_000_000 or not head.get('ETag'):raise ValueError('Index size or identity unavailable')
+   path=pathlib.Path(directory)/'original.sqlite';self.get(key,path,sha);raw=path.read_bytes()
+   if len(raw)!=head['ContentLength']:raise ValueError('Index changed during read')
+   packed=gzip.compress(raw,compresslevel=6,mtime=0)
+   if len(packed)>=len(raw):return 0
+   if gzip.decompress(packed)!=raw:raise ValueError('Compression roundtrip failed')
+   with self.lease_lock:
+    if not self.lease or self.lease['lost']:raise ValueError('Storage publication lease unavailable')
+   # Atomic replacement uses less stored space; never raises the existing budget.
+   result=self.client.put_object(Bucket=self.bucket,Key=key,Body=packed,ContentLength=len(packed),ContentType='application/octet-stream',Metadata=self.codec_metadata(raw),IfMatch=head['ETag'])
+   try:self.get(key,pathlib.Path(directory)/'verified.sqlite',sha)
+   except Exception:
+    # Restore the identical original only if our replacement is still current.
+    if result.get('ETag'):self.client.put_object(Bucket=self.bucket,Key=key,Body=raw,ContentLength=len(raw),ContentType=head.get('ContentType','application/octet-stream'),Metadata=head.get('Metadata',{}),IfMatch=result['ETag'])
+    raise
+   return len(raw)-len(packed)
 
 def summary_path(ident,sha):return ROOT/'summaries'/f'{ident}-{sha}.sqlite'
 def published_receipt(receipt):

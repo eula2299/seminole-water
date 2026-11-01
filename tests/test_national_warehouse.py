@@ -79,7 +79,7 @@ class WarehouseTests(unittest.TestCase):
   self.assertEqual(status()['retained_source_records'],0);self.assertFalse(status()['target_met']);self.assertFalse(status()['household_safety_certified'])
 
 class MemoryS3:
- def __init__(self,versioned=False):self.objects={};self.versions=[];self.multipart=[];self.versioned=versioned;self.serial=0
+ def __init__(self,versioned=False):self.objects={};self.versions=[];self.multipart=[];self.versioned=versioned;self.serial=0;self.metadata={}
  def get_bucket_versioning(self,**kwargs):return {'Status':'Enabled'} if self.versioned else {}
  def get_paginator(self,operation):
   owner=self
@@ -98,10 +98,11 @@ class MemoryS3:
   current=self.objects.get(Key)
   if kwargs.get('IfNoneMatch')=='*' and current or kwargs.get('IfMatch') and (not current or kwargs['IfMatch']!=current[1]):raise ClientError({'Error':{'Code':'PreconditionFailed'}},'PutObject')
   body=Body.read() if hasattr(Body,'read') else Body;self.serial+=1;etag='"'+str(self.serial)+'"';self.objects[Key]=(body,etag)
+  self.metadata[Key]=kwargs.get('Metadata',{})
   self.versions.append({'Key':Key,'Size':len(body),'VersionId':str(self.serial)})
   return {'ETag':etag}
  def download_file(self,bucket,key,path):pathlib.Path(path).write_bytes(self.objects[key][0])
- def head_object(self,Key,**kwargs):return {'ContentLength':len(self.objects[Key][0])}
+ def head_object(self,Key,**kwargs):return {'ContentLength':len(self.objects[Key][0]),'ETag':self.objects[Key][1],'Metadata':self.metadata.get(Key,{})}
 
 class HardenedWarehouseTests(unittest.TestCase):
  def setUp(self):self.saved=copy.deepcopy(W.STATE)
@@ -212,3 +213,30 @@ class HardenedWarehouseTests(unittest.TestCase):
     server.slots.acquire();server.process_request(left,('127.0.0.1',1));self.assertIn(b'503 Service Unavailable',right.recv(1024))
    finally:right.close();server.server_close()
 if __name__=='__main__':unittest.main()
+
+
+class LosslessCompactionTests(unittest.TestCase):
+ def test_compaction_preserves_exact_index_and_receipt_at_full_budget(self):
+  raw=b'SQLite format 3\x00'+b'original water records\n'*20000;sha=hashlib.sha256(raw).hexdigest();key='wqp/v1/data/fixture/source/spatial.sqlite'
+  client=MemoryS3();client.put_object(Key=key,Body=raw)
+  store=W.Store(client=client,bucket='test',provider='railway',max_total=len(raw)+4096)
+  saved=store.compact_index(key,sha);self.assertGreater(saved,len(raw)*.8)
+  self.assertEqual(len(client.objects[key][0]),len(raw)-saved)
+  store.verify_size(key,len(raw));self.assertEqual(store.compact_index(key,sha),0)
+  with tempfile.TemporaryDirectory() as d:
+   p=pathlib.Path(d)/'index';store.get(key,p,sha);self.assertEqual(p.read_bytes(),raw)
+  self.assertIn(key,client.objects)
+ def test_wrong_receipt_never_replaces_evidence(self):
+  client=MemoryS3();key='wqp/v1/data/fixture/source/spatial.sqlite';raw=b'unchanged'*1000;client.put_object(Key=key,Body=raw)
+  store=W.Store(client=client,bucket='test',provider='railway',max_total=100000)
+  with self.assertRaisesRegex(ValueError,'checksum'):store.compact_index(key,'a'*64)
+  self.assertEqual(client.objects[key][0],raw)
+ def test_new_index_writes_are_compressed_and_decode_is_bounded(self):
+  client=MemoryS3();key='wqp/v1/data/fixture/source/spatial.sqlite';store=W.Store(client=client,bucket='test',provider='railway',max_total=1000000)
+  with tempfile.TemporaryDirectory() as d:
+   p=pathlib.Path(d)/'index';raw=b'repeat'*10000;p.write_bytes(raw);sha=hashlib.sha256(raw).hexdigest()
+   with store.publication_lock():store.put(key,p)
+   self.assertLess(len(client.objects[key][0]),len(raw));p.unlink();store.get(key,p,sha);self.assertEqual(p.read_bytes(),raw);p.unlink()
+   client.metadata[key]['water-decoded-size']='64000001'
+   with self.assertRaisesRegex(ValueError,'Invalid compressed'):store.get(key,p,sha)
+   self.assertFalse(p.exists())
