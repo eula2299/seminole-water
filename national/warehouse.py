@@ -30,6 +30,19 @@ COMPLIANCE_ARCHIVE=None
 WELL_ARCHIVE=None
 STATE={'schema':VERSION,'sources':{},'errors':{},'ingestion_status':'starting','current_archive':None,'target_minimum_records':200000000,'trained_prediction_models':0,'persistent_storage_bytes':None,'storage_accounting_checked_at':None}
 
+class StorageBudgetExceeded(ValueError):
+ def __init__(self,used,additional,maximum):
+  super().__init__('Persistent storage budget exceeded; publication paused')
+  self.used=used;self.additional=additional;self.maximum=maximum
+
+def capacity_retry_ready(failure,used,maximum,now):
+ # Retry only after real recovery, with enough room for the failed reservation.
+ # A failed lease reservation cannot predict the full publication, so require
+ # at least 100 MB recovered and thirty minutes before another bounded attempt.
+ error=failure['error']
+ return (now-failure['at']>=1800 and error.used-used>=100_000_000
+         and maximum-used>=max(100_000_000,error.additional))
+
 def utc(): return dt.datetime.now(dt.timezone.utc).isoformat()
 def digest(path):
  h=hashlib.sha256()
@@ -179,7 +192,7 @@ class Store:
  def ensure_capacity(self,additional):
   if additional<0:raise ValueError('Invalid storage allocation')
   actual=self.inventory()['bytes']
-  if actual+self.pending_bytes+additional>self.max_total:raise ValueError('Persistent storage budget exceeded; publication paused')
+  if actual+self.pending_bytes+additional>self.max_total:raise StorageBudgetExceeded(actual,self.pending_bytes+additional,self.max_total)
   return actual
  @contextlib.contextmanager
  def publication_lock(self):
@@ -431,12 +444,25 @@ def pws_report(pwsid):
 
 def loop(stop=None,store_factory=Store,discover_fn=discover):
  global ENVIRONMENTAL_ARCHIVE,COMPLIANCE_ARCHIVE,WELL_ARCHIVE
- stop=stop or threading.Event();store=None;next_catalogue=0
+ stop=stop or threading.Event();store=None;next_catalogue=0;capacity_paused={}
+ def attempt(source,action):
+  try:
+   action();capacity_paused.pop(source,None)
+   with LOCK:STATE['errors'].pop(source,None)
+   if source=='compliance':log('compliance-archive-ready',rows=COMPLIANCE_ARCHIVE.status()['retained_association_rows'])
+  except Exception as e:
+   if isinstance(e,StorageBudgetExceeded):capacity_paused[source]={'error':e,'at':time.monotonic(),'action':action}
+   else:capacity_paused.pop(source,None)
+   with LOCK:STATE['errors'][source]=str(e)[:250]
+   log('compliance-import-error' if source=='compliance' else 'ingest-error',source=source,error=str(e)[:250])
+  finally:
+   if source=='compliance':
+    with LOCK:STATE['compliance_archive']=COMPLIANCE_ARCHIVE.status()
  ROOT.mkdir(parents=True,exist_ok=True)
  while not stop.is_set():
   try:
    if store is None:store=store_factory()
-   store.inventory()
+   inventory=store.inventory()
    with LOCK:STATE['errors'].pop('storage',None)
   except Exception as e:
    store=None
@@ -461,6 +487,18 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
     WELL_ARCHIVE=WellArchive(store,ROOT/'wells')
    except Exception as e:log('well-restore-error',error=str(e)[:250])
   if time.monotonic()<next_catalogue:
+   for source,failure in list(capacity_paused.items()):
+    if stop.is_set():break
+    if capacity_retry_ready(failure,inventory['bytes'],store.max_total,time.monotonic()):
+     log('capacity-recovered-retry',source=source,reclaimed_bytes=failure['error'].used-inventory['bytes'])
+     attempt(source,failure['action'])
+     # Re-read accounting before another source can start; every publication
+     # still uses the existing lease and full capacity checks.
+     try:inventory=store.inventory()
+     except Exception:break
+     with LOCK:
+      STATE['ingestion_status']='cycle-complete-with-gaps' if STATE['errors'] else 'cycle-complete'
+      STATE['current_archive']=None;STATE['last_capacity_retry_at']=utc()
    if WELL_ARCHIVE:
     try:
      if WELL_ARCHIVE.step():log('well-archive-step',records=WELL_ARCHIVE.status()['source_well_records'],errors=WELL_ARCHIVE.status()['errors'])
@@ -484,19 +522,8 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
     except Exception as e:log('restore-error',source=item['id'],error=type(e).__name__)
    for item in items:
     if stop.is_set():break
-    try:ingest(store,item)
-    except Exception as e:
-     with LOCK:STATE['errors'][item['id']]=str(e)[:250]
-     log('ingest-error',source=item['id'],error=str(e)[:250])
-   if COMPLIANCE_ARCHIVE and not stop.is_set():
-    try:
-     COMPLIANCE_ARCHIVE.refresh()
-     log('compliance-archive-ready',rows=COMPLIANCE_ARCHIVE.status()['retained_association_rows'])
-     with LOCK:STATE['errors'].pop('compliance',None)
-    except Exception as e:
-     log('compliance-import-error',error=str(e)[:250])
-     with LOCK:STATE['errors']['compliance']=str(e)[:250]
-    with LOCK:STATE['compliance_archive']=COMPLIANCE_ARCHIVE.status()
+    attempt(item['id'],lambda item=item:ingest(store,item))
+   if COMPLIANCE_ARCHIVE and not stop.is_set():attempt('compliance',COMPLIANCE_ARCHIVE.refresh)
    with LOCK:STATE['ingestion_status']='cycle-complete-with-gaps' if STATE['errors'] else 'cycle-complete';STATE['current_archive']=None;STATE['last_cycle_at']=utc()
   except Exception as e:
    with LOCK:STATE['ingestion_status']='catalogue-unavailable';STATE['errors']['catalogue']=type(e).__name__

@@ -240,3 +240,66 @@ class LosslessCompactionTests(unittest.TestCase):
    client.metadata[key]['water-decoded-size']='64000001'
    with self.assertRaisesRegex(ValueError,'Invalid compressed'):store.get(key,p,sha)
    self.assertFalse(p.exists())
+
+class CapacityRecoveryTests(unittest.TestCase):
+ def test_retry_needs_time_recovered_bytes_and_complete_reservation(self):
+  failure={'error':W.StorageBudgetExceeded(950_000_000,300_000_000,1_000_000_000),'at':100}
+  self.assertFalse(W.capacity_retry_ready(failure,600_000_000,1_000_000_000,1899))
+  self.assertFalse(W.capacity_retry_ready(failure,900_000_000,1_000_000_000,1900))
+  self.assertFalse(W.capacity_retry_ready(failure,800_000_000,1_000_000_000,1900))
+  self.assertTrue(W.capacity_retry_ready(failure,600_000_000,1_000_000_000,1900))
+  self.assertFalse(W.capacity_retry_ready(failure,950_000_000,2_000_000_000,1900))
+ def test_storage_exception_carries_exact_reservation_without_changing_limit(self):
+  client=MemoryS3();client.put_object(Key='existing',Body=b'1234567')
+  store=W.Store(client=client,bucket='test',max_total=10);store.pending_bytes=2
+  with self.assertRaises(W.StorageBudgetExceeded) as raised:store.ensure_capacity(4)
+  self.assertEqual((raised.exception.used,raised.exception.additional,raised.exception.maximum),(7,6,10))
+  self.assertEqual(client.objects['existing'][0],b'1234567')
+ def test_only_capacity_failed_source_retries_before_weekly_catalogue(self):
+  clock=[0];calls=[];discoveries=[];saved=copy.deepcopy(W.STATE)
+  class Stop:
+   done=False
+   def is_set(self):return self.done
+   def wait(self,seconds):
+    clock[0]+=600
+    if clock[0]>3600:raise AssertionError('Recovery was not retried')
+  stop=Stop()
+  class Storage:
+   max_total=1_000_000_000
+   def inventory(self):return {'bytes':950_000_000 if clock[0]==0 else 600_000_000}
+   def json(self,key):return None
+  def discover():discoveries.append(1);return [{'id':n} for n in ['unchanged','capacity','bad-schema']]
+  def ingest(store,item):
+   source=item['id'];calls.append(source)
+   if source=='bad-schema':raise ValueError('Invalid source schema')
+   if source=='capacity':
+    if calls.count(source)==1:raise W.StorageBudgetExceeded(950_000_000,300_000_000,store.max_total)
+    stop.done=True
+  try:
+   W.STATE['errors']={}
+   with tempfile.TemporaryDirectory() as t,mock.patch.object(W,'ROOT',pathlib.Path(t)),mock.patch.object(W,'ingest',ingest),mock.patch.object(W.time,'monotonic',side_effect=lambda:clock[0]),mock.patch.object(W,'ENVIRONMENTAL_ARCHIVE',None),mock.patch.object(W,'WELL_ARCHIVE',None),mock.patch.object(W,'COMPLIANCE_ARCHIVE',None),mock.patch.dict(W.os.environ,{'WAREHOUSE_WQP_ENABLED':'false','WAREHOUSE_COMPLIANCE_ENABLED':'false','WAREHOUSE_WELLS_ENABLED':'false'}):
+    W.loop(stop=stop,store_factory=Storage,discover_fn=discover)
+   self.assertEqual(calls,['unchanged','capacity','bad-schema','capacity']);self.assertEqual(len(discoveries),1)
+   self.assertNotIn('capacity',W.STATE['errors']);self.assertIn('bad-schema',W.STATE['errors'])
+  finally:W.STATE.clear();W.STATE.update(saved)
+ def test_compliance_capacity_retry_stops_after_success(self):
+  clock=[0];saved=copy.deepcopy(W.STATE)
+  class Stop:
+   def is_set(self):return clock[0]>2400
+   def wait(self,seconds):clock[0]+=600
+  class Storage:
+   max_total=1_000_000_000
+   def inventory(self):return {'bytes':950_000_000 if clock[0]==0 else 600_000_000}
+  class Compliance:
+   calls=0
+   def status(self):return {'retained_association_rows':self.calls}
+   def refresh(self):
+    self.calls+=1
+    if self.calls==1:raise W.StorageBudgetExceeded(950_000_000,300_000_000,1_000_000_000)
+  compliance=Compliance()
+  try:
+   W.STATE['errors']={}
+   with tempfile.TemporaryDirectory() as t,mock.patch.object(W,'ROOT',pathlib.Path(t)),mock.patch.object(W.time,'monotonic',side_effect=lambda:clock[0]),mock.patch.object(W,'ENVIRONMENTAL_ARCHIVE',None),mock.patch.object(W,'WELL_ARCHIVE',None),mock.patch.object(W,'COMPLIANCE_ARCHIVE',compliance),mock.patch.dict(W.os.environ,{'WAREHOUSE_WQP_ENABLED':'false','WAREHOUSE_WELLS_ENABLED':'false'}):
+    W.loop(stop=Stop(),store_factory=Storage,discover_fn=lambda:[])
+   self.assertEqual(compliance.calls,2);self.assertNotIn('compliance',W.STATE['errors'])
+  finally:W.STATE.clear();W.STATE.update(saved)
