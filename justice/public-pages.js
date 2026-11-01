@@ -10,7 +10,7 @@ async function page(url,depth=0){
   const ip=ips[0];const req=https.get(url,{lookup:(_h,opts,cb)=>opts.all?cb(null,[ip]):cb(null,ip.address,ip.family),headers:{Accept:'text/html,text/plain','User-Agent':'IsMyWaterOK-HelpFinder/1.0'}},res=>{
    if(res.statusCode>=300&&res.statusCode<400&&res.headers.location){res.resume();let next;try{next=new URL(res.headers.location,url).href;}catch{return reject(Error('SOURCE_ROUTE'));}return resolve(page(next,depth+1));}
    if(res.statusCode!==200||!/^text\/(html|plain)/i.test(res.headers['content-type']||'')){res.resume();return reject(Error('SOURCE_CONTENT'));}
-   let size=0,parts=[];res.on('data',b=>{size+=b.length;if(size>900000)res.destroy(Error('SOURCE_LIMIT'));else parts.push(b);});res.on('error',reject);res.on('end',()=>{const html=Buffer.concat(parts).toString('utf8');resolve({url,text:plain(html),title:plain(html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1]||new URL(url).hostname)});});
+   let size=0,parts=[];res.on('data',b=>{size+=b.length;if(size>900000)res.destroy(Error('SOURCE_LIMIT'));else parts.push(b);});res.on('error',reject);res.on('end',()=>{const html=Buffer.concat(parts).toString('utf8');const links=[...html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)].map(m=>{try{return {url:new URL(decode(m[1]),url).href,title:plain(m[2])};}catch{return null;}}).filter(r=>r&&safeUrl(r.url)&&r.title).slice(0,300);resolve({url,links,text:plain(html),title:plain(html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1]||new URL(url).hostname)});});
   });const timer=setTimeout(()=>req.destroy(Error('SOURCE_TIME')),6500);req.on('close',()=>clearTimeout(timer));req.on('error',reject);
  });
 }

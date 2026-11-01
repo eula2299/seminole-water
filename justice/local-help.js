@@ -26,18 +26,37 @@ function createLocalHelp({ai,readPage=page,now=Date.now}={}){
   const work=(async()=>{
    const direct=agencies({state}),result={...direct,city,kind,items:[],checked_at:new Date(now()).toISOString(),status:'official_routes',suggestions:null};
    if(!ai?.enabled)return result;
-   let response;
-   try{response=await ai.discover({city,state,kind,language,official:direct.region.routes});}catch(e){console.warn(JSON.stringify({event:"local-help-discovery-failed",reason:e.message,kind}));return result;}
-   result.suggestions=suggestion(response.grounding?.searchEntryPoint?.renderedContent);
-   const grounded=(response.grounding?.groundingChunks||[]).map(r=>r.web).filter(r=>r&&/^https:\/\//.test(r.uri)).slice(0,8);
-   if(!grounded.length){console.warn(JSON.stringify({event:"local-help-no-grounded-sources",kind}));return result;}
-   const pages=await Promise.allSettled(grounded.map(async source=>({source,page:await readPage(source.uri)})));
-   const fetched=pages.filter(r=>r.status==='fulfilled').map(r=>r.value);
+   let response,fetched=[];
+   try{response=await ai.discover({city,state,kind,language,official:direct.region.routes});}catch(e){console.warn(JSON.stringify({event:"local-help-discovery-failed",reason:e.message,kind}));}
+   result.suggestions=suggestion(response?.grounding?.searchEntryPoint?.renderedContent);
+   const grounded=(response?.grounding?.groundingChunks||[]).map(r=>r.web).filter(r=>r&&/^https:\/\//.test(r.uri)).slice(0,8);
+   if(grounded.length){
+    const pages=await Promise.allSettled(grounded.map(async source=>({source,page:await readPage(source.uri)})));
+    fetched=pages.filter(r=>r.status==='fulfilled').map(r=>r.value);
+   }
+   // Read the official directories directly when the search provider has no quota or no usable sources.
+   // This uses public agency pages and the ordinary explanation API, not another search key/model.
+   if(!fetched.length&&ai.discoverPages){
+    const kinds=kind==='meetings'?['local','state']:kind==='pipes'||kind==='repairs'?['water','local','social']:['social','water','consumer'];
+    const seed=await Promise.allSettled([...new Set(kinds.map(k=>direct.region.routes[k]?.url).filter(Boolean))].map(url=>readPage(url)));
+    const pages=seed.filter(r=>r.status==='fulfilled').map(r=>r.value),chosen=[];
+    const terms=kind==='meetings'?/meeting|council|commission|calendar|public comment/i:kind==='pipes'||kind==='repairs'?/lead|pipe|service.line|repair|replacement/i:/water|utility|bill|assistance|discount/i;
+    for(const p of pages){
+     const links=(p.links||[]).filter(l=>l.title.toLowerCase().includes(city.toLowerCase())||terms.test(l.title));
+     links.sort((a,b)=>Number(b.title.toLowerCase().includes(city.toLowerCase()))-Number(a.title.toLowerCase().includes(city.toLowerCase())));
+     for(const link of links.slice(0,2))if(!chosen.includes(link.url)&&!pages.some(p=>p.url===link.url))chosen.push(link.url);
+    }
+    const extra=await Promise.allSettled(chosen.slice(0,4).map(url=>readPage(url)));pages.push(...extra.filter(r=>r.status==='fulfilled').map(r=>r.value));
+    if(pages.length){
+     try{const items=await ai.discoverPages({pages,city,state,kind});response={result:items};fetched=pages.map(page=>({source:{uri:page.url},page,directoryLinked:true}));}catch(e){console.warn(JSON.stringify({event:'local-help-page-reading-failed',reason:e.message}));}
+    }
+   }
+   if(!response?.result)return result;
    const known=new Set(Object.values(direct.region.routes).map(r=>new URL(r.url).hostname));
    const permitted=host=>host.endsWith('.gov')||host.endsWith('.us')||known.has(host)||['211.org','www.211.org','lsc.gov','www.lsc.gov','rd.usda.gov'].includes(host);
    for(const item of (response.result?.items||[]).slice(0,8)){
     const matched=fetched.find(r=>normalizeUrl(r.page.url)===normalizeUrl(item.url)||normalizeUrl(r.source.uri)===normalizeUrl(item.url));
-    if(!matched||!permitted(new URL(matched.page.url).hostname))continue;
+    if(!matched||!matched.directoryLinked&&!permitted(new URL(matched.page.url).hostname))continue;
     const quote=plain(clean(item.quote,550));
     if(quote.length<15||!matched.page.text.toLowerCase().includes(quote.toLowerCase()))continue;
     const dateLabel=clean(item.date_label,70),deadline=clean(item.deadline_label,100);
