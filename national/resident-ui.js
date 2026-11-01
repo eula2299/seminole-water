@@ -31,6 +31,7 @@ function residentClient(){
  function findingRow(parent,f){const row=n('article',undefined,'measurement');const name=n('div');name.append(n('h3',f.name));p(name,f.provider,'muted');const value=n('div');value.append(n('strong',f.result));p(value,f.detected?'Found in the sample':'Reported test result','muted');row.append(name,value);parent.append(row);p(row,(f.scope==='source-water'?'Before treatment · ':f.scope==='system-monitoring'?'Water provider’s tests · ':'Sample location not stated · ')+date(f.first_sample)+' to '+date(f.last_sample),'sample-date');if(f.comparison){p(row,f.comparison.description,'comparison'+(f.comparison.above_reference?' attention':''));p(row,'Drinking-water limit: '+f.comparison.reference_text+'. '+f.comparison.qualification,'muted');}if(f.source_url){const source=n('div',undefined,'source-link');source.append(a('Read the source',f.source_url));row.append(source);}}
  function firstSentence(value){const t=String(value||'').trim();if(!t)return '';const m=t.match(/^.*?[.!?](?:\\s|$)/);return (m?m[0]:t).trim();}
  function testPlan(r){
+  if(r.access_plan?.what_to_ask_for?.length)return r.access_plan.what_to_ask_for.map(item=>item.name).filter(Boolean).slice(0,5);
   const out=[],seen=new Set(),add=x=>{const k=x.toLowerCase();if(!seen.has(k)){seen.add(k);out.push(x);}};
   if(r.private_well){add('Total coliform bacteria');add('Nitrate');add('pH + total dissolved solids');}
   const names=(r.findings||[]).filter(f=>f.detected||f.comparison?.above_reference).map(f=>String(f.name||''));
@@ -177,12 +178,43 @@ function residentClient(){
   const technical=n('p',undefined,'technical-link');technical.append(a('Open the separate technical report →','/water-details'));section.append(technical);
   main.append(section);
  }
+ function renderProviderPicker(parent,r,data){
+  if(r.private_well||(!data.provider?.requires_selection&&r.providers?.length))return;
+  const panel=n('section',undefined,'provider-picker clean-decision');
+  panel.append(n('h3','Find the provider on your water bill'));
+  p(panel,'Choose the company that supplies your water. A utility’s mailing address does not show which homes it serves. If you rent, your landlord can tell you the name.','muted');
+  const query=n('input');query.type='search';query.placeholder='Water provider name';query.setAttribute('aria-label','Water provider name');query.maxLength=100;
+  const search=n('button','Find provider','secondary');search.type='button';
+  const status=n('p','','muted');status.setAttribute('role','status');const list=n('div');
+  panel.append(query,search,status,list);parent.append(panel);
+  async function find(){
+   const term=query.value.trim(),region=data.address?.state||state?.value||'';
+   if(term.length<2){status.textContent='Enter at least two letters of the provider name.';return;}
+   if(!region){status.textContent='Choose your state above, then try again.';return;}
+   search.disabled=true;status.textContent='Checking provider names…';list.replaceChildren();
+   try{
+    const response=await fetch('/api/national/providers?'+new URLSearchParams({state:region,query:term}));
+    if(!response.ok)throw Error('Unavailable');const found=await response.json();
+    if(!Array.isArray(found.providers))throw Error('Unavailable');
+    if((typeof panel.isConnected==='boolean'&&!panel.isConnected)||query.value.trim()!==term)return;
+    status.textContent=found.providers.length?'Choose the name shown on your bill.':'No matching name was found. Try a shorter name, or ask your landlord or water provider.';
+    for(const item of found.providers){
+     const row=n('div',undefined,'provider-row');row.append(n('strong',item.name));
+     const choose=n('button','Use this provider','secondary');choose.type='button';
+     choose.addEventListener('click',()=>{selected=item.id;supply.value='public';submitLookup();});row.append(choose);list.append(row);
+    }
+   }catch{status.textContent='We could not check provider names. Try again.';}finally{search.disabled=false;}
+  }
+  search.addEventListener('click',find);query.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();find();}});
+ }
  function renderSnapshot(r,data){
   const main=n('section',undefined,'snapshot-main simple-results');
   const label={urgent:'Act now',elevated:'Needs attention',watch:'Worth checking',screened:'No priority concern found in available records'}[r.risk_profile?.overall]||'Your water results';
   main.append(n('p','YOUR WATER RESULTS','mini-kicker'),n('h2',label));
   p(main,r.address||input.value,'report-address');
   p(main,'Start with these results. They describe available records, not a test of your faucet. Health effects depend on the amount and length of exposure.','snapshot-intro');
+  if(data.provider?.requires_selection)p(main,data.address?.status==='matched'?'We found the address, but could not confirm its water provider. Choose the provider on your bill to see its results.':'We could not confirm the exact address. Choose the provider on your bill to see its water records.','attention');
+  renderProviderPicker(main,r,data);
   if(r.data_status?.refresh_available){
    const notice=n('div',undefined,'record-status');notice.setAttribute('role','status');
    p(notice,r.data_status.status==='saved'?'Showing verified records last checked on '+date(r.data_status.last_verified_at)+'. We could not refresh every source this time.':'Some records could not be checked this time. Showing the verified records available.','attention');
@@ -259,7 +291,7 @@ function residentClient(){
    for(const check of checks){const line=n('p',undefined,'muted');line.append(a(check.name,check.source_url));if(check.checked_at)line.append(n('span',' · checked '+date(check.checked_at)));box.append(line);p(box,check.coverage,'muted');}
    if(!checks.length)box.append(a('Find your local drinking-water authority','https://www.epa.gov/ground-water-and-drinking-water/local-drinking-water-information'));
   }
-  if(r.providers.length){const provider=card('Your water provider','provider-card');p(provider,r.provider_match_method==='local-directory'?'These providers have a published listing near you. Choose the name on your water bill.':r.provider_ambiguity?'More than one water provider may serve this location. Choose the name shown on your water bill.':'This is the provider most closely connected to the address. Your water bill can confirm it.','muted');for(const item of r.providers){const row=n('div',undefined,'provider-row');row.append(n('strong',item.name));if(r.provider_ambiguity&&selected!==item.id){const pick=n('button','This is my provider','secondary');pick.type='button';pick.addEventListener('click',()=>{selected=item.id;supply.value='public';submitLookup();});row.append(pick);}provider.append(row);}}
+  if(r.providers.length){const provider=card('Your water provider','provider-card');p(provider,r.provider_match_method==='local-directory'?'These are utility contact listings. Their mailing address does not establish which homes they serve. Choose only the name on your water bill.':r.provider_ambiguity?'More than one water provider may serve this location. Choose the name shown on your water bill.':'This is the provider most closely connected to the address. Your water bill can confirm it.','muted');for(const item of r.providers){const row=n('div',undefined,'provider-row');row.append(n('strong',item.name));if(r.provider_ambiguity&&selected!==item.id){const pick=n('button','This is my provider','secondary');pick.type='button';pick.addEventListener('click',()=>{selected=item.id;supply.value='public';submitLookup();});row.append(pick);}provider.append(row);}}
   if(r.findings.length){const box=card('What the water tests found');p(box,'These are the amounts and dates listed in water tests. “Below the reporting limit” means the lab could not measure an amount above that level; it does not mean zero.','muted');
    const featured=r.findings.filter(f=>f.scope==='system-monitoring');const shown=(featured.length?featured:r.findings).slice(0,4);for(const f of shown)findingRow(box,f);
    const all=disclosure(box,'Explore all reported substances');const filter=n('input');filter.type='search';filter.placeholder='Search a substance, such as arsenic';filter.setAttribute('aria-label','Search reported substances');all.append(filter);const list=n('div');all.append(list);const draw=()=>{list.replaceChildren();const matches=r.findings.filter(f=>f.name.toLowerCase().includes(filter.value.toLowerCase()));p(list,matches.length+' reported substance summaries','muted');for(const f of matches)findingRow(list,f);};filter.addEventListener('input',draw);draw();

@@ -9,7 +9,7 @@ const warehouse={findLocalSystems:async()=>[listing,{...listing,pwsid:'CA0000001
 test('geocoder and map outage still searches official locality systems without claiming a household match',async()=>{
  const request=async url=>{if(url.startsWith(ENDPOINTS.systems))return {Results:{Systems:[{PWSID:'NY0000001'}]}};throw Error('Fixture outage');};
  const result=await createEngine({request,warehouse}).lookup(input);
- assert.equal(result.systems.length,1);assert.equal(result.systems[0].pwsid,'NY0000001');assert.equal(result.occurrence.records.length,1);
+ assert.equal(result.systems.length,0);assert.equal(result.occurrence.records.length,0);assert.equal(result.provider.candidates[0].pwsid,'NY0000001');assert.equal(result.provider.requires_selection,true);
  assert.equal(result.provider.method,'local-directory');assert.equal(result.provider.household_connection_verified,false);assert.equal(result.resident_report.provider_ambiguity,true);
  assert.ok(result.audit.some(a=>a.agent==='published-local-water-systems'&&a.status==='completed'));
  assert.ok(!result.resident_report.risk_profile.priority_risks.some(r=>r.relation==='serving-water-system'));
@@ -17,7 +17,7 @@ test('geocoder and map outage still searches official locality systems without c
 test('failed first geocoder request retries structured address before provider-map search',async()=>{
  let attempts=0;
  const request=async url=>{if(url.startsWith(ENDPOINTS.censusOneLine)){attempts++;throw Error('Transient');}if(url.startsWith(ENDPOINTS.census)){attempts++;return {result:{addressMatches:[{addressComponents:{state:'NY',city:'Example'},coordinates:{x:-74,y:41},matchedAddress:'1 SYNTHETIC STREET'}]}};}if(url.startsWith(ENDPOINTS.boundaries))return {features:[]};throw Error('Unused source');};
- const r=await createEngine({request,warehouse}).lookup(input);assert.equal(attempts,2);assert.equal(r.address.status,'matched');assert.equal(r.systems.length,1);
+ const r=await createEngine({request,warehouse}).lookup(input);assert.equal(attempts,2);assert.equal(r.address.status,'matched');assert.equal(r.systems.length,0);assert.equal(r.provider.requires_selection,true);
 });
 test('private wells never use city-directory public-system records',async()=>{
  let calls=0;const r=await createEngine({request:async()=>({result:{addressMatches:[]}}),warehouse:{...warehouse,findLocalSystems:async()=>{calls++;return [listing];}}}).lookup({...input,supply_type:'private-well'});assert.equal(calls,0);assert.deepEqual(r.systems,[]);

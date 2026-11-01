@@ -44,6 +44,12 @@ function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false,m
     if(voice){const token=voice.remember(data);if(token)data.voice_token=token;}
     testingCatalog.refresh().catch(()=>{});return send(res,200,data);
    }
+   if(req.method==='GET'&&u.pathname==='/api/national/providers'){
+    if(!allowed(req)||active>=maxConcurrent)return send(res,429,{message:'Please try again shortly.'});
+    if(typeof engine.searchProviders!=='function')return send(res,503,{message:'Provider search could not finish. Please try again.'});
+    active++;
+    try{return send(res,200,{providers:await engine.searchProviders({state:u.searchParams.get('state')||'',query:u.searchParams.get('query')||''})});}finally{active--;}
+   }
    if(req.method==='GET'&&u.pathname==='/api/national/status')return send(res,200,await engine.status());
    if(req.method!=='POST'||u.pathname!=='/api/national/lookup')return send(res,404,{message:'Not found.'});
    if(req.headers.origin){let host;try{const origin=new URL(req.headers.origin);if(!['https:','http:'].includes(origin.protocol))throw new Error();host=origin.host;}catch{return send(res,403,{message:'Invalid origin.'});}if(host!==req.headers.host)return send(res,403,{message:'Origin not permitted.'});}

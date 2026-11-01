@@ -8,7 +8,7 @@ const {createPropertyContext,sourceReader,streetKey}=require('../national/proper
 const {getHealthContext}=require('../national/health_context');
 const source={id:'syr4',url:'https://www.epa.gov/dwsixyearreview'},summary={analyte:'Arsenic',scope:'system-monitoring',source_id:'syr4',unit:'µg/L',n:20,detects:8,nondetects:12,min_detect:2,max_detect:12,first_date:'2012-01-01',last_date:'2019-01-01',invalid_identity_date:0};
 function report(){return {address:{status:'matched',matched_address:'SYNTHETIC FIXTURE'},supply:{type:'public'},provider:{candidates:[{pwsid:'NY1234567',name:'Fixture Water'}]},systems:[{pwsid:'NY1234567',archive:{summaries:[summary],sources:[source],compliance:{status:'records-returned',distinct_violation_ids:1,records:[{VIOLATION_ID:'01',IS_HEALTH_BASED_IND:'Y',VIOLATION_STATUS:'Resolved',NON_COMPL_PER_BEGIN_DATE:'01/01/2020',code_descriptions:{VIOLATION_CODE:'Test violation'}},{VIOLATION_ID:'01',IS_HEALTH_BASED_IND:'Y',VIOLATION_STATUS:'Resolved',code_descriptions:{VIOLATION_CODE:'Test violation'}},{ENFORCEMENT_ID:'2',VIOLATION_ID:'',IS_HEALTH_BASED_IND:'Y',VIOLATION_STATUS:'Unresolved'}],source:{documentation_url:'https://echo.epa.gov/'}}}}],generated_at:'2026-09-18T00:00:00Z'};}
-test('one full address does not require a second state or utility ID field',async()=>{const input=validateInput({address:'100 Synthetic St, Example, NY 10001'});assert.equal(input.state,'');const calls=[];const result=await createEngine({request:async(url)=>{calls.push(url);if(url.startsWith(ENDPOINTS.censusOneLine))return {result:{addressMatches:[{matchedAddress:input.address,addressComponents:{state:'NY'},coordinates:{x:-74,y:41},geographies:{Counties:[{NAME:'Fixture County',GEOID:'00000'}]}}]}};return {features:[]};}}).lookup(input);assert.equal(result.address.state,'NY');assert.equal(result.address.geography.county.name,'Fixture County');assert.ok(calls[0].includes('onelineaddress'));assert.ok(result.resident_report.actions.length);});
+test('one full address does not require a second state or utility ID field',async()=>{const input=validateInput({address:'100 Synthetic St, Example, NY 10001'});assert.equal(input.state,'NY');const calls=[];const result=await createEngine({request:async(url)=>{calls.push(url);if(url.startsWith(ENDPOINTS.censusOneLine))return {result:{addressMatches:[{matchedAddress:input.address,addressComponents:{state:'NY'},coordinates:{x:-74,y:41},geographies:{Counties:[{NAME:'Fixture County',GEOID:'00000'}]}}]}};return {features:[]};}}).lookup(input);assert.equal(result.address.state,'NY');assert.equal(result.address.geography.county.name,'Fixture County');assert.ok(calls[0].includes('onelineaddress'));assert.ok(result.resident_report.actions.length);});
 
 test('city field is accepted with a street-only address and used by the Census retry',async()=>{const calls=[];const result=await createEngine({request:async url=>{calls.push(url);if(url.startsWith(ENDPOINTS.censusOneLine))return {result:{addressMatches:[]}};if(url.startsWith(ENDPOINTS.census))return {result:{addressMatches:[{matchedAddress:'100 SYNTHETIC ST, EXAMPLE, NY, 10001',addressComponents:{state:'NY',city:'EXAMPLE',zip:'10001'},coordinates:{x:-74,y:41}}]}};return {features:[]};}}).lookup({address:'100 Synthetic St',city:'Example',state:'NY'});assert.equal(result.address.status,'matched');assert.ok(calls.some(url=>url.includes('city=Example')));});
 test('an unrecognized country/state and ambiguous address cannot select a house',()=>{assert.equal(censusMatch({result:{addressMatches:[{addressComponents:{state:'ON'},coordinates:{x:-75,y:45}}]}},{state:''}).status,'unresolved');const h={addressComponents:{state:'NY'},matchedAddress:'Fixture',coordinates:{x:-74,y:41}};const r=censusMatch({result:{addressMatches:[h,h]}},{state:''});assert.equal(r.status,'ambiguous');assert.equal(r.candidates.length,2);assert.equal(r.latitude,undefined);});
@@ -76,4 +76,34 @@ test('a refreshed provider listing cannot hide missing testing records',()=>{
  system.archive.checked_sources=[{id:'ucmr5',retrieved_at:'2026-10-31'}];
  r=buildResidentReport(data);assert.equal(r.data_status.status,'available');
  system.archive.truncated=true;r=buildResidentReport(data);assert.equal(r.data_status.status,'partial');assert.equal(r.complete_evidence.truncation.historical_water_summaries,true);
+});
+
+test('first four tiles use distinct substances without removing source histories or combining ranges',()=>{
+ const data=report();data.systems[0].archive.compliance={status:'no-records-in-snapshot',records:[]};
+ data.systems[0].archive.summaries=[
+  {...summary,analyte:'Chlorate',min_detect:120,max_detect:470,last_date:'2015-01-01'},
+  {...summary,analyte:' CHLORATE ',min_detect:120,max_detect:430,last_date:'2025-01-01',source_id:'syr3'},
+  ...['PFHxA','PFOS','Radium 226','Radium 228'].map(analyte=>({...summary,analyte,min_detect:1,max_detect:2,last_date:'2024-01-01'}))
+ ];
+ const r=buildResidentReport(data),tiles=r.risk_profile.priority_risks;
+ assert.equal(r.findings.length,6);assert.equal(r.complete_evidence.water_findings,6);
+ assert.equal(r.risk_profile.risks.filter(x=>x.key.startsWith('finding:')).length,6);assert.equal(tiles.length,4);
+ const chlorate=tiles.filter(x=>/chlorate/i.test(x.title));assert.equal(chlorate.length,1);assert.equal(chlorate[0].result,'120–430 µg/L');
+ assert.ok(r.findings.some(x=>x.result==='120–470 µg/L'));assert.ok(r.findings.some(x=>x.result==='120–430 µg/L'));
+ assert.ok(r.findings.some(x=>x.name==='Radium 226'));assert.ok(r.findings.some(x=>x.name==='Radium 228'));
+});
+
+test('a single mailing-directory candidate still asks for the provider on the bill without implying proximity or service',()=>{
+ const data=report();data.systems=[];
+ data.provider={method:'local-directory',status:'provider-selection-needed',requires_selection:true,candidates:[{pwsid:'NY1234567',name:'Fixture Water',provenance:'published-contact-directory',candidate_basis:'mailing-contact-address'}]};
+ const r=buildResidentReport(data);
+ assert.equal(r.headline,'Choose the water provider on your bill');assert.match(r.summary,/mailing address does not show which homes/);
+ assert.doesNotMatch(r.summary+' '+r.headline,/near you|retrieved their water records|matched this address/);
+ assert.deepEqual(r.providers,[]);assert.deepEqual(r.findings,[]);assert.equal(r.provider_ambiguity,true);
+ assert.ok(r.accuracy_check.notes.includes('water-provider-needs-selection'));assert.equal(r.accuracy_check.score,25);
+ assert.match(r.access_plan.primary_path.title,/provider on your bill/);
+ const chosen=report();chosen.provider={...data.provider,requires_selection:false,user_selected_pwsid:'NY1234567'};
+ const selected=buildResidentReport(chosen);
+ assert.ok(selected.findings.length>0);assert.equal(selected.providers[0].name,'Fixture Water');
+ assert.doesNotMatch(selected.headline,/Choose the water provider/);
 });

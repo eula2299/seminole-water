@@ -49,7 +49,8 @@ function addressQuality(data,findings,compliance){
  };
  let score=0;const notes=[];
  if(data.address?.status==='matched')score+=25;else notes.push('address-not-fully-resolved');
- if(candidates.length===1){score+=20;if(candidates[0].provenance==='state-or-system-sourced')score+=10;else if(candidates[0].provenance==='modeled')score+=5;}
+ if(data.provider?.requires_selection===true)notes.push('water-provider-needs-selection');
+ else if(candidates.length===1){score+=20;if(candidates[0].provenance==='state-or-system-sourced')score+=10;else if(candidates[0].provenance==='modeled')score+=5;}
  else if(candidates.length>1)notes.push('multiple-water-providers');
  else notes.push('water-provider-not-resolved');
  const familyCount=Object.values(families).filter(Boolean).length;score+=Math.min(36,familyCount*6);
@@ -113,7 +114,13 @@ function addressRiskProfile(data,findings,compliance,privateWell){
  if(data.environment?.status==='records-returned'&&priorityCount()<4&&!hasKey('local:')&&!hasKey('environment:')&&!hasKey('cleanup:'))add('local:environment','Nearby environment','screened','No very-local environmental signal rose to the top within the tightly bounded area around this address.','Use local testing if there is a spill, flood, unusual taste, color, or odor.','Very local environmental check',3,'very-local-environment-screen');
  if((data.current_advisories?.checks||[]).some(c=>c.status==='checked')&&!cityOnly&&priorityCount()<4&&!hasKey('notice'))add('notice:screen','Current water notices','screened','No active notice surfaced for the serving water source in the connected notice checks.','If water suddenly changes in smell, color, taste, or pressure, check the water provider directly.','Serving-source notice checks',4,'serving-water-system');
  risks.sort((a,b)=>(rank[b.level]||0)-(rank[a.level]||0)||(b.specificity||0)-(a.specificity||0)||a.title.localeCompare(b.title));
- const priority=risks.filter(x=>(x.specificity||0)>=3).slice(0,4);
+ // One substance per initial tile. Keep every source-specific risk/finding
+ // below; never merge ranges, sample counts, chemical forms or PFAS species.
+ const prioritySeen=new Set();
+ const priority=risks.filter(x=>(x.specificity||0)>=3).slice().sort((a,b)=>(rank[b.level]||0)-(rank[a.level]||0)||(b.specificity||0)-(a.specificity||0)||String(b.last_sample||'').localeCompare(String(a.last_sample||''))||a.title.localeCompare(b.title)).filter(x=>{
+  const key=x.key.startsWith('finding:')?'finding:'+String(x.title).normalize('NFKC').toLowerCase().replace(/[\s,_()\-:]+/g,''):x.key;
+  if(prioritySeen.has(key))return false;prioritySeen.add(key);return true;
+ }).slice(0,4);
  const overall=!priority.length?'verify':priority.some(x=>x.level==='urgent')?'urgent':priority.some(x=>x.level==='elevated')?'elevated':priority.some(x=>x.level==='watch')?'watch':'screened';
  return {overall,risks,priority_risks:priority,specificity_policy:'property/address > exact serving water system > <=1 km local context; broader city/state/proximity-only evidence cannot drive the first four',signals_evaluated:{water_records:findings.length,compliance_groups:compliance.length,nearby_environmental_records:env.length,cleanup_sites:Number(data.property?.cleanup_sites?.records?.length||0),well_records:Number(data.well_records?.records?.length||0)+Number(data.property?.wells?.records?.length||0),service_line_match:line?.status==='address-record-match'}};
 }
@@ -142,7 +149,7 @@ function buildResidentReport(data){
  let headline=privateWell?'Address water-risk profile':'Your address water-risk profile';
  let summary=privateWell?'We combined the address, well context, nearby environmental monitoring and known local hazards into one screening profile.':'We combined the address, mapped water system, infrastructure, historical testing, compliance, nearby environmental records and current notices into one screening profile.';
  if(!matched&&!data.provider?.user_selected_pwsid){headline=data.address?.status==='ambiguous'?'Choose the address you meant':'Add a little more detail to your address';summary='Use the street number, street name, city and state or ZIP code so the address-level screening can resolve the correct place.';}
- if(data.provider?.method==='local-directory'){headline='Water records for providers listed near you';summary='We searched published utility listings and retrieved their water records. Match the provider name to your bill to connect these results to your home.';}
+ if(data.provider?.requires_selection===true||data.provider?.method==='local-directory'&&!data.provider?.user_selected_pwsid){headline='Choose the water provider on your bill';summary='These names come from official contact listings. A mailing address does not show which homes a provider serves. Search for the name on your water bill and choose it to see its records.';}
  const actions=[];
  const notices=privateWell?{status:'not-applicable-private-well',records:[],checks:[],comprehensive:false}:data.current_advisories||{status:'not-connected',records:[],checks:[],comprehensive:false};
  if(notices.records?.length){headline='A water notice needs your attention';summary='An official source lists a notice for a possible provider or an area near this address. Check whether your home is affected and follow the notice before using the water. The historical results below do not override it.';}

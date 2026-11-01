@@ -1,5 +1,5 @@
 'use strict';
-const {EvidenceError,validateInput,fingerprint,censusMatch,boundaryCandidates,echoRows,queryId,REGION_CODES,validPwsid}=require('./evidence');
+const {EvidenceError,validateInput,addressParts,fingerprint,censusMatch,boundaryCandidates,echoRows,queryId,REGION_CODES,validPwsid}=require('./evidence');
 const {getHealthContext}=require('./health_context');
 const {buildResidentReport}=require('./resident');
 const {modelReadiness}=require('./model_readiness');
@@ -51,12 +51,12 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
   const hasAddress=input.address||input.street&&(input.city||input.zip);
   const address=hasAddress?await stage('address-resolution',async()=>{
    const common={benchmark:'Public_AR_Current',vintage:'Current_Current',format:'json'},one=input.address;
-   const parts=[one,input.city,input.state].filter(Boolean),oneLine=parts.join(', ');
+   const entered=addressParts(one),oneLineFor=street=>[street,...(!entered.city?[input.city]:[]),...(!entered.state?[input.state]:[]),...(!entered.zip?[input.zip]:[])].filter(Boolean).join(', '),oneLine=oneLineFor(one);
    const targets=[query(one?ENDPOINTS.censusOneLine:ENDPOINTS.census,one?{...common,address:oneLine}:{...common,street:input.street,city:input.city,state:input.state,zip:input.zip})];
    if(one){
     const clean=one.replace(/\s+(?:APT|UNIT|SUITE|STE|#)\s*[A-Z0-9-]+(?=,|$)/i,'').trim();
-    if(clean!==one)targets.push(query(ENDPOINTS.censusOneLine,{...common,address:[clean,input.city,input.state].filter(Boolean).join(', ')}));
-    if(input.city)targets.push(query(ENDPOINTS.census,{...common,street:clean.split(',')[0].trim(),city:input.city,state:input.state,zip:input.zip}));
+    if(clean!==one)targets.push(query(ENDPOINTS.censusOneLine,{...common,address:oneLineFor(clean)}));
+    if(input.city||input.zip)targets.push(query(ENDPOINTS.census,{...common,street:clean.split(',')[0].trim(),city:input.city,state:input.state,zip:input.zip}));
    }else targets.push(query(ENDPOINTS.censusOneLine,{...common,address:[input.street,input.city,input.state,input.zip].filter(Boolean).join(', ')}));
    let match=null,lastError;
    for(const target of [...new Set(targets)].slice(0,3)){
@@ -88,10 +88,13 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
   const localState=input.state||address?.state,localCity=input.city||address?.components?.city;
   if(!candidates.length&&!local?.length&&input.supply_type!=='private-well'&&warehouse?.findLocalSystems&&localState&&localCity&&(!input.city||!input.state))local=await stage('matched-city-water-systems',()=>warehouse.findLocalSystems({state:localState,city:localCity,zip:input.zip||address?.components?.zip||''}));
   if(!candidates.length&&input.supply_type!=='private-well'&&Array.isArray(local)&&local.length){
-   candidates=local.filter(r=>validPwsid(r.pwsid)&&r.state===localState&&r.active===true&&(!REGION_CODES.includes(r.pwsid.slice(0,2))||r.pwsid.startsWith(localState))).map(r=>({...r,provenance:'published-local-directory',household_connection_verified:false}));
-   if(candidates.length){boundaryStatus='local-directory-candidates';providerMethod='local-directory';}
+   candidates=local.filter(r=>validPwsid(r.pwsid)&&r.state===localState&&r.active===true&&(!REGION_CODES.includes(r.pwsid.slice(0,2))||r.pwsid.startsWith(localState))).map(r=>({...r,provenance:'published-contact-directory',candidate_basis:'mailing-contact-address',household_connection_verified:false}));
+   if(candidates.length){boundaryStatus=input.pwsid?'user-selected':'provider-selection-needed';providerMethod='local-directory';}
   }
-  const ids=[...new Set(candidates.map(x=>x.pwsid))],selected=(input.pwsid?[input.pwsid]:ids).slice(0,4),systems=[];
+  // A directory city/ZIP may describe a utility's mailing office, not its
+  // service area. Do not attach those systems' chemistry to this address until
+  // the resident identifies the provider on their bill.
+  const ids=[...new Set(candidates.map(x=>x.pwsid))],selected=(input.pwsid?[input.pwsid]:providerMethod==='local-directory'?[]:ids).slice(0,4),systems=[];
   // Advisory retrieval overlaps historical retrieval and never substitutes a
   // compliance violation for an active public notice.
   const advisoryJob=advisories?stage('current-official-advisories',()=>advisories({address,pwsids:selected.length<=4?selected:[],supplyType:input.supply_type},{signal})):Promise.resolve(null);
@@ -111,9 +114,9 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
   if(input.supply_type==='private-well')gaps.push('Private-well status is user-reported. Nearby monitoring wells do not establish this well\'s water quality.');
   if(!ids.length&&input.supply_type!=='private-well')gaps.push('No mapped provider was established; this does not prove a private well.');
   if(ids.length>1)gaps.push('Multiple providers overlap the location. No winner has been selected.');
-  if(ids.length>4)gaps.push('Records for the first four possible providers are shown separately. Choose your provider to retrieve its full results.');
-  if(providerMethod==='local-directory')gaps.push('These utilities have a published city or ZIP listing. That listing does not establish which one supplies this home.');
-  const conflict=!!input.pwsid&&ids.length>0&&!ids.includes(input.pwsid);if(conflict)gaps.push('The supplied PWSID conflicts with the mapped candidate set.');
+  if(ids.length>4&&providerMethod!=='local-directory')gaps.push('Records for the first four possible providers are shown separately. Choose your provider to retrieve its full results.');
+  if(providerMethod==='local-directory')gaps.push('These utility listings may describe a mailing office rather than a service area. Choose the provider on your bill before connecting its records to this address.');
+  const conflict=!!input.pwsid&&providerMethod!=='local-directory'&&ids.length>0&&!ids.includes(input.pwsid);if(conflict)gaps.push('The supplied PWSID conflicts with the mapped candidate set.');
   if(input.pwsid)gaps.push('The PWSID is user-selected, not independently verified as connected to this household.');
   const occurrenceRecords=systems.flatMap(s=>(s.warehouse?.observations||[]).map(r=>({...r,pwsid:s.pwsid,scope:'public-system-not-household',health_context:getHealthContext(r.analyte)})));
   const storedStates=systems.map(s=>s.warehouse?.observation_status||s.warehouse?.status||'unavailable');
@@ -125,7 +128,7 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
   const archived_environment=await archivedEnvironmentJob||{status:'unavailable',records:[],household_sample_verified:false};
   const property=await propertyJob,well_records=await wellArchiveJob,equity_context=await equityJob;
   const current_advisories=await advisoryJob||{status:advisories?'unavailable':'not-connected',records:[],checks:[],comprehensive:false};
-  const result={schema_version:'national-evidence/2',generated_at:now().toISOString(),release_state:'incomplete-national-coverage',address:{state:input.state,city:input.city,...(address||{status:'unavailable'})},supply:{type:input.supply_type,evidence:'user-reported'},provider:{status:boundaryStatus,method:providerMethod,records_retrieved_for:selected,candidates,user_selected_pwsid:input.pwsid||null,conflict,household_connection_verified:false,nearby_screen:{method:'30m-envelope-not-a-calibrated-geocode-error-bound',status:nearbyStatus,candidates:nearby||[]}},systems,occurrence,environment,archived_environment,property,well_records,equity_context,next_steps,household_safety:{status:'not-determined',measured_concentrations:[]},gaps,audit,models:modelReadiness(),coverage:await status(),sources:SOURCE_DOCS};
+  const result={schema_version:'national-evidence/2',generated_at:now().toISOString(),release_state:'incomplete-national-coverage',address:{state:input.state,city:input.city,...(address||{status:'unavailable'})},supply:{type:input.supply_type,evidence:'user-reported'},provider:{status:boundaryStatus,method:providerMethod,requires_selection:providerMethod==='local-directory'&&!input.pwsid,records_retrieved_for:selected,candidates,user_selected_pwsid:input.pwsid||null,conflict,household_connection_verified:false,nearby_screen:{method:'30m-envelope-not-a-calibrated-geocode-error-bound',status:nearbyStatus,candidates:nearby||[]}},systems,occurrence,environment,archived_environment,property,well_records,equity_context,next_steps,household_safety:{status:'not-determined',measured_concentrations:[]},gaps,audit,models:modelReadiness(),coverage:await status(),sources:SOURCE_DOCS};
   result.current_advisories=current_advisories;
   result.resident_report=buildResidentReport(result);return result;
  }
@@ -148,6 +151,16 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
   return Promise.all([current,historical]).then(([data,history])=>{const compliance=history?.compliance_archive;const complianceReady=Number(compliance?.retained_association_rows)>0&&!!compliance?.sha256;return {...data,well_registries:history?.well_archive?.published_states?.length?'acquired-state-NWWDB-and-USGS-monitoring-wells':data.well_registries,wqp:history?.environmental_archive?.schema==='wqp-durable/1'?'persistent-bounded-geographic-lookups':data.wqp,compliance_history:complianceReady?'object-store-archive-ready':'unavailable',completion:{...data.completion,compliance_history:complianceReady?'operational-object-store-exact-pwsid':'unavailable'},historical_archive:history};});
  }
 
- return {lookup,status};
+ async function searchProviders(raw={}){
+  if(!raw||typeof raw!=='object'||Array.isArray(raw)||typeof raw.state!=='string'||typeof raw.query!=='string'||raw.state.length>2||raw.query.length>100||/[\x00-\x1f\x7f]/.test(raw.state+raw.query))throw new EvidenceError('BAD_PROVIDER_SEARCH','Enter your state and the water provider name from your bill.');
+  const state=raw.state.trim().toUpperCase(),name=raw.query.normalize('NFKC').trim();
+  if(!REGION_CODES.includes(state)||name.length<2||name.length>100)throw new EvidenceError('BAD_PROVIDER_SEARCH','Choose a US state and enter at least two letters of the provider name.');
+  if(!warehouse?.searchSystems)throw new EvidenceError('PROVIDER_SEARCH_UNAVAILABLE','Provider search could not be checked this time. Please try again.',503);
+  const rows=await warehouse.searchSystems({state,query:name,limit:10});
+  if(!Array.isArray(rows))throw new EvidenceError('PROVIDER_SEARCH_UNAVAILABLE','Provider search could not be checked this time. Please try again.',503);
+  const seen=new Set();
+  return rows.filter(row=>validPwsid(row?.pwsid)&&row.state===state&&typeof row.name==='string'&&row.name.trim()&&row.active!==false&&row.active!=='false'&&!seen.has(row.pwsid)&&seen.add(row.pwsid)).slice(0,10).map(row=>({id:row.pwsid,name:row.name.trim().slice(0,240),state:row.state}));
+ }
+ return {lookup,status,searchProviders};
 }
 module.exports={ENDPOINTS,SOURCE_DOCS,safeTarget,transport,query,createEngine};
