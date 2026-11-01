@@ -2,11 +2,39 @@
 // Pure national evidence contracts. A numerical conversion is not a safety finding.
 const {createHash} = require('node:crypto');
 const REGION_CODES = Object.freeze('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY AS GU MP PR VI'.split(' '));
+const REGION_NAMES=Object.freeze({'ALABAMA':'AL','ALASKA':'AK','ARIZONA':'AZ','ARKANSAS':'AR','CALIFORNIA':'CA','COLORADO':'CO','CONNECTICUT':'CT','DELAWARE':'DE','DISTRICT OF COLUMBIA':'DC','FLORIDA':'FL','GEORGIA':'GA','HAWAII':'HI','IDAHO':'ID','ILLINOIS':'IL','INDIANA':'IN','IOWA':'IA','KANSAS':'KS','KENTUCKY':'KY','LOUISIANA':'LA','MAINE':'ME','MARYLAND':'MD','MASSACHUSETTS':'MA','MICHIGAN':'MI','MINNESOTA':'MN','MISSISSIPPI':'MS','MISSOURI':'MO','MONTANA':'MT','NEBRASKA':'NE','NEVADA':'NV','NEW HAMPSHIRE':'NH','NEW JERSEY':'NJ','NEW MEXICO':'NM','NEW YORK':'NY','NORTH CAROLINA':'NC','NORTH DAKOTA':'ND','OHIO':'OH','OKLAHOMA':'OK','OREGON':'OR','PENNSYLVANIA':'PA','RHODE ISLAND':'RI','SOUTH CAROLINA':'SC','SOUTH DAKOTA':'SD','TENNESSEE':'TN','TEXAS':'TX','UTAH':'UT','VERMONT':'VT','VIRGINIA':'VA','WASHINGTON':'WA','WEST VIRGINIA':'WV','WISCONSIN':'WI','WYOMING':'WY','AMERICAN SAMOA':'AS','GUAM':'GU','NORTHERN MARIANA ISLANDS':'MP','PUERTO RICO':'PR','US VIRGIN ISLANDS':'VI','U.S. VIRGIN ISLANDS':'VI','VIRGIN ISLANDS':'VI'});
+function addressParts(address){
+ // Read only explicit address text. ZIPs never imply a state, and a street/city
+ // boundary without punctuation is never guessed from a list of place names.
+ const text=String(address||'').trim().replace(/(?:,\s*|\s+)(?:USA|US|UNITED STATES(?: OF AMERICA)?)\s*$/i,'').trim();
+ const segments=text.split(',').map(x=>x.trim()).filter(Boolean),tail=segments.at(-1)||'';
+ const zip=tail.match(/\b(\d{5}(?:-\d{4})?)\s*$/)?.[1]||'';
+ const regionText=zip?tail.slice(0,tail.length-zip.length).trim():tail;
+ const regionKeys=[...Object.keys(REGION_NAMES),...REGION_CODES].sort((a,b)=>b.length-a.length);
+ let region=regionKeys.find(name=>regionText.toUpperCase()===name||regionText.toUpperCase().endsWith(' '+name));
+ // A lone spelled-out place ("street, Washington 20004") may be the city.
+ // Require a separate city segment before interpreting that as a state name.
+ if(region&&!REGION_CODES.includes(region)&&segments.length<3&&regionText.toUpperCase()===region)region=null;
+ const state=region?(REGION_NAMES[region]||region):'';
+ let city='',street='';
+ if(state&&segments.length>=2){
+  const cityInTail=regionText.slice(0,regionText.length-region.length).trim();
+  if(cityInTail){city=cityInTail;street=segments.slice(0,-1).join(', ');}
+  else if(segments.length>=3){city=segments.at(-2);street=segments.slice(0,-2).join(', ');}
+  else street=segments[0];
+ }
+ return {street:street.length<=180?street:'',city:city.length<=100?city:'',state,zip};
+}
 class EvidenceError extends Error { constructor(code,message,status=422){super(message);this.name='EvidenceError';this.code=code;this.status=status;} }
 function validateInput(raw){
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new EvidenceError('BAD_INPUT','A JSON object is required.');
   const str=(key,max)=>{const value=raw[key]??'';if(typeof value!=='string'||value.length>max||/[\x00-\x1f\x7f]/.test(value))throw new EvidenceError('BAD_INPUT',`Invalid ${key}.`);return value.normalize('NFKC').trim();};
   const x={address:str('address',300),street:str('street',180),city:str('city',100),state:str('state',2).toUpperCase(),zip:str('zip',10),pwsid:str('pwsid',9).toUpperCase(),supply_type:str('supply_type',12)||'unknown'};
+  if(x.address){
+   const parts=addressParts(x.address);
+   if(x.state&&parts.state&&x.state!==parts.state||x.zip&&parts.zip&&x.zip.slice(0,5)!==parts.zip.slice(0,5))throw new EvidenceError('CONFLICTING_ADDRESS','The state or ZIP in your address does not match the separate address fields.');
+   for(const key of ['street','city','state','zip'])if(!x[key])x[key]=parts[key];
+  }
   if((x.state||!x.address)&&!REGION_CODES.includes(x.state))throw new EvidenceError('BAD_REGION','Include a US state or territory with your address.');
   if(!x.address&&!x.pwsid&&(!x.street||(!x.city&&!x.zip)))throw new EvidenceError('ADDRESS_REQUIRED','Enter your street address, city and state or ZIP code.');
   if(x.address&&x.address.length<8)throw new EvidenceError('ADDRESS_REQUIRED','Add the street number, street name and city or ZIP code.');
@@ -100,4 +128,4 @@ function echoRows(payload,pwsid){
   return found.filter((x,i,a)=>a.findIndex(y=>fingerprint(y)===fingerprint(x))===i);
 }
 function queryId(payload){let id=null;function walk(x,depth=0){if(id||depth>10||!x||typeof x!=='object')return;for(const[k,v]of Object.entries(x)){if(['queryid','qid'].includes(k.replace(/[^a-z0-9]/gi,'').toLowerCase())&&/^[A-Za-z0-9_-]{1,100}$/.test(String(v))){id=String(v);return;}walk(v,depth+1);}}walk(payload);return id;}
-module.exports={REGION_CODES,EvidenceError,validateInput,validPwsid,fingerprint,finiteNumber,validDate,normalizeMeasurement,censusMatch,boundaryCandidates,echoRows,queryId};
+module.exports={REGION_CODES,EvidenceError,addressParts,validateInput,validPwsid,fingerprint,finiteNumber,validDate,normalizeMeasurement,censusMatch,boundaryCandidates,echoRows,queryId};

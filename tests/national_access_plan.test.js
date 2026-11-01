@@ -212,3 +212,46 @@ test('Seminole plan returns many distinct local lab and program choices',()=>{
   assert.ok([...plan.option_inventory.paid,...plan.option_inventory.contact_first].some(x=>x.provider.includes(name)),name);
  }
 });
+
+test('PFHxA is an exact lab target and never presented as covered by a lead or PFOA/PFOS-only test',()=>{
+ const data={address:{status:'matched',state:'DC',city:'Washington',matched_address:'1350 PENNSYLVANIA AVE NW, WASHINGTON, DC'},provider:{candidates:[{pwsid:'DC0000002',name:'DC Water'}]},systems:[],current_advisories:{records:[]}};
+ const findings=[{name:'PFHxA',detected:true}],line={status:'address-record-match',records:[{material:'Unknown'}]};
+ const plan=buildAccessPlan(data,{findings,serviceLine:line,providers:[{id:'DC0000002',name:'DC Water'}]});
+ assert.deepEqual(plan.what_to_ask_for.map(x=>x.name),['PFHxA','Lead at the tap']);
+ assert.equal(plan.personalized.concern,'PFHxA, Lead at the tap');assert.match(plan.personalized.call_script,/checking PFHxA, Lead at the tap/);
+ assert.ok(plan.verified_options.filter(x=>x.test==='PFHxA').every(x=>x.all_options.every(o=>!o.tests||o.tests.includes('PFHxA')||o.tests.includes('*'))));
+ assert.ok(!plan.verified_options.some(x=>x.test==='PFAS panel including PFOA/PFOS'));
+ assert.ok(plan.passport.pillars.health.priorities.some(x=>x.id==='pfas'));
+ if(plan.primary_path.verified_option&&plan.primary_path.cost==='$0')assert.match(plan.primary_path.test,/Lead|Service line/);
+});
+test('recognized PFAS species remain distinct test targets while PFOA/PFOS keeps its established catalog label',()=>{
+ const tests=targetedTests(false,[{name:'PFHxA',detected:true},{name:'PFHxS',detected:true},{name:'PFOA',detected:true},{name:'PFOS',detected:true}],null);
+ assert.deepEqual(tests.map(x=>x.name),['PFHxA','PFHxS','PFAS panel including PFOA/PFOS']);
+ const plan=buildAccessPlan({address:{status:'matched',state:'DC'},systems:[],provider:{candidates:[]}},{findings:[{name:'Chlorate',detected:true}]});
+ assert.equal(plan.personalized.concern,'Lead at the tap');assert.match(plan.personalized.why_this_is_for_you,/home tests in this plan are Lead at the tap/);assert.doesNotMatch(plan.personalized.why_this_is_for_you,/focusing.*Chlorate/);
+});
+
+test('mailing-directory candidates cannot become the household provider, contact or customer-only offer',()=>{
+ const data={address:{status:'matched',state:'DC',city:'Washington',matched_address:'1350 PENNSYLVANIA AVE NW, WASHINGTON, DC'},provider:{method:'local-directory',status:'provider-selection-needed',requires_selection:true,candidates:[{pwsid:'DC0000002',name:'DC Water',provenance:'published-contact-directory',candidate_basis:'mailing-contact-address'}]},systems:[{pwsid:'DC0000002',records:[{data:{PWSName:'DC Water',PHONE_NUMBER:'202-555-0100'}}]}]};
+ const context={providers:[{id:'DC0000002',name:'DC Water'}],findings:[{name:'PFHxA',detected:true}],serviceLine:{status:'address-record-match',records:[{material:'Unknown'}]}};
+ const plan=buildAccessPlan(data,context);
+ assert.deepEqual(providerContacts(data),[]);assert.deepEqual(plan.provider_contacts,[]);
+ assert.equal(plan.personalized.provider,'your water provider');assert.match(plan.personalized.why_this_is_for_you,/contact directory do not show/);
+ assert.match(plan.personalized.call_script,/confirm which water provider serves this address/);assert.doesNotMatch(plan.personalized.call_script,/DC Water|PFHxA|appears to be/);
+ assert.match(plan.primary_path.title,/provider on your bill/);assert.match(plan.testing_decision.label,/Confirm your water provider/);
+ assert.ok(plan.passport.pillars.neglect.gaps.some(x=>x.title==='Water provider not confirmed'));
+ assert.ok(plan.option_inventory.paid.length>0);assert.ok(!plan.option_inventory.free.some(x=>x.id==='dc-free-lead'));
+ assert.ok(!plan.targeted_tests.some(x=>x.name==='PFHxA'));
+ // Explicit selection restores the actual provider's contacts and offers.
+ data.provider={...data.provider,requires_selection:false,user_selected_pwsid:'DC0000002'};
+ const selected=buildAccessPlan(data,context);
+ assert.equal(selected.provider_contacts[0].name,'DC Water');assert.ok(selected.option_inventory.free.some(x=>x.id==='dc-free-lead'));
+ assert.equal(selected.personalized.provider,'DC Water');
+});
+
+test('provider choice preserves city-resident testing programs without claiming a supplier match',()=>{
+ const plan=buildAccessPlan({address:{status:'matched',state:'NY',city:'New York',matched_address:'SYNTHETIC FIXTURE'},provider:{method:'local-directory',requires_selection:true,candidates:[]},systems:[]});
+ assert.ok(plan.option_inventory.free.some(x=>x.id==='nyc-free-lead'));
+ assert.match(plan.primary_path.title,/provider on your bill/);
+ assert.doesNotMatch(plan.personalized.why_this_is_for_you,/We matched/);
+});
