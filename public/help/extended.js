@@ -56,11 +56,11 @@ window.WaterHelpExtended = { create(c) {
         button(main,'askAdvocate',()=>advocate('form',f.label||t('formNoLabel')),'quiet');
       }
       function review(){
-        page('review','formReview',()=>step(Math.max(0,usable.length-1)));
+        page('review','uploadedFormReview',()=>step(Math.max(0,usable.length-1)));
         const table=el('dl');for(const f of usable){table.append(el('dt',f.label||t('questionNumber',{number:f.number})),el('dd',String(values[f.id]??'')));}main.append(table);
         text(main,'formSensitive','fine');
         if(usable.length<spec.fields.length)text(main,'unlabeledForm','fine');
-        button(main,'downloadForm',async()=>D.download(await D.fillUploadedForm(spec,values),'completed-form-review.pdf'));
+        button(main,'formDownload',async()=>D.download(await D.fillUploadedForm(spec,values),'completed-form-review.pdf'));
         button(main,'submissionHelp',()=>submission({title:spec.name,document:usable.map(f=>(f.label||t('questionNumber',{number:f.number}))+': '+(values[f.id]??'')).join('\n')}),'quiet');
       }
       page('formHelp','formHelpIntro',forms);
@@ -73,7 +73,7 @@ window.WaterHelpExtended = { create(c) {
         const paint=()=>{answers.replaceChildren();for(const f of usable)answers.append(el('dt',f.label),el('dd',String(values[f.id]??'')));};paint();
         WaterVoice.mount(voiceBox,{voice_token:response.voice_token,form_mode:true,onFormAnswer:answer=>{if(!voiceBox.isConnected)return;const f=usable.find(f=>f.id===answer.field_id);if(!f)return;values[f.id]=answer.value;paint();}});
         button(main,'review',()=>{WaterVoice.stop();review();});
-      }catch{talk.disabled=false;toast(t('tryAgain'));}};
+      }catch{talk.disabled=false;toast(t('error'));}};
 
     }catch{toast(t('readFileError'));}});
     text(b,'readsAutomatically','fine');
