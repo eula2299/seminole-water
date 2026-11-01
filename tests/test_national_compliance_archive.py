@@ -18,6 +18,7 @@ class ComplianceArchiveTests(unittest.TestCase):
         text=io.StringIO();writer=csv.DictWriter(text,fieldnames=list(self.rows[0]));writer.writeheader();writer.writerows(self.rows)
         with zipfile.ZipFile(path,'w') as z:
             z.writestr('SDWA_VIOLATIONS_ENFORCEMENT.csv',text.getvalue())
+            z.writestr('SDWA_PUB_WATER_SYSTEMS.csv','PWSID,PWS_NAME,STATE_CODE,CITY_NAME,ZIP_CODE,PWS_ACTIVITY_CODE,PWS_TYPE_CODE\n010106001,Fixture Water,MN,Example,00123,A,CWS\n')
             z.writestr('SDWA_REF_CODE_VALUES.csv','VALUE_TYPE,VALUE_CODE,VALUE_DESCRIPTION\nCONTAMINANT_CODE,2950,Example source description\n')
         return {'url':C.URL,'retrieved_at':C.Q.now(),'bytes':path.stat().st_size,'sha256':C.Q.sha(path)}
     def create(self,name='run'):return C.ComplianceArchive(self.store,self.root/name,self.fetch)

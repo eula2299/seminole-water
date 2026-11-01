@@ -28,7 +28,7 @@ LOCK=threading.RLock()
 ENVIRONMENTAL_ARCHIVE=None
 COMPLIANCE_ARCHIVE=None
 WELL_ARCHIVE=None
-STATE={'schema':VERSION,'sources':{},'errors':{},'ingestion_status':'starting','current_archive':None,'target_minimum_records':200000000,'trained_prediction_models':0,'persistent_storage_bytes':None,'storage_accounting_checked_at':None}
+STATE={'schema':VERSION,'sources':{},'errors':{},'ingestion_status':'starting','serving_ready':False,'restore_pending':[],'current_archive':None,'target_minimum_records':200000000,'trained_prediction_models':0,'persistent_storage_bytes':None,'storage_accounting_checked_at':None}
 
 class StorageBudgetExceeded(ValueError):
  def __init__(self,used,additional,maximum):
@@ -53,12 +53,13 @@ class CapacityCompactor:
  # during this process lifetime. Restart resets this limit; it is not a daily cap.
  def __init__(self,candidates_fn=None):
   self.candidates_fn=candidates_fn;self.queue=None;self.attempts=0;self.next_check=0
+ def can_recover(self,store,failures,used):
+  if self.attempts>=25 or self.queue==[] or getattr(store,'provider',None)!='railway':return False
+  return any(isinstance(f['error'],StorageBudgetExceeded) and
+             (store.max_total-used<max(100_000_000,f['error'].additional) or f['error'].used-used<100_000_000)
+             for f in failures.values())
  def step(self,store,failures,used,now):
-  if self.attempts>=25 or now<self.next_check or getattr(store,'provider',None)!='railway':return 0
-  needs_space=any(isinstance(f['error'],StorageBudgetExceeded) and
-                 (store.max_total-used<max(100_000_000,f['error'].additional) or f['error'].used-used<100_000_000)
-                 for f in failures.values())
-  if not needs_space:return 0
+  if now<self.next_check or not self.can_recover(store,failures,used):return 0
   self.next_check=now+60
   store.check_publication_lease()
   if self.queue is None:
@@ -366,8 +367,11 @@ def distinct_receipts(receipts):
  return list(unique.values())
 def status():
  with LOCK:s=json.loads(json.dumps(STATE))
- if ENVIRONMENTAL_ARCHIVE:s['environmental_archive']=ENVIRONMENTAL_ARCHIVE.status()
+ # The ingestion loop publishes a completed environmental status snapshot.
+ # Its live lock can span an object-store checkpoint upload; a drinking-water
+ # status/readiness request must never wait for that unrelated transfer.
  if WELL_ARCHIVE:s['well_archive']=WELL_ARCHIVE.status()
+ if COMPLIANCE_ARCHIVE:s['compliance_archive']=COMPLIANCE_ARCHIVE.status()
  receipts=distinct_receipts(s['sources'].values());count=sum(x['distinct_source_rows'] for x in receipts)
  eligible=sum(x.get('eligible_source_records',0) for x in receipts if x.get('schema')==VERSION)
  s.update(retained_source_records=count,eligible_source_records=eligible,raw_rows=sum(x['raw_rows'] for x in receipts),published_archives=len(receipts),qualified_archives=sum(x.get('schema')==VERSION for x in receipts),active_archive_bytes=sum(x['stored_bytes'] for x in receipts),stored_bytes=s['persistent_storage_bytes'],storage_budget_bytes=MAX_TOTAL,target_met=eligible>=s['target_minimum_records'],count_definition='retained exact source-field rows deduplicated within each archive member; eligible rows additionally pass identity, date, and typed numeric or documented qualitative-result checks; neither count is an independent-observation or household count; cross-source duplication is not resolved',target_count_basis='eligible_source_records',household_safety_certified=False,coverage_complete=False)
@@ -384,7 +388,17 @@ def ingest(store,item):
   receipt={**item,**download(item['url'],archive,MAX_ARCHIVE),'retrieved_at':utc(),'schema':VERSION,'parser_profile':profile}
   old_profile=(existing or {}).get('parser_profile')
   if existing and existing['sha256']==receipt['sha256'] and existing.get('schema')==VERSION and old_profile==profile:
-   log('unchanged',source=item['id']);return
+   # A fresh full-file checksum confirms the retained source is still current.
+   # Preserve original acquisition time; advance only the verified check time.
+   checked={**existing,'checked_at':receipt['retrieved_at']}
+   with store.publication_lock():
+    current=store.json('v2/latest/'+item['id']+'.json')
+    if not current or current.get('sha256')!=existing['sha256'] or current.get('parser_profile')!=profile:raise ValueError('Published source changed during freshness check')
+    metadata_size=len(json.dumps(checked,allow_nan=False).encode())
+    store.ensure_capacity(2*metadata_size+4096)
+    store.put_json('v2/data/'+receipt['sha256']+'/'+profile+'/receipt.json',checked)
+    store.put_json('v2/latest/'+item['id']+'.json',checked)
+   activate(store,checked);log('unchanged',source=item['id']);return
   base='v2/data/'+receipt['sha256']+'/'+profile;summary=work/'summary.sqlite';parts=[];skipped=[];expanded=0
   with zipfile.ZipFile(archive) as z:
    extensions=('.mdb',) if item['family']=='syr2' else ('.txt','.tsv','.csv')
@@ -452,11 +466,20 @@ def ingest(store,item):
   store.inventory()
   activate(store,receipt);log('archive-published',source=item['id'],records=receipt['distinct_source_rows'],total_records=status()['retained_source_records'])
 
-def pws_report(pwsid):
+def compliance_report(pwsid):
  if not re.fullmatch('[A-Z0-9]{9}',pwsid):raise ValueError('Invalid complete PWSID')
- with LOCK:loaded=distinct_receipts(STATE['sources'].values())
+ if COMPLIANCE_ARCHIVE:
+  try:return COMPLIANCE_ARCHIVE.system(pwsid)
+  except Exception as e:log('compliance-query-error',error=type(e).__name__)
+ return {'pwsid':pwsid,'status':'unavailable','records':[],'current_safety':'not-determined'}
+
+def pws_report(pwsid,include_compliance=True):
+ if not re.fullmatch('[A-Z0-9]{9}',pwsid):raise ValueError('Invalid complete PWSID')
+ with LOCK:
+  loaded=distinct_receipts(STATE['sources'].values());serving_ready=STATE.get('serving_ready',False)
  receipts=[r for r in loaded if r.get('schema')==VERSION]
  summaries=[];sources=[];matching=0;response_bytes=0;truncated=False;omitted_raw=0
+ checked_sources=[{k:r[k] for k in ('id','url','catalogue_url','retrieved_at','sha256')} for r in receipts]
  for receipt in receipts:
   db=sqlite3.connect(f'file:{summary_path(receipt["id"],receipt["sha256"])}?mode=ro',uri=True)
   db.row_factory=sqlite3.Row
@@ -474,17 +497,13 @@ def pws_report(pwsid):
     if response_bytes+size>MAX_RESPONSE//2:truncated=True;continue
     response_bytes+=size;summaries.append(item)
   finally:db.close()
- compliance=None
- if COMPLIANCE_ARCHIVE:
-  try:compliance=COMPLIANCE_ARCHIVE.system(pwsid)
-  except Exception as e:
-   log('compliance-query-error',error=type(e).__name__)
-   compliance={'pwsid':pwsid,'status':'unavailable','records':[],'current_safety':'not-determined'}
- return {'schema':VERSION,'pwsid':pwsid,'status':'records-returned' if summaries else 'response-truncated' if matching else 'qualified-archives-unavailable' if not receipts else 'no-records-in-loaded-archives','summaries':summaries,'sources':sources,'compliance':compliance,'archives_checked':len(receipts),'legacy_archives_excluded':len(loaded)-len(receipts),'matching_summary_groups':matching,'returned_summary_groups':len(summaries),'truncated':truncated or omitted_raw>0,'omitted_large_latest_records':omitted_raw,'maximum_summary_groups':MAX_SUMMARIES,'scope':'public-system-samples-not-household','current_safety':'not-determined','cross_source_sample_independence_certified':False,'historical_data':True,'coverage_complete':False}
+ compliance=compliance_report(pwsid) if include_compliance else None
+ return {'schema':VERSION,'pwsid':pwsid,'status':'records-returned' if summaries else 'response-truncated' if matching else 'qualified-archives-unavailable' if not receipts else 'no-records-in-loaded-archives','serving_ready':serving_ready,'summaries':summaries,'sources':sources,'checked_sources':checked_sources,'compliance':compliance,'archives_checked':len(receipts),'legacy_archives_excluded':len(loaded)-len(receipts),'matching_summary_groups':matching,'returned_summary_groups':len(summaries),'truncated':truncated or omitted_raw>0,'omitted_large_latest_records':omitted_raw,'maximum_summary_groups':MAX_SUMMARIES,'scope':'public-system-samples-not-household','current_safety':'not-determined','cross_source_sample_independence_certified':False,'historical_data':True,'coverage_complete':False}
 
 def loop(stop=None,store_factory=Store,discover_fn=discover):
  global ENVIRONMENTAL_ARCHIVE,COMPLIANCE_ARCHIVE,WELL_ARCHIVE
  stop=stop or threading.Event();store=None;next_catalogue=0;pending_retries={};compactor=CapacityCompactor()
+ with LOCK:STATE['serving_ready']=False;STATE['restore_pending']=[]
  def attempt(source,action):
   try:
    if hasattr(store,'check_publication_lease'):store.check_publication_lease()
@@ -554,6 +573,14 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
      with LOCK:
       STATE['ingestion_status']='cycle-complete-with-gaps' if STATE['errors'] else 'cycle-complete'
       STATE['current_archive']=None;STATE['last_capacity_retry_at' if capacity else 'last_publication_retry_at']=utc()
+   # Restore blocked published snapshots before spending minutes downloading
+   # additional historical backfill. Existing query endpoints remain available.
+   capacities=[f for f in pending_retries.values() if isinstance(f['error'],StorageBudgetExceeded)]
+   if getattr(store,'provider',None)=='railway' and capacities:
+    now=time.monotonic();ready_at=min(f['at']+60 for f in capacities)
+    if now<ready_at or compactor.can_recover(store,pending_retries,inventory['bytes']):
+     stop.wait(min(60,max(1,(ready_at if now<ready_at else compactor.next_check)-now)))
+     continue
    if WELL_ARCHIVE:
     try:
      if WELL_ARCHIVE.step():log('well-archive-step',records=WELL_ARCHIVE.status()['source_well_records'],errors=WELL_ARCHIVE.status()['errors'])
@@ -570,11 +597,22 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
   try:
    items=discover_fn()
    with LOCK:STATE['catalogue_archives']=len(items);STATE['ingestion_status']='ingesting';STATE['errors'].pop('catalogue',None)
+   restore_pending=[];published_receipts=0
    for item in items:
     try:
      receipt=store.json('v2/latest/'+item['id']+'.json') or store.json('v1/latest/'+item['id']+'.json')
-     if receipt:activate(store,receipt)
-    except Exception as e:log('restore-error',source=item['id'],error=type(e).__name__)
+     if receipt:published_receipts+=1;activate(store,receipt)
+    except Exception as e:
+     restore_pending.append(item['id']);log('restore-error',source=item['id'],error=type(e).__name__)
+   with LOCK:
+    STATE['restore_pending']=restore_pending;STATE['published_receipts_checked']=published_receipts
+    # Do not admit traffic while only the first few saved archives are loaded.
+    # Missing, never-published sources do not block an otherwise usable archive.
+    STATE['serving_ready']=not restore_pending
+    if not restore_pending:STATE['restored_at']=utc()
+   if restore_pending:
+    with LOCK:STATE['ingestion_status']='restoring'
+    stop.wait(STORAGE_RETRY_SECONDS);continue
    for item in items:
     if stop.is_set():break
     attempt(item['id'],lambda item=item:ingest(store,item))
@@ -595,9 +633,26 @@ class Handler(BaseHTTPRequestHandler):
  def do_GET(self):
   target=urllib.parse.urlsplit(self.path)
   try:
-   if target.path=='/healthz':data={'process':'up','published_archives':status()['published_archives']}
+   response_status=200
+   if target.path=='/healthz':
+    inventory=status();ready=inventory.get('serving_ready',False)
+    data={'process':'up','serving_ready':ready,'published_archives':inventory['published_archives']}
+    if not ready:response_status=503
    elif target.path=='/status':data=status()
-   elif re.fullmatch(r'/pws/[A-Z0-9]{9}',target.path):data=pws_report(target.path.rsplit('/',1)[-1])
+   elif re.fullmatch(r'/pws/[A-Z0-9]{9}',target.path):
+    params=urllib.parse.parse_qs(target.query,strict_parsing=True,max_num_fields=1)
+    if params and params!={'include_compliance':['0']} and params!={'include_compliance':['1']}:raise ValueError('Invalid system query')
+    data=pws_report(target.path.rsplit('/',1)[-1],include_compliance=params.get('include_compliance',['1'])==['1'])
+   elif re.fullmatch(r'/compliance/[A-Z0-9]{9}',target.path):
+    if target.query:raise ValueError('Invalid compliance query')
+    data=compliance_report(target.path.rsplit('/',1)[-1])
+   elif re.fullmatch(r'/directory/system/[A-Z0-9]{9}',target.path):
+    if target.query:raise ValueError('Invalid directory query')
+    data=COMPLIANCE_ARCHIVE.directory_system(target.path.rsplit('/',1)[-1]) if COMPLIANCE_ARCHIVE else {'schema':'sdwis-directory/1','status':'not-acquired','records':[],'total_records':0,'matching_records':0,'truncated':False,'household_connection_verified':False}
+   elif target.path=='/directory/search':
+    params=urllib.parse.parse_qs(target.query,strict_parsing=True,max_num_fields=6,keep_blank_values=True)
+    if set(params)-{'state','city','zip','query','limit','local'} or any(len(v)!=1 for v in params.values()):raise ValueError('Invalid directory query')
+    data=COMPLIANCE_ARCHIVE.directory_search(**{k:v[0] for k,v in params.items()}) if COMPLIANCE_ARCHIVE else {'schema':'sdwis-directory/1','status':'not-acquired','records':[],'total_records':0,'matching_records':0,'truncated':False,'household_connection_verified':False}
    elif target.path=='/environment/near':
     params=urllib.parse.parse_qs(target.query,strict_parsing=True,max_num_fields=2)
     if set(params)!={'lat','lon'} or any(len(v)!=1 for v in params.values()):raise ValueError('Invalid environmental query')
@@ -611,10 +666,15 @@ class Handler(BaseHTTPRequestHandler):
    if len(payload)>MAX_RESPONSE:
     payload=json.dumps({'schema':VERSION,'error':'RESPONSE_TOO_LARGE','truncated':True,'current_safety':'not-determined'}).encode()
     self.send_response(503)
-   else:self.send_response(200)
+   else:self.send_response(response_status)
    self.send_header('Content-Type','application/json');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(payload)));self.end_headers();self.wfile.write(payload)
+  except (BrokenPipeError,ConnectionResetError,TimeoutError):
+   # A cancelled client has no response socket. Writing an error a second time
+   # only hides the original slow lookup under another broken-pipe traceback.
+   log('query-client-disconnected')
   except Exception as e:
-   log('query-error',error=type(e).__name__);self.send_error(503,'Evidence temporarily unavailable')
+   log('query-error',error=type(e).__name__)
+   with contextlib.suppress(BrokenPipeError,ConnectionResetError,TimeoutError):self.send_error(503,'Evidence temporarily unavailable')
 class Server(ThreadingHTTPServer):
  address_family=socket.AF_INET6
  daemon_threads=True

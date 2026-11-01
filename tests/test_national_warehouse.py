@@ -154,6 +154,11 @@ class HardenedWarehouseTests(unittest.TestCase):
     W.ingest(store,item)
     receipt=store.json('v2/latest/ucmr5.json');self.assertEqual(receipt['schema'],W.VERSION);self.assertEqual(receipt['eligible_source_records'],1)
     report=W.pws_report('CA0000001');self.assertEqual(report['summaries'][0]['max_detect'],1.0)
+    with mock.patch.object(W,'utc',return_value='2026-11-15T00:00:00Z'),mock.patch.object(store,'put',wraps=store.put) as uploaded:
+     W.ingest(store,item)
+    uploaded.assert_not_called();checked=store.json('v2/latest/ucmr5.json')
+    self.assertEqual(checked['retrieved_at'],receipt['retrieved_at']);self.assertEqual(checked['checked_at'],'2026-11-15T00:00:00Z')
+    self.assertEqual(W.STATE['sources']['ucmr5']['checked_at'],'2026-11-15T00:00:00Z')
     # A schema migration must recalculate qualification without re-uploading
     # already retained source objects or consuming their storage a second time.
     legacy=copy.deepcopy(receipt);legacy['schema']='occurrence-warehouse/1'
@@ -409,3 +414,33 @@ class AutomaticCapacityCompactionTests(unittest.TestCase):
   with self.assertRaisesRegex(ValueError,'checksum'):compactor.step(store,failed,950_000_000,0)
   self.assertEqual(compactor.attempts,1)
   self.assertEqual(compactor.step(store,failed,950_000_000,1),0)
+
+class RecoveryPriorityTests(unittest.TestCase):
+ def test_capacity_recovery_finishes_before_slow_backfill_can_delay_retry(self):
+  clock=[0];used=[900_000_000];calls=[];background=[];saved=copy.deepcopy(W.STATE)
+  class Store:
+   provider='railway';max_total=1_000_000_000
+   def inventory(self):return {'bytes':used[0]}
+   def json(self,*args,**kwargs):return None
+  class Compactor:
+   attempts=0;next_check=0
+   def step(self,store,failures,amount,now):
+    if used[0]>650_000_000:
+     used[0]=650_000_000;self.attempts+=1;self.next_check=60;return 250_000_000
+    return 0
+   def can_recover(self,*args):return used[0]>650_000_000
+  class Stop:
+   def is_set(self):return clock[0]>60
+   def wait(self,seconds):clock[0]+=seconds
+  class Environment:
+   def step(self):background.append(clock[0]);return False
+   def status(self):return {}
+  def ingest(store,item):
+   calls.append(clock[0])
+   if len(calls)==1:raise W.StorageBudgetExceeded(900_000_000,300_000_000,store.max_total)
+  try:
+   W.STATE['errors']={}
+   with tempfile.TemporaryDirectory() as t,mock.patch.object(W,'ROOT',pathlib.Path(t)),mock.patch.object(W,'CapacityCompactor',Compactor),mock.patch.object(W.time,'monotonic',side_effect=lambda:clock[0]),mock.patch.object(W,'ingest',side_effect=ingest),mock.patch.object(W,'ENVIRONMENTAL_ARCHIVE',Environment()),mock.patch.object(W,'WELL_ARCHIVE',None),mock.patch.object(W,'COMPLIANCE_ARCHIVE',None),mock.patch.dict(W.os.environ,{'WAREHOUSE_WELLS_ENABLED':'false','WAREHOUSE_COMPLIANCE_ENABLED':'false'}):
+    W.loop(stop=Stop(),store_factory=Store,discover_fn=lambda:[{'id':'ucmr5'}])
+   self.assertEqual(calls,[0,60]);self.assertEqual(background,[60]);self.assertNotIn('ucmr5',W.STATE['errors'])
+  finally:W.STATE.clear();W.STATE.update(saved)

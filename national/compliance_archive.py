@@ -7,10 +7,12 @@ preserved as text. Requests read only the acquired shard for a complete PWSID.
 from __future__ import annotations
 import csv, hashlib, io, json, os, pathlib, re, shutil, tempfile, threading, urllib.parse, urllib.request, zipfile
 from . import wqp_backfill as Q
+from . import system_directory as D
 
 URL='https://echo.epa.gov/files/echodownloads/SDWA_latest_downloads.zip'
 DOCUMENTATION='https://echo.epa.gov/tools/data-downloads/sdwa-download-summary'
 PREFIX='sdwis-compliance/v1'
+DIRECTORY_PREFIX='sdwis-directory/v1'
 MAX_SHARD=128_000_000
 MAX_CACHE=384_000_000
 REQUIRED={'SUBMISSIONYEARQUARTER','PWSID','VIOLATION_ID','ENFORCEMENT_ID','VIOLATION_CODE','VIOLATION_CATEGORY_CODE','CONTAMINANT_CODE','VIOLATION_STATUS','NON_COMPL_PER_BEGIN_DATE','NON_COMPL_PER_END_DATE','ENFORCEMENT_DATE','IS_HEALTH_BASED_IND'}
@@ -81,32 +83,118 @@ class ComplianceArchive:
         self.lock=threading.RLock();self.query_lock=threading.Lock();self.error=None;self.phase='ready'
         self.receipt=store.json(PREFIX+'/latest.json')
         if self.receipt and self.receipt.get('schema')!='sdwis-compliance/1':raise ValueError('Unsupported compliance receipt')
+        self.directory_path=None;self.directory_receipt=None
+        try:
+            directory_receipt=store.json(DIRECTORY_PREFIX+'/latest.json')
+            if not directory_receipt and self.receipt and self.receipt.get('directory'):
+                directory_receipt={'schema':D.SCHEMA,'source':self.receipt['source'],'raw_key':self.receipt['raw_key'],'directory':self.receipt['directory']}
+            if directory_receipt:
+                if directory_receipt.get('schema')!=D.SCHEMA:raise ValueError('Unsupported directory receipt')
+                self.directory_path=D.restore(self.store,directory_receipt['directory'],self.root/'directory')
+                self.directory_receipt=directory_receipt
+        except Exception:self.error='Directory verification failed'
 
     def status(self):
-        with self.lock:r=self.receipt or {}
-        return {'schema':'sdwis-compliance/1','status':self.phase,'retained_association_rows':r.get('source_rows',0),'excluded_identity_rows':r.get('excluded_identity_rows',0),'unlinked_enforcement_rows':r.get('unlinked_enforcement_rows',0),'source_url':URL,'documentation_url':DOCUMENTATION,'retrieved_at':r.get('source',{}).get('retrieved_at'),'sha256':r.get('source',{}).get('sha256'),'count_definition':'Violation/enforcement rows, including enforcement without a linked violation. A violation can have multiple enforcement rows. Not water samples or current advisories.','household_safety_assessed':False,'error':self.error}
+        with self.lock:r=self.receipt or {};dr=self.directory_receipt or {};available=bool(self.directory_path)
+        directory={'status':'available' if available else 'not-acquired','source':dr.get('source'),'source_rows':dr.get('directory',{}).get('source_rows',0),'valid_identity_rows':dr.get('directory',{}).get('valid_identity_rows',0),'unique_pwsids':dr.get('directory',{}).get('unique_pwsids',0)}
+        return {'schema':'sdwis-compliance/1','status':self.phase,'retained_association_rows':r.get('source_rows',0),'excluded_identity_rows':r.get('excluded_identity_rows',0),'unlinked_enforcement_rows':r.get('unlinked_enforcement_rows',0),'source_url':URL,'documentation_url':DOCUMENTATION,'retrieved_at':r.get('source',{}).get('retrieved_at'),'sha256':r.get('source',{}).get('sha256'),'count_definition':'Violation/enforcement rows, including enforcement without a linked violation. A violation can have multiple enforcement rows. Not water samples or current advisories.','household_safety_assessed':False,'error':self.error,'directory':directory}
+
+    def publish_directory(self,raw,work,source,base):
+        # A directory can become current even if the larger compliance snapshot
+        # is capacity-paused. Both revisions retain independent source hashes.
+        directory=D.prepare(raw,work);directory['key']=base+'/'+directory['file']
+        same=bool(self.receipt and self.receipt['source']['sha256']==source['sha256'])
+        raw_key=base+'/source.zip'
+        receipt={'schema':D.SCHEMA,'source':source,'raw_key':raw_key,'directory':directory}
+        with self.store.publication_lock():
+            self.store.ensure_capacity((0 if same else source['bytes'])+directory['bytes']+1_000_000)
+            if not same:self.store.put(raw_key,raw)
+            self.store.verify_size(raw_key,source['bytes'])
+            self.store.put(directory['key'],work/directory['file'])
+            # No pointer is activated until stored bytes, hashes and every source
+            # row count have been verified by reading the new index back.
+            directory_path=D.restore(self.store,directory,self.root/'directory')
+            self.store.put_json(DIRECTORY_PREFIX+'/data/'+source['sha256']+'/receipt.json',receipt)
+            self.store.put_json(DIRECTORY_PREFIX+'/latest.json',receipt)
+        with self.lock:self.directory_receipt=receipt;self.directory_path=directory_path
+        return directory
 
     def refresh(self):
         self.phase='acquiring';self.error=None
         try:
             with tempfile.TemporaryDirectory(prefix='import-',dir=self.root) as temporary:
-                work=pathlib.Path(temporary);raw=work/'source.zip';source=self.fetcher(raw)
-                if self.receipt and self.receipt['source']['sha256']==source['sha256']:self.phase='ready';return False
-                artifacts=prepare(raw,work);base=PREFIX+'/data/'+source['sha256']
-                for parts in artifacts['shards'].values():
-                    for part in parts:part['key']=base+'/'+part['file']
-                receipt={'schema':'sdwis-compliance/1','source':source,'raw_key':base+'/source.zip',**artifacts}
-                with self.store.publication_lock():
-                    self.store.ensure_capacity(source['bytes']+sum(p['bytes'] for parts in artifacts['shards'].values() for p in parts)+1_000_000)
-                    self.store.put(receipt['raw_key'],raw)
+                work=pathlib.Path(temporary);raw=work/'source.zip';source=self.fetcher(raw);source={**source,'checked_at':source['retrieved_at']}
+                same=bool(self.receipt and self.receipt['source']['sha256']==source['sha256'])
+                directory_current=bool(self.directory_path and self.directory_receipt and self.directory_receipt['source']['sha256']==source['sha256'])
+                if same and directory_current:
+                    # The downloaded bytes matched in full. Record that check
+                    # without rewriting acquisition time or retained raw data.
+                    directory_receipt={**self.directory_receipt,'source':{**self.directory_receipt['source'],'checked_at':source['checked_at']}}
+                    receipt={**self.receipt,'source':{**self.receipt['source'],'checked_at':source['checked_at']}}
+                    with self.store.publication_lock():
+                        current=self.store.json(PREFIX+'/latest.json');current_directory=self.store.json(DIRECTORY_PREFIX+'/latest.json')
+                        if not current or current['source']['sha256']!=source['sha256'] or current_directory and current_directory['source']['sha256']!=source['sha256']:raise ValueError('Published source changed during freshness check')
+                        self.store.ensure_capacity(1_000_000)
+                        self.store.put_json(DIRECTORY_PREFIX+'/latest.json',directory_receipt)
+                        self.store.put_json(PREFIX+'/latest.json',receipt)
+                    with self.lock:self.directory_receipt=directory_receipt;self.receipt=receipt
+                    self.phase='ready';return False
+                base=PREFIX+'/data/'+source['sha256']
+                directory=self.directory_receipt['directory'] if directory_current else self.publish_directory(raw,work,source,base)
+                if same:
+                    # Upgrade metadata only, retaining the original ZIP and shards.
+                    receipt={**self.receipt,'source':source,'directory':directory};additional=1_000_000
+                else:
+                    artifacts=prepare(raw,work)
                     for parts in artifacts['shards'].values():
-                        for part in parts:self.store.put(part['key'],work/part['file'])
+                        for part in parts:part['key']=base+'/'+part['file']
+                    receipt={'schema':'sdwis-compliance/1','source':source,'raw_key':base+'/source.zip',**artifacts,'directory':directory}
+                    # The independent directory publication already retained this
+                    # exact official ZIP. Do not reserve or upload it a second time.
+                    additional=sum(p['bytes'] for parts in artifacts['shards'].values() for p in parts)+1_000_000
+                with self.store.publication_lock():
+                    self.store.verify_size(receipt['raw_key'],source['bytes'])
+                    self.store.ensure_capacity(additional)
+                    if not same:
+                        for parts in receipt['shards'].values():
+                            for part in parts:self.store.put(part['key'],work/part['file'])
                     self.store.put_json(base+'/receipt.json',receipt)
                     self.store.put_json(PREFIX+'/latest.json',receipt)
                 with self.lock:self.receipt=receipt
                 self.phase='ready';return True
         except Exception as exc:
             self.phase='acquisition-failed';self.error=str(exc)[:250];raise
+
+    def directory_result(self,where,args,limit=50,exact=False):
+        with self.lock:receipt=self.directory_receipt;path=self.directory_path
+        base={'schema':D.SCHEMA,'records':[],'total_records':0,'matching_records':0,'truncated':False,'household_connection_verified':False}
+        if not receipt or not path:return {**base,'status':'not-acquired'}
+        rows,total=D.records(path,where,args,limit)
+        source={'url':URL,'sha256':receipt['source']['sha256'],'retrieved_at':receipt['source']['retrieved_at'],'checked_at':receipt['source'].get('checked_at',receipt['source']['retrieved_at']),'source_member':receipt['directory']['source_member']}
+        return {**base,'status':'ambiguous' if exact and total>1 else 'records-returned' if total else 'no-matching-records','records':rows,'total_records':receipt['directory']['source_rows'],'matching_records':total,'truncated':total>len(rows),'source':source}
+
+    def directory_system(self,pwsid):
+        if not re.fullmatch('[A-Z0-9]{9}',pwsid):raise ValueError('Invalid complete PWSID')
+        return self.directory_result('eligible=1 AND pwsid=?',[pwsid],100,exact=True)
+
+    def directory_search(self,state='',city='',zip='',query='',limit=50,local=False):
+        state=str(state).strip().upper();city=str(city).strip().upper();zip=str(zip).strip();query=str(query).strip()
+        if state and not re.fullmatch('[A-Z]{2}',state):raise ValueError('Invalid directory state')
+        if len(city)>100 or len(query)>100 or zip and not re.fullmatch('[0-9]{5}',zip):raise ValueError('Invalid directory search')
+        limit=int(limit)
+        if not 1<=limit<=50:raise ValueError('Invalid directory result limit')
+        if isinstance(local,str):
+            if local not in ('true','false'):raise ValueError('Invalid directory mode')
+            local=local=='true'
+        where=['eligible=1'];args=[]
+        if local:
+            if not state or not (city or zip):raise ValueError('A state and city or ZIP are required')
+            where += ["active=1","system_type='CWS'","state=?","(substr(pwsid,1,2)=? OR substr(pwsid,1,2) GLOB '[0-9][0-9]')","((?<>'' AND city=?) OR (?<>'' AND zip=?))"]
+            args += [state,state,city,city,zip,zip]
+        else:
+            if state:where.append('state=?');args.append(state)
+            if query:where.append('(instr(upper(name),upper(?))>0 OR pwsid=upper(?))');args += [query,query]
+        return self.directory_result(' AND '.join(where),args,limit)
 
     def system(self,pwsid):
         if not re.fullmatch('[A-Z0-9]{9}',pwsid):raise ValueError('Invalid complete PWSID')
