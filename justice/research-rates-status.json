@@ -1,0 +1,259 @@
+{
+  "checked_at": "2026-11-01",
+  "purpose": "Reviewable primary-source data for water-charge comparisons and read-only public request status. Not a determination of overcharging or proof that a repair was completed.",
+  "water_rates": [
+    {
+      "id": "minneapolis-residential-water-2026",
+      "provider": "City of Minneapolis",
+      "source_url": "https://www.minneapolismn.gov/resident-services/utility-billing/rates-fees/",
+      "effective_date_source": "https://lims.minneapolismn.gov/Download/FileV2/52795/2026%20Adopted%20Budget%20-%20reduced%20file%20size.pdf",
+      "effective_date_source_section": "Utility Rate Resolution; also Schedule 7, Water",
+      "effective_from": "2026-01-01",
+      "effective_basis": "Meter read date, not the date the user pays the bill.",
+      "app_scope_end_exclusive": "2027-01-01",
+      "scope_end_note": "Conservative implementation cutoff for this researched 2026 schedule; not a claim the ordinance automatically expires then. Re-verify any 2027 bill.",
+      "supported_scope": "Monthly in-city residential retail water, standard meter, known billed usage and meter-read date. Water charges only.",
+      "volume_unit": "100 cubic feet (CCF)",
+      "gallons_per_unit_approximate": 748,
+      "volume_rate_usd_per_unit": 3.88,
+      "tiers": [
+        {
+          "from_units_inclusive": 0,
+          "to_units": null,
+          "usd_per_unit": 3.88
+        }
+      ],
+      "monthly_fixed_water_usd_by_meter_inches": {
+        "0.625": 11.75,
+        "0.75": 17.1,
+        "1": 27.75,
+        "1.5": 54.35,
+        "2": 86.3,
+        "3": 187.55,
+        "4": 320.7,
+        "6": 720.2,
+        "8": 1492.55,
+        "10": 2344.8
+      },
+      "residential_sales_tax_rate": 0,
+      "separate_safe_drinking_water_fee": {
+        "published_monthly_usd": 1.27,
+        "published_annual_usd": 15.22,
+        "handling": "Show separately. Do not infer a missing monthly cent or bill adjustment from the rounded annual/monthly difference."
+      },
+      "calculation_rules": [
+        "Read actual billed water usage in CCF and multiply by 3.88; compare only the water usage line.",
+        "If usage is in cubic feet, divide by 100. Prefer billed CCF to conversion from gallons because 748 is approximate.",
+        "Compare the meter-size fixed WATER line separately. Never use the SEWER fixed charge table.",
+        "The resolution applies the monthly fixed fee to each billing period or partial period. Do not invent day-proration rules.",
+        "Do not apply sewer average-winter-consumption rules to water usage.",
+        "Use decimal currency arithmetic, show rounding and label a mismatch as a question to ask the utility. Supplier rounding of fractional usage was not verified."
+      ],
+      "excluded": [
+        "sewer",
+        "stormwater",
+        "solid waste",
+        "prior balances",
+        "credits",
+        "penalties",
+        "turn-on/off charges",
+        "fire lines",
+        "wholesale contracts",
+        "commercial taxes",
+        "special assessments"
+      ],
+      "example": {
+        "meter_inches": 0.625,
+        "billed_water_ccf": 6,
+        "water_usage_usd": 23.28,
+        "fixed_water_usd": 11.75,
+        "water_subtotal_before_separate_fees_usd": 35.03
+      },
+      "source_note": "The official rates page was last updated July 23, 2026. The adopted budget confirms rates for meter reads on/after January 1, 2026. The outside-city sewer figure $38.90 is a monthly sewer-only fee, NOT a per-CCF water rate."
+    },
+    {
+      "id": "denver-single-family-water-2026",
+      "provider": "Denver Water",
+      "source_url": "https://www.denverwater.org/residential/billing-and-rates/2026-rates",
+      "drought_source_url": "https://www.denverwater.org/tap/denver-board-water-commissioners-approves-temporary-drought-pricing-part-stage-1-drought",
+      "effective_from": "2026-01-01",
+      "effective_basis": "Meters read on/after January 1, 2026.",
+      "app_scope_end_exclusive": "2027-01-01",
+      "supported_scope": "Monthly single-family treated-water account with service class, meter size and provider's winter threshold confirmed. Water only; exclude unusual billing periods.",
+      "volume_unit": "1000 US gallons",
+      "monthly_fixed_water_usd_by_meter_inches": {
+        "0.625": 20.91,
+        "0.75": 20.91,
+        "1": 31.3,
+        "1.5": 60.88,
+        "2": 102.31,
+        "3": 220.76,
+        "4": 386.5,
+        "6": 860.29,
+        "8": 1522.47,
+        "10": 2375.18,
+        "12": 3418.41
+      },
+      "base_tier_rates_usd_per_1000_gallons": {
+        "inside_city": [
+          3.02,
+          5.44,
+          7.25
+        ],
+        "outside_city_read_and_bill": [
+          3.03,
+          5.45,
+          7.26
+        ],
+        "outside_city_total_service": [
+          4.37,
+          7.87,
+          10.49
+        ]
+      },
+      "tier_thresholds": {
+        "tier1_end_gallons": "T = clamp(average January-February-March billed monthly gallons, 5000, 15000)",
+        "tier2_width_gallons": 15000,
+        "tier3_start_gallons": "T + 15000",
+        "winter_threshold_note": "Prefer the account's provider-confirmed AWC/tier1 threshold. Never assume every home gets the same threshold."
+      },
+      "drought": {
+        "usage_effective_from": "2026-05-01",
+        "first_bills_month": "2026-06",
+        "stated_through": "2027-04-30",
+        "subject_to_board_change": true,
+        "surcharge_per_1000_gallons": [
+          0,
+          1.1,
+          2.2
+        ],
+        "fixed_charge_surcharge": 0,
+        "handling": "Apply to confirmed May2026-or-later usage within the researched 2026 schedule. For boundary/straddling bills ask the utility; do not infer from bill date alone. Re-verify base2027 rates even though drought pricing may continue."
+      },
+      "calculation_rules": [
+        "For monthly gallons G and confirmed threshold T: V1=min(G,T), V2=min(max(G-T,0),15000), V3=max(G-T-15000,0).",
+        "Base usage charge=sum(Vi/1000 * applicable base rate i). Drought charge=sum(Vi/1000 * surcharge i), when applicable. Add the separate fixed water charge only for the matched meter size.",
+        "Require the customer class from the bill; city-name text alone cannot distinguish inside-city, read-and-bill and total-service classes.",
+        "Compare water usage, drought and fixed lines separately. Do not declare the entire bill incorrect."
+      ],
+      "excluded": [
+        "sewer",
+        "stormwater",
+        "private fireline",
+        "hydrants",
+        "multifamily/commercial tariffs",
+        "large irrigation",
+        "wholesale",
+        "development/tap charges",
+        "late fees",
+        "credits",
+        "partial-period proration"
+      ],
+      "example": {
+        "class": "inside_city",
+        "meter_inches": 0.625,
+        "gallons": 25000,
+        "confirmed_tier1_threshold_gallons": 5000,
+        "tier_gallons": [
+          5000,
+          15000,
+          5000
+        ],
+        "base_usage_usd": 132.95,
+        "drought_usd": 27.5,
+        "fixed_water_usd": 20.91,
+        "water_subtotal_usd": 181.36
+      }
+    }
+  ],
+  "request_status": {
+    "recommended": {
+      "provider": "City of Pittsburgh 311 via WPRDC",
+      "type": "Public CKAN datastore read API; not an Open311 submission API",
+      "source_url": "https://data.wprdc.org/dataset/pittsburgh-311-data",
+      "schema_source_url": "https://data.wprdc.org/dataset/pittsburgh-311-data/resource/5202679a-d243-402e-b82a-63189995a942",
+      "endpoint": "https://data.wprdc.org/api/3/action/datastore_search",
+      "resource_id": "5202679a-d243-402e-b82a-63189995a942",
+      "credentials_required_for_verified_reads": false,
+      "filter_field": "case_number",
+      "filter_semantics": "Exact JSON filter on the published 311 case number. Preserve punctuation and leading zeros. unique_id adds creation year; do not assume case_number alone is globally unique.",
+      "query_parameters": {
+        "resource_id": "5202679a-d243-402e-b82a-63189995a942",
+        "filters": "{\"case_number\":\"<USER CASE NUMBER>\"}",
+        "fields": "case_number,unique_id,status,case_owner,subject,created_date_utc,last_modified_date_utc,closed_date_utc",
+        "limit": 5,
+        "include_total": false
+      },
+      "returned_field_map": {
+        "request_number": "case_number",
+        "stable_record_id": "unique_id",
+        "status": "status",
+        "agency": "case_owner",
+        "request_type": "subject",
+        "created_at_utc": "created_date_utc",
+        "updated_at_utc": "last_modified_date_utc",
+        "closed_at_utc": "closed_date_utc"
+      },
+      "parser_rules": [
+        "Check success=true, then read result.records; no records means not found in this public feed, not an invalid request.",
+        "Keep status text exactly, including any Duplicate flag. Known values include New, Open, Closed and In Progress; preserve unfamiliar values.",
+        "If multiple rows share a case number, ask the user to select the matching year/subject; retain unique_id.",
+        "UTC-named fields are UTC even when serialized without a trailing Z. Use these rather than assuming Eastern timestamps are UTC.",
+        "Closed means the agency closed its case. It does not prove the underlying repair was completed or the water is safe.",
+        "Select only the allowlisted fields. No address/location or reporter data is needed for a case-number lookup."
+      ],
+      "published_refresh": "Four publications daily around 02:17, 08:17, 14:17, 20:17 local time; not a real-time connection to agency staff.",
+      "resource_last_modified_observed": "2026-10-31T20:15:29.996611",
+      "coverage": "Pittsburgh municipal311 records from new system introduced2025-02-04 plus imported legacy records back to2015. Not every water utility work order or private landlord request is a municipal311 case.",
+      "limits": [
+        "Privacy rules restrict some request/location data.",
+        "The separate old archive stopped updating2025-02-04; do not use resource29462525-62a6-45bf-9b5e-ad2e1c06348d for current tracking.",
+        "Network failures must show unavailable, not closed or not found.",
+        "Credit City of Pittsburgh / WPRDC and link the source; dataset is Creative Commons Attribution."
+      ],
+      "official_fallback": "https://www.pittsburghpa.gov/Resident-Services/311/Contacting-311",
+      "verified_exact_case_url": "https://data.wprdc.org/api/3/action/datastore_search?resource_id=5202679a-d243-402e-b82a-63189995a942&filters=%7B%22case_number%22%3A+%2226-00111581%22%7D&fields=case_number%2Cunique_id%2Cstatus%2Ccase_owner%2Csubject%2Ccreated_date_utc%2Clast_modified_date_utc%2Cclosed_date_utc&limit=5&include_total=false",
+      "verified_example": {
+        "case_number": "26-00111581",
+        "unique_id": "26-00111581-26",
+        "status": "Open",
+        "case_owner": "PWSA",
+        "subject": "Water Main Break",
+        "created_date_utc": "2026-10-26T21:39:16.000",
+        "last_modified_date_utc": "2026-10-26T21:39:18.000",
+        "closed_date_utc": null
+      },
+      "verified_without_credentials": true,
+      "observed_duplicate_example": {
+        "case_number": "99-00082323",
+        "unique_ids": [
+          "99-00082323-16",
+          "99-00082323-24"
+        ],
+        "note": "Exact lookup returned different requests from2016 and2024; ask for matching year."
+      }
+    },
+    "nyc_receipt_lookup_not_supported": {
+      "source_url": "https://data.cityofnewyork.us/Social-Services/311-Service-Requests-from-2020-to-Present/erm2-nwe9",
+      "official_dictionary": "https://data.cityofnewyork.us/api/views/erm2-nwe9/files/c5cc6926-45bb-4af3-8aab-0ee6a29bcf4d?download=true&filename=311_ServiceRequest_2020-present_DataDictionary_Updated_2025.xlsx",
+      "endpoint": "https://data.cityofnewyork.us/resource/erm2-nwe9.json",
+      "reason": "Official dictionary states unique_key is NOT the Service Request number given to the initiating customer; SR numbers are absent. Do not use a receipt number as unique_key or infer a mapping.",
+      "verified_public_record_filter": {
+        "unique_key": "70935235",
+        "$limit": 1,
+        "$select": "unique_key,status,agency,complaint_type,created_date,resolution_action_updated_date,closed_date"
+      },
+      "observed_record": {
+        "unique_key": "70935235",
+        "status": "In Progress",
+        "agency": "DEP",
+        "complaint_type": "Noise",
+        "created_date": "2026-10-30T01:44:09.000"
+      },
+      "refresh": "Overnight with a one-day buffer, per official dictionary.",
+      "metadata_updated_at_observed": "2026-10-31T01:40:50Z",
+      "official_receipt_lookup": "https://portal.311.nyc.gov/check-status/",
+      "official_scope_help": "https://portal.311.nyc.gov/article/?kanumber=KA-01066"
+    }
+  }
+}

@@ -1,0 +1,404 @@
+{
+  "checked_at": "2026-10-31",
+  "coverage_note": "Verified public connectors for the listed utilities and meeting clients only. A missing record is not proof of no lead. Pipe material is not a tap-water laboratory result. No submission or approval is performed by these research assets.",
+  "pipes": [
+    {
+      "id": "denver-water",
+      "city": "Denver",
+      "state": "CO",
+      "provider": "Denver Water",
+      "coverage": "Denver Water service area; match the returned city and street address. Do not assume every Denver-area property is covered.",
+      "official_page": "https://www.denverwater.org/your-water/water-quality/lead/lead-service-lines",
+      "official_map": "https://experience.arcgis.com/experience/26531bf694514f75806ab04f2d236647/",
+      "provenance": {
+        "app_item_id": "26531bf694514f75806ab04f2d236647",
+        "webmap_item_id": "c7ab3db61bb7470580d0447967248424",
+        "layer_item_id": "b83eae6da2c448408ece1825419a0caf",
+        "note": "Despite DEMO in the service name, this is the layer referenced by the current official Denver Water inventory map."
+      },
+      "endpoint": "https://services.arcgis.com/czCXlxn6hYtK4vdg/arcgis/rest/services/LRP_Inventory_LCRR_DEMO/FeatureServer/0",
+      "query_endpoint": "https://services.arcgis.com/czCXlxn6hYtK4vdg/arcgis/rest/services/LRP_Inventory_LCRR_DEMO/FeatureServer/0/query",
+      "address_field": "prem_full_addr",
+      "material_fields": [
+        "lsli_final_lead_cat"
+      ],
+      "out_fields": [
+        "OBJECTID",
+        "prem_full_addr",
+        "PREM_CITY",
+        "PREM_STATE",
+        "PREM_POSTAL",
+        "lsli_final_lead_cat",
+        "Published_Date"
+      ],
+      "optional_description_field": "Category_Desc",
+      "date_field": "Published_Date",
+      "date_type": "esriFieldTypeDateOnly; example 2026-07-08",
+      "normalization": {
+        "input": "Trim and uppercase street-only address; collapse repeated whitespace. Preserve house number, direction and unit. Validate city/state separately. Do not silently substitute a nearby property.",
+        "sql": "UPPER(prem_full_addr) = '<ADDRESS>'",
+        "escaping": "Escape a literal apostrophe as two apostrophes before building the SQL literal; URL-encode query parameters.",
+        "result": "Return exact source category. Category_Desc contains HTML and must be stripped/sanitized, never injected directly."
+      },
+      "material_values": {
+        "Confirmed lead service line; included in the Lead Reduction Program.": "lead_confirmed",
+        "No lead service line. Not included in Lead Reduction Program.": "non_lead_inventory",
+        "Unknown; likely to have lead service line. Included in the Lead Reduction Program.": "unknown_likely_lead",
+        "Unknown; unlikely to have lead service line. Not included in the Lead Reduction Program.": "unknown_unlikely_lead"
+      },
+      "verified_query": {
+        "where": "UPPER(prem_full_addr) = '5912 BOSTON CT'",
+        "outFields": "prem_full_addr,lsli_final_lead_cat",
+        "returnGeometry": "false",
+        "resultRecordCount": 3,
+        "f": "json"
+      },
+      "verified_sample": {
+        "address": "5912 BOSTON CT",
+        "city": "DENVER",
+        "state": "CO",
+        "material": "No lead service line. Not included in Lead Reduction Program.",
+        "published_date": "2026-07-08"
+      },
+      "inspection_route": "https://www.denverwater.org/your-water/water-quality/lead/lead-service-lines/investigative-process",
+      "checked_at": "2026-10-31",
+      "expires_at": null
+    },
+    {
+      "id": "pittsburgh-water",
+      "city": "Pittsburgh",
+      "state": "PA",
+      "provider": "Pittsburgh Water",
+      "coverage": "Pittsburgh Water service area. Public and private portions are separate records within a result; preserve both.",
+      "official_page": "https://www.pgh2o.com/your-water/community-lead-response",
+      "official_map": "https://www.pgh2o.com/leadmap",
+      "provenance": {
+        "app_item_id": "9d7352ef7f694c8eb5f703a3e0955fda",
+        "webmap_item_id": "1aae14d661b94ba0906aaba0d0f9108f",
+        "layer_item_id": "2fa4b628b8e54dc08cde81eb701f42cd"
+      },
+      "endpoint": "https://services5.arcgis.com/jAsbh6V9IpseXByp/arcgis/rest/services/PGH2O_Water_Service_Line_Material/FeatureServer/0",
+      "query_endpoint": "https://services5.arcgis.com/jAsbh6V9IpseXByp/arcgis/rest/services/PGH2O_Water_Service_Line_Material/FeatureServer/0/query",
+      "address_field": "Address",
+      "material_fields": [
+        "FinalReportedMaterialPublic",
+        "FinalReportedMaterialPrivate"
+      ],
+      "out_fields": [
+        "OBJECTID",
+        "Address",
+        "FinalReportedMaterialPublic",
+        "FinalDescriptionPublic",
+        "FinalReportedMaterialPrivate",
+        "FinalDescriptionPrivate"
+      ],
+      "normalization": {
+        "input": "Trim and uppercase street-only address; collapse repeated whitespace. Preserve house number, direction and unit. Do not use the nearest point as an exact match.",
+        "sql": "UPPER(Address) = '<ADDRESS>'",
+        "escaping": "Escape a literal apostrophe as two apostrophes, then URL-encode query parameters.",
+        "result": "Preserve public/private portions and the Abandoned_ prefix. Unknown, abandoned and non-lead are distinct."
+      },
+      "material_values": {
+        "Lead": "Lead",
+        "NonLead": "Non-lead",
+        "Unknown": "Unknown",
+        "Galvanized": "Galvanized",
+        "Abandoned_Lead": "Abandoned line: lead",
+        "Abandoned_NonLead": "Abandoned line: non-lead",
+        "Abandoned_Unknown": "Abandoned line: material unknown",
+        "Abandoned_Galvanized": "Abandoned line: galvanized"
+      },
+      "verified_query": {
+        "where": "UPPER(Address) = '3240 CHILDS ST'",
+        "outFields": "Address,FinalReportedMaterialPublic,FinalReportedMaterialPrivate",
+        "returnGeometry": "false",
+        "resultRecordCount": 3,
+        "f": "json"
+      },
+      "verified_sample": {
+        "address": "3240 CHILDS ST",
+        "public_material": "NonLead",
+        "private_material": "NonLead"
+      },
+      "inspection_route": "https://www.pgh2o.com/your-water/community-lead-response/identify-private-service-line-material",
+      "repair_route": "https://www.pgh2o.com/construction-maintenance/lead-line-replacement-programs",
+      "contact": {
+        "phone": "412-255-8987",
+        "email": "LeadHelp@pgh2o.com"
+      },
+      "checked_at": "2026-10-31",
+      "expires_at": null
+    },
+    {
+      "id": "minneapolis-water",
+      "city": "Minneapolis",
+      "state": "MN",
+      "provider": "City of Minneapolis",
+      "coverage": "City of Minneapolis inventory; addresses correspond to utility bills. Some service points are along the street rather than at parcel centers.",
+      "official_page": "https://www.minneapolismn.gov/resident-services/utility-services/water/water-quality/water-quality-lead/plumbing-faucets/lead-service-line-map/",
+      "official_map": "https://experience.arcgis.com/experience/0d6fba5dc2344601ae0eea0bae553921/",
+      "provenance": {
+        "app_item_id": "0d6fba5dc2344601ae0eea0bae553921",
+        "webmap_item_id": "0c2f6d3931b64c3cadf234ed67912e5e",
+        "layer_item_id": "5a1ad12f780e48088160bfa6a18b5a75",
+        "owner": "City_of_Minneapolis"
+      },
+      "endpoint": "https://services.arcgis.com/afSMGVsC7QlRK1kZ/ArcGIS/rest/services/ServiceLineInventory_Public/FeatureServer/0",
+      "query_endpoint": "https://services.arcgis.com/afSMGVsC7QlRK1kZ/ArcGIS/rest/services/ServiceLineInventory_Public/FeatureServer/0/query",
+      "address_field": "PremiseAddress",
+      "material_fields": [
+        "Classification"
+      ],
+      "out_fields": [
+        "OBJECTID",
+        "PremiseAddress",
+        "Classification"
+      ],
+      "normalization": {
+        "input": "Trim and uppercase street-only address; collapse repeated whitespace. Preserve house number, direction and unit. Exact returned address must match or be explicitly selected by the user.",
+        "sql": "UPPER(PremiseAddress) = '<ADDRESS>'",
+        "escaping": "Escape a literal apostrophe as two apostrophes, then URL-encode query parameters.",
+        "result": "Classification is a small integer domain, not a text material name. Do not request outFields=*; this service also includes contact-attempt fields unnecessary for material lookup."
+      },
+      "material_values": {
+        "1": "Lead",
+        "2": "Non-Lead",
+        "3": "Unknown",
+        "4": "Galvanized Requiring Replacement (GRR)"
+      },
+      "verified_query": {
+        "where": "UPPER(PremiseAddress) = '715 12TH AVE SE'",
+        "outFields": "PremiseAddress,Classification",
+        "returnGeometry": "false",
+        "resultRecordCount": 3,
+        "f": "json"
+      },
+      "verified_sample": {
+        "address": "715 12TH AVE SE",
+        "classification": 2
+      },
+      "inspection_route": "https://www.minneapolismn.gov/resident-services/utility-services/water/water-quality/water-quality-lead/plumbing-faucets/lead-service-line-research-request/",
+      "contact": {
+        "phone": "612-673-5600",
+        "assistance_phone": "612-673-3000",
+        "assistance_email": "minneapolis311@minneapolismn.gov"
+      },
+      "published_refresh_description": "Official city page says updated daily.",
+      "checked_at": "2026-10-31",
+      "expires_at": null
+    }
+  ],
+  "meetings": {
+    "api_docs": "https://webapi.legistar.com/Help/Api/GET-v1-Client-Events",
+    "verified_query_parameters": {
+      "$filter": "EventDate ge datetime'2026-10-31T00:00:00'",
+      "$orderby": "EventDate asc",
+      "$top": 20
+    },
+    "fields": [
+      "EventId",
+      "EventBodyName",
+      "EventDate",
+      "EventTime",
+      "EventLocation",
+      "EventInSiteURL",
+      "EventAgendaFile",
+      "EventAgendaStatusName",
+      "EventLastModifiedUtc",
+      "EventComment"
+    ],
+    "implementation_notes": [
+      "Replace the example filter date with the current date in the city time zone.",
+      "EventDate and EventTime represent local meeting dates/times; EventLastModifiedUtc is UTC. Preserve named timezone when calculating deadlines or calendar files.",
+      "Agenda and video URLs may be null. Events may be canceled or duplicates. Do not infer a public comment right from the existence of an event.",
+      "No universal public-comment deadline field was verified. Store deadlines only with the official source and applicable event type.",
+      "NYC endpoint returned HTTP 403 anonymously; do not claim its API is connected. Use official calendar fallback."
+    ],
+    "clients": [
+      {
+        "client": "denver",
+        "city": "Denver",
+        "state": "CO",
+        "timezone": "America/Denver",
+        "endpoint": "https://webapi.legistar.com/v1/denver/Events",
+        "official_calendar": "https://denver.legistar.com/",
+        "official_signup_source": "https://denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Denver-City-Council/Public-Input/General-Public-Comment",
+        "signup_url": "https://fs12.formsite.com/qD2eXl/0ryjigimkv/index",
+        "deadline": {
+          "applies_to": "General Public Comment Session only",
+          "source_text_summary": "Registration opens Thursday at 5 p.m. and closes Monday at 3 p.m. for the normal Monday session.",
+          "automatic_deadline_safe": false,
+          "reason": "Holiday shifts and special sessions exist; confirm the official event-specific schedule. Do not apply this rule to council hearings or committee meetings.",
+          "source_url": "https://denvergov.org/Government/Agencies-Departments-Offices/Agencies-Departments-Offices-Directory/Denver-City-Council/Public-Input/General-Public-Comment"
+        },
+        "verified_sample": {
+          "event_id": 13025,
+          "body": "City Council",
+          "date": "2026-11-02",
+          "time": "3:30 PM",
+          "url": "https://denver.legistar.com/MeetingDetail.aspx?LEGID=13025&GID=655&G=928A1C29-26D7-4A5D-8DD4-947A533B1CC6"
+        },
+        "checked_at": "2026-10-31",
+        "expires_at": null
+      },
+      {
+        "client": "pittsburgh",
+        "city": "Pittsburgh",
+        "state": "PA",
+        "timezone": "America/New_York",
+        "endpoint": "https://webapi.legistar.com/v1/pittsburgh/Events",
+        "official_calendar": "https://pittsburgh.legistar.com/Calendar.aspx",
+        "official_signup_source": "https://www.pittsburghpa.gov/City-Government/The-City-Council/Clerks-Office/Council-Meeting-Schedule",
+        "signup_url": "https://us.openforms.com/Form/66714828-de38-49e7-bdfa-c1b74b8f600d",
+        "deadline": {
+          "applies_to": "Regular City Council and Standing Committees meetings only",
+          "minutes_before_start": 60,
+          "public_hearings": "Check the individual hearing description for its deadline.",
+          "post_agendas": "Post Agenda discussions do not have public comment.",
+          "source_url": "https://www.pittsburghpa.gov/City-Government/The-City-Council/Clerks-Office/Council-Meeting-Schedule"
+        },
+        "written_comment_email": "cityclerksoffice@pittsburghpa.gov",
+        "written_comment_note": "Sending a written statement does not register someone to speak.",
+        "verified_sample": {
+          "event_id": 12131,
+          "body": "City Council",
+          "date": "2026-11-02",
+          "time": "10:00 AM",
+          "url": "https://pittsburgh.legistar.com/MeetingDetail.aspx?LEGID=12131&GID=115&G=B84377D7-CD7F-434A-A5AB-A7BCD775D91D"
+        },
+        "duplicate_note": "Verification also returned event12127 City Council at10:01AM on the same day with no agenda. Preserve distinct source IDs or deduplicate carefully; prefer current official agenda without hiding separate hearings.",
+        "checked_at": "2026-10-31",
+        "expires_at": null
+      }
+    ],
+    "unsupported": [
+      {
+        "city": "New York City",
+        "state": "NY",
+        "client": "nyc",
+        "endpoint": "https://webapi.legistar.com/v1/nyc/Events",
+        "observed_status": 403,
+        "official_calendar": "https://legistar.council.nyc.gov/Calendar.aspx",
+        "checked_at": "2026-10-31"
+      }
+    ]
+  },
+  "forms": [
+    {
+      "id": "usda-rd3550-35",
+      "title": "504 Home Repair Loan and Grant Program Intake Form",
+      "issuer": "USDA Rural Development",
+      "form_number": "RD 3550-35",
+      "revision": "03-24",
+      "source_url": "https://forms.sc.egov.usda.gov/efcommon/eFileServices/eForms/RD3550-35.PDF",
+      "local_file": "justice/forms/rd3550-35.pdf",
+      "official_program_url": "https://www.rd.usda.gov/programs-services/single-family-housing-programs/single-family-housing-repair-loans-grants",
+      "eligibility_map_url": "https://eligibility.sc.egov.usda.gov/",
+      "office_locator_url": "https://offices.sc.egov.usda.gov/locator/app?state=us&agency=rd",
+      "purpose": "An intake to begin USDA review; not a complete eligibility determination, approved grant, or submitted application.",
+      "eligibility": [
+        "Must own and occupy the home.",
+        "Property must be in an eligible rural area; USDA address eligibility tool and local office determine coverage.",
+        "Must be unable to obtain affordable credit elsewhere.",
+        "Household income must meet the applicable county low or very-low income limits.",
+        "Grants require age62 or older and very-low household income and must remove health/safety hazards.",
+        "Loans may repair, improve or modernize the home or remove health/safety hazards.",
+        "Final eligibility, documentation, funding and approval are determined by Rural Development; do not guarantee assistance or pipe-replacement coverage."
+      ],
+      "field_type": "AcroForm /Tx except signature fields /Sig and checkboxes /Btn",
+      "field_map": {
+        "applicant_name": "1 Adult Household Members NameRow1",
+        "applicant_birthdate": "4 Birthdate mmddyyyy",
+        "monthly_gross_employment_income": "5 Monthly Gross Employment Income before deductions for taxes insurance etc",
+        "monthly_gross_other_income": "6 Monthly Gross Income from Other Sources eg child support social security retirement etc",
+        "dependents_names_ages": "7 Names and ages of any dependents",
+        "monthly_medical_expenses": "fill_40",
+        "monthly_childcare_expenses": "fill_42",
+        "monthly_debt_payments": "fill_44",
+        "monthly_mortgage_excluding_tax_insurance": "fill_46",
+        "annual_property_tax": "fill_48",
+        "annual_homeowner_insurance": "fill_49",
+        "retirement_assets_value": "fill_51",
+        "nonretirement_assets_value": "fill_52",
+        "phone": "16 Contact phone numbers",
+        "email": "17 Email addresses",
+        "residence_address": "18 Address of residence",
+        "mailing_address": "19 Mailing address",
+        "repairs_line_1": "undefined",
+        "repairs_line_2": "20 List of repairs 1",
+        "repairs_line_3": "20 List of repairs 2",
+        "repairs_line_4": "20 List of repairs 3",
+        "repairs_line_5": "20 List of repairs 4",
+        "estimated_repair_cost": "fill_58"
+      },
+      "household_row_fields": {
+        "rows": 5,
+        "name_template": "1 Adult Household Members NameRow{row}",
+        "birthdate_first": "4 Birthdate mmddyyyy",
+        "birthdate_later_template": "4 Birthdate mmddyyyy_{row}",
+        "employment_income_first": "5 Monthly Gross Employment Income before deductions for taxes insurance etc",
+        "employment_income_later_template": "5 Monthly Gross Employment Income before deductions for taxes insurance etc_{row}",
+        "other_income_first": "6 Monthly Gross Income from Other Sources eg child support social security retirement etc",
+        "other_income_later_template": "6 Monthly Gross Income from Other Sources eg child support social security retirement etc_{row}"
+      },
+      "sensitive_fields_do_not_prefill_by_default": [
+        "2 Social Security  potential applicants onlyRow1",
+        "2 Social Security  potential applicants onlyRow2",
+        "2 Social Security  potential applicants onlyRow3",
+        "2 Social Security  potential applicants onlyRow4",
+        "2 Social Security  potential applicants onlyRow5"
+      ],
+      "leave_blank_for_user": [
+        "Potential Applicant Signature",
+        "Potential Applicant Signature_2",
+        "Potential Applicant Signature_3",
+        "Potential Applicant Signature_4"
+      ],
+      "verification": "Downloaded actual 316717-byte PDF and inspected AcroForm fields with pypdf. Three pages. Unlabeled financial field mappings verified against page1 text coordinates. Render completed PDF before delivery to ensure appearance.",
+      "checkbox_note": "Checkbox widget names are generic and were not mapped to a semantic field; do not guess checkboxes or attestations.",
+      "review_note": "User reviews and signs the official form and chooses how to submit to the appropriate USDA office. Do not auto-sign or auto-submit.",
+      "checked_at": "2026-10-31",
+      "expires_at": "2026-11-30",
+      "expiry_meaning": "Printed OMB expiration date; recheck official template before offering after this date.",
+      "rejected_alternatives": [
+        {
+          "url": "https://www.rd.usda.gov/media/file/download/504-intake-form-32124.pdf",
+          "reason": "Prefilled for Kansas office addresses; unsuitable as national blank template."
+        },
+        {
+          "url": "https://forms.sc.egov.usda.gov/efcommon/eFileServices/eForms/RD3550-1.PDF",
+          "reason": "USDA currently links this authorization form, but actual PDF printed expiry is2025-02-28; not verified current. Do not label current without confirmation."
+        }
+      ],
+      "sha256": "9e74f48c600928bdd5470fec27dbb7d3ab2499e63a698a93320b01b30b0c0fcd",
+      "bytes": 316717
+    }
+  ],
+  "national_routes": [
+    {
+      "name": "Find local government offices",
+      "url": "https://www.usa.gov/local-governments",
+      "use": "Official state-by-state fallback to find local council, commission or clerk when a live meeting connector is unavailable."
+    },
+    {
+      "name": "Find elected officials",
+      "url": "https://www.usa.gov/elected-officials",
+      "use": "Official federal, state and local representative directories."
+    },
+    {
+      "name": "State drinking-water regulator and data",
+      "url": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data",
+      "use": "EPA directory of state, territorial and Tribal drinking-water agencies/data. Primacy coverage varies; do not assume every place is regulated by a state agency."
+    },
+    {
+      "name": "Minnesota statewide service-line map",
+      "url": "https://maps.umn.edu/LSL/",
+      "use": "Official Minnesota Department of Health/University of Minnesota collaboration for address lookup. Link fallback; direct API not verified in this research."
+    },
+    {
+      "name": "Minnesota lead replacement program",
+      "url": "https://www.health.state.mn.us/communities/environment/water/lslrprogram.html",
+      "use": "Official program information and route to the service-line map; contact local water provider about actual timing."
+    }
+  ]
+}

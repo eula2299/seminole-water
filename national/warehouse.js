@@ -84,6 +84,17 @@ function createWarehouse({connectionString=process.env.DATABASE_URL,pool}={}) {
     WHERE r.kind='system' AND ($1='' OR r.data->>'state'=$1) AND ($2='' OR r.data->>'name' ILIKE '%'||$2||'%' OR r.pwsid=$2)
     ORDER BY r.data->>'name',r.pwsid LIMIT $3`,[String(state).toUpperCase(),like,Math.max(1,Math.min(50,Number(limit)||20))]);return r.rows;
  }
+ // SDWIS city/ZIP are directory locations, not proof of a household connection.
+ async function findLocalSystems({state,city='',zip=''}={}) {
+  if(!pool)return [];
+  if(!require('./evidence').REGION_CODES.includes(state))throw Error('Invalid state');
+  const r=await query(`SELECT DISTINCT ON (r.pwsid) r.pwsid,r.data->>'name' AS name,r.data->>'state' AS state,r.data->>'city' AS city,true AS active
+   FROM national_water.records r JOIN national_water.sources s ON s.active_run=r.run_id
+   WHERE r.kind='system' AND r.data->>'state'=$1 AND r.data->>'active'='true' AND r.data->>'system_type'='CWS'
+    AND (($2<>'' AND upper(trim(r.data->>'city'))=upper($2)) OR ($3<>'' AND left(r.data->>'zip',5)=$3))
+   ORDER BY r.pwsid LIMIT 50`,[state,String(city).trim().slice(0,100),/^\d{5}/.test(zip)?zip.slice(0,5):'']);
+  return r.rows;
+ }
  // A dedicated connection holds a PostgreSQL advisory lock throughout download/import.
  async function beginImport(source,sourceUrl) {
   await initialize(); if(!pool)throw new Error('NATIONAL_DATABASE_NOT_CONFIGURED');
@@ -166,6 +177,6 @@ function createWarehouse({connectionString=process.env.DATABASE_URL,pool}={}) {
   }catch(e){await client.query('SELECT pg_advisory_unlock(hashtext($1))',['ismywaterok-national:'+source]).catch(()=>{});client.release();throw e;}
  }
  async function close(){if(own)await pool.end();}
- return {initialize,status,lookupSystem,searchSystems,beginImport,importCapacity,close};
+ return {initialize,status,lookupSystem,searchSystems,findLocalSystems,beginImport,importCapacity,close};
 }
 module.exports={createWarehouse,SCHEMA};
