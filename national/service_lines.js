@@ -61,7 +61,7 @@ function inventoryAction(record,inventory){
 }
 function withServiceLines(engine,{lookup=createServiceLines()}={}){
  function decorate(status){return {...status,utility_service_line_inventory:{status:'official-source-connected',scope:'utility-wide-not-household',source_url:DOC,comprehensive:false}};}
- return {async status(){return decorate(await engine.status());},async lookup(input){
+ return {...engine,async status(){return decorate(await engine.status());},async lookup(input){
   const data=await engine.lookup(input),inventory=await lookup({pwsids:(data.systems||[]).map(s=>s.pwsid),supplyType:data.supply?.type});
   data.utility_service_lines=inventory;data.coverage=decorate(data.coverage||{});
   if(data.resident_report){data.resident_report.utility_service_lines=inventory;

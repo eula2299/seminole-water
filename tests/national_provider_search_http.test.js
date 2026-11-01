@@ -2,9 +2,11 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const {createServer}=require('../national/server');
 const {EvidenceError}=require('../national/evidence');
+const {withServiceLines}=require('../national/service_lines');
 test('provider-name endpoint returns deliberate choices without running a water lookup',async t=>{
  const calls=[];let lookup=0;
- const server=createServer({engine:{searchProviders:async args=>{calls.push(args);if(args.query.length<2)throw new EvidenceError('BAD_PROVIDER_SEARCH','Enter a provider name.');return [{id:'NY7003493',name:'NEW YORK CITY SYSTEM',state:'NY'}];},lookup:async()=>{lookup++;},status:async()=>({})}});
+ const engine=withServiceLines({searchProviders:async args=>{calls.push(args);if(args.query.length<2)throw new EvidenceError('BAD_PROVIDER_SEARCH','Enter a provider name.');return [{id:'NY7003493',name:'NEW YORK CITY SYSTEM',state:'NY'}];},lookup:async()=>{lookup++;},status:async()=>({})},{lookup:async()=>({records:[]})});
+ const server=createServer({engine});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
  const base='http://127.0.0.1:'+server.address().port;
  const response=await fetch(base+'/api/national/providers?state=NY&query=New%20York');assert.equal(response.status,200);
