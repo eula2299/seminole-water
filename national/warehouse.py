@@ -43,10 +43,40 @@ class PublicationBusy(ValueError):
 def capacity_retry_ready(failure,used,maximum,now):
  # Retry only after real recovery, with enough room for the failed reservation.
  # A failed lease reservation cannot predict the full publication, so require
- # at least 100 MB recovered and thirty minutes before another bounded attempt.
+ # at least 100 MB recovered and one minute before another bounded attempt.
  error=failure['error']
- return (now-failure['at']>=1800 and error.used-used>=100_000_000
+ return (now-failure['at']>=60 and error.used-used>=100_000_000
          and maximum-used>=max(100_000_000,error.additional))
+
+class CapacityCompactor:
+ # Recovery only: one verified index attempt per minute, at most 25 attempts
+ # during this process lifetime. Restart resets this limit; it is not a daily cap.
+ def __init__(self,candidates_fn=None):
+  self.candidates_fn=candidates_fn;self.queue=None;self.attempts=0;self.next_check=0
+ def step(self,store,failures,used,now):
+  if self.attempts>=25 or now<self.next_check or getattr(store,'provider',None)!='railway':return 0
+  needs_space=any(isinstance(f['error'],StorageBudgetExceeded) and
+                 (store.max_total-used<max(100_000_000,f['error'].additional) or f['error'].used-used<100_000_000)
+                 for f in failures.values())
+  if not needs_space:return 0
+  self.next_check=now+60
+  store.check_publication_lease()
+  if self.queue is None:
+   if self.candidates_fn is None:
+    from .compact_indexes import candidates
+    self.candidates_fn=candidates
+   self.queue=list(reversed(self.candidates_fn(store)))
+  # Bound metadata reads too. Published candidates are largest first; compressed
+  # ones are skipped. New indexes already use compression at initial publication.
+  for _ in range(min(200,len(self.queue))):
+   item=self.queue.pop()
+   head=store.client.head_object(Bucket=store.bucket,Key=item['key'])
+   if head.get('Metadata',{}).get('water-storage-codec')=='gzip-v1':continue
+   self.attempts+=1
+   # Existing implementation checks the published checksum, conditional ETag,
+   # publication lease and exact decoded readback; it never removes evidence.
+   return store.compact_index(item['key'],item['sha256'])
+  return 0
 
 def utc(): return dt.datetime.now(dt.timezone.utc).isoformat()
 def digest(path):
@@ -454,7 +484,7 @@ def pws_report(pwsid):
 
 def loop(stop=None,store_factory=Store,discover_fn=discover):
  global ENVIRONMENTAL_ARCHIVE,COMPLIANCE_ARCHIVE,WELL_ARCHIVE
- stop=stop or threading.Event();store=None;next_catalogue=0;pending_retries={}
+ stop=stop or threading.Event();store=None;next_catalogue=0;pending_retries={};compactor=CapacityCompactor()
  def attempt(source,action):
   try:
    if hasattr(store,'check_publication_lease'):store.check_publication_lease()
@@ -469,7 +499,8 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
     pending_retries[source]={'error':e,'retry_at':time.monotonic()+max(5,min(60,e.expires-time.time())),'action':action}
    else:pending_retries.pop(source,None)
    with LOCK:STATE['errors'][source]=str(e)[:250]
-   log('compliance-import-error' if source=='compliance' else 'ingest-error',source=source,error=str(e)[:250])
+   details={'storage_used_bytes':e.used,'storage_required_additional_bytes':e.additional,'storage_budget_bytes':e.maximum} if isinstance(e,StorageBudgetExceeded) else {}
+   log('compliance-import-error' if source=='compliance' else 'ingest-error',source=source,error=str(e)[:250],**details)
   finally:
    if source=='compliance':
     with LOCK:STATE['compliance_archive']=COMPLIANCE_ARCHIVE.status()
@@ -502,6 +533,12 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
     WELL_ARCHIVE=WellArchive(store,ROOT/'wells')
    except Exception as e:log('well-restore-error',error=str(e)[:250])
   if time.monotonic()<next_catalogue:
+   try:
+    reclaimed=compactor.step(store,pending_retries,inventory['bytes'],time.monotonic())
+    if reclaimed:
+     inventory=store.inventory()
+     log('capacity-index-compacted',bytes_reclaimed=reclaimed,attempts_this_process=compactor.attempts,maximum_attempts_this_process=25)
+   except Exception as e:log('capacity-compaction-paused',error=str(e)[:250])
    for source,failure in list(pending_retries.items()):
     if stop.is_set():break
     capacity=isinstance(failure['error'],StorageBudgetExceeded)
