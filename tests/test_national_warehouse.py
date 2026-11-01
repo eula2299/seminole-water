@@ -444,3 +444,45 @@ class RecoveryPriorityTests(unittest.TestCase):
     W.loop(stop=Stop(),store_factory=Store,discover_fn=lambda:[{'id':'ucmr5'}])
    self.assertEqual(calls,[0,60]);self.assertEqual(background,[60]);self.assertNotIn('ucmr5',W.STATE['errors'])
   finally:W.STATE.clear();W.STATE.update(saved)
+
+
+class DirectoryBootstrapTests(unittest.TestCase):
+ def run_bootstrap(self,recover):
+  saved=copy.deepcopy(W.STATE);clock=[0];calls=[];used=[986_000_000]
+  class Stop:
+   done=False
+   def is_set(self):return self.done
+   def wait(self,seconds):
+    clock[0]+=seconds
+    if clock[0]>180:raise AssertionError('Directory recovery stalled')
+  stop=Stop()
+  class Storage:
+   max_total=1_000_000_000;provider='railway'
+   def inventory(self):return {'bytes':used[0]}
+   def json(self,key):return None
+  class Compactor:
+   attempts=0;next_check=0
+   def can_recover(self,*args):return recover and self.attempts<1
+   def step(self,store,failures,current,now):
+    if self.attempts or not recover:return 0
+    self.attempts+=1;self.next_check=now+60;used[0]-=150_000_000;return 150_000_000
+  class Compliance:
+   attempts=0
+   def status(self):return {'retained_association_rows':10}
+   def warm_directory(self):
+    calls.append(('directory',clock[0],W.STATE['serving_ready']));self.attempts+=1
+    if self.attempts==1:raise W.StorageBudgetExceeded(used[0],48_000_000,1_000_000_000)
+   def refresh(self):calls.append(('compliance',clock[0],W.STATE['serving_ready']));stop.done=True
+  def ingest(store,item):calls.append(('chemistry',clock[0],W.STATE['serving_ready']))
+  try:
+   W.STATE['errors']={}
+   with tempfile.TemporaryDirectory() as t,mock.patch.object(W,'ROOT',pathlib.Path(t)),mock.patch.object(W,'ingest',ingest),mock.patch.object(W,'CapacityCompactor',Compactor),mock.patch.object(W.time,'monotonic',side_effect=lambda:clock[0]),mock.patch.object(W,'ENVIRONMENTAL_ARCHIVE',None),mock.patch.object(W,'WELL_ARCHIVE',None),mock.patch.object(W,'COMPLIANCE_ARCHIVE',Compliance()),mock.patch.dict(W.os.environ,{'WAREHOUSE_WQP_ENABLED':'false','WAREHOUSE_WELLS_ENABLED':'false'}):
+    W.loop(stop=stop,store_factory=Storage,discover_fn=lambda:[{'id':'ucmr5'}])
+   expected=[('directory',0,True)]+([('directory',60,True)] if recover else [])+[('chemistry',60,True),('compliance',60,True)]
+   self.assertEqual(calls,expected)
+   self.assertEqual('directory' in W.STATE['errors'],not recover)
+  finally:W.STATE.clear();W.STATE.update(saved)
+ def test_capacity_recovery_warms_directory_before_full_refresh_and_keeps_restored_serving_ready(self):
+  self.run_bootstrap(True)
+ def test_exhausted_recovery_resumes_chemistry_without_repeating_directory_bootstrap(self):
+  self.run_bootstrap(False)
