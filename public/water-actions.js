@@ -12,7 +12,7 @@
   let selected=null,active=null,bodyInput,subjectInput,toInput,review,status,answers={},drafts={};
   function save(){if(selected&&bodyInput)drafts[selected]={body:bodyInput.value,subject:subjectInput.value,to:toInput.value};}
   function show(lane,fromVoice){
-   if(!D.labels[lane])return;save();const version=++generation;selected=lane;active=D.forAddress(D.prepare(context,lane,answers[lane]||{}),address);if(fromVoice)active=D.forAddress({...active,body:fromVoice.body||active.body,subject:fromVoice.subject||active.subject},address);panel.replaceChildren();panel.hidden=false;
+   if(!D.labels[lane])return;if(lane==='explain'){panel.hidden=true;window.WaterVoice?.focusLane('explain');return;}save();const version=++generation;selected=lane;active=D.forAddress(D.prepare(context,lane,answers[lane]||{}),address);if(fromVoice)active=D.forAddress({...active,body:fromVoice.body||active.body,subject:fromVoice.subject||active.subject},address);panel.replaceChildren();panel.hidden=false;
    for(const b of choices.children)b.setAttribute('aria-pressed',String(b.dataset.lane===lane));
    const head=e('div',null,'action-work-head');head.append(e('h3',active.title),button('Talk this through',()=>window.WaterVoice?.focusLane(lane),'action-talk'));panel.append(head,e('p',active.description,'action-description'));
    if(!data.voice_token)head.lastElementChild.hidden=true;

@@ -19,7 +19,7 @@
   const checkLabel=el('label',null,'voice-check'),check=document.createElement('input');check.type='checkbox';checkLabel.append(check,el('span','I’m 18 or older, using this from the United States, and agree to share what I say and these water results with Google for this call.'));consent.append(checkLabel);
   const actions=el('div',null,'voice-actions'),start=button('Start voice call','voice-start'),mute=button('Mute microphone','voice-secondary'),end=button('End call','voice-end'),next=button('Show next steps ↓','voice-secondary');
   start.disabled=true;mute.hidden=end.hidden=true;actions.append(start,mute,end,next);
-  const status=el('p','Up to 15 minutes per call.','voice-status');status.setAttribute('role','status');
+  const status=el('p','Talk through your questions. End the call when you’re done.','voice-status');status.setAttribute('role','status');
   const captions=el('details',null,'voice-captions'),log=el('div',null,'voice-log');captions.append(el('summary','Show conversation captions'),log);
   box.append(top,consent,actions,status,captions,el('p','AI can make mistakes. These are public records, not a test of your own water.','voice-note'));parent.append(box);
   let selectedLane=null;
@@ -53,7 +53,7 @@
     processor.port.onmessage=event=>{if(ready&&!stopped&&!muted&&ws.readyState===WebSocket.OPEN){if(ws.bufferedAmount>131072){stop('Your connection is too slow for a voice call. Please try again.');return;}ws.send(event.data);}};
     ws.onopen=()=>{if(stopped||current!==attempt)return;ws.send(JSON.stringify({type:'start',token:data.voice_token,consent:true,lane:selectedLane}));};
     ws.onmessage=event=>{if(stopped||current!==attempt)return;let m;try{m=JSON.parse(event.data);}catch{return stop('The voice connection was interrupted.');}
-     if(m.type==='ready'){clearInterval(clock);ready=true;mute.hidden=false;mute.textContent='Mute microphone';mute.setAttribute('aria-pressed','false');box.classList.add('is-live');deadline=Date.now()+m.seconds*1000;const tick=()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));status.textContent=(!ready?'Reconnecting your call…':muted?'Microphone muted':'Call connected — speak naturally')+' · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0')+' left';if(!left)stop('Your call has ended. Your drafts, testing options, and next steps are still here.');};tick();clock=setInterval(tick,500);}
+     if(m.type==='ready'){clearInterval(clock);ready=true;mute.hidden=false;mute.textContent='Mute microphone';mute.setAttribute('aria-pressed','false');box.classList.add('is-live');deadline=m.seconds?Date.now()+m.seconds*1000:Infinity;const tick=()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));status.textContent=(!ready?'Reconnecting your call…':muted?'Microphone muted':'Call connected — speak naturally');if(!left)stop('Your call has ended. Your drafts, testing options, and next steps are still here.');};tick();clock=setInterval(tick,500);}
      else if(m.type==='reconnecting'){ready=false;status.textContent='Reconnecting your call…';}
      else if(m.type==='audio')play(m.data,m.rate);
      else if(m.type==='action')window.WaterActions?.present(m.action);
@@ -66,7 +66,7 @@
     ws.onclose=()=>{if(!stopped&&current===attempt&&socket===ws)stop('The voice connection ended. Your results are still here. Please try again later.');};
    }catch(error){if(current!==attempt)return;stop(error.name==='NotAllowedError'?'Microphone access was not allowed. Enable it in your browser to use the voice guide.':'The microphone could not start. Check that it is connected and try again.');}
   });
-  focusCurrent=lane=>{selectedLane=lane;if(ready&&socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'focus',lane}));else {box.scrollIntoView({behavior:'smooth',block:'start'});status.textContent='Ready to help with this. Agree above, then start your call.';}};
+  focusCurrent=lane=>{selectedLane=lane;if(ready&&socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'focus',lane}));else {box.scrollIntoView({behavior:'smooth',block:'start'});if(check.checked)start.click();else {status.textContent='Agree to voice sharing above to start your call.';check.focus();}}};
   const exit=()=>stop();window.addEventListener('pagehide',exit);
   disposeCurrent=()=>{stop();window.removeEventListener('pagehide',exit);};
  }

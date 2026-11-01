@@ -19,7 +19,7 @@ async function render(privateWell,extraFindings=[],reportFields={},fixture={}){
 test('main result stays concise and puts see-all before next steps',async()=>{const headings=(await render(false)).map(x=>x.children[0]?.textContent);assert.match(headings[0],/YOUR WATER RESULTS/);assert.ok(!headings.includes('What the water tests found'));assert.ok(!headings.includes('Evidence behind this address profile'));});
 test('private-well main result stays concise',async()=>{const headings=(await render(true)).map(x=>x.children[0]?.textContent);assert.match(headings[0],/YOUR WATER RESULTS/);assert.ok(!headings.includes('What to test in your well'));assert.ok(!headings.includes('Water notices to check now'));});
 
-test('results paginate four at a time, reveal all, and keep full records before actions',async()=>{
+test('results reveal only four additional entries per click, and keep full records before actions',async()=>{
  const fixtures=Array.from({length:10},(_,i)=>({name:'Result '+i,result:i+' µg/L',health:{text:'Health context '+i}}));
  const [main]=await render(false,fixtures);
  const tiles=main.children.find(x=>x.className==='risk-tiles');
@@ -27,20 +27,20 @@ test('results paginate four at a time, reveal all, and keep full records before 
  assert.equal(tiles.children.length,4);
  controls.children[1].listeners.click();assert.equal(tiles.children.length,8);
  controls.children[1].listeners.click();assert.equal(tiles.children.length,12);
- controls.children[2].listeners.click();assert.equal(tiles.children.length,12);
- assert.equal(controls.children[1].hidden,true);assert.equal(controls.children[2].hidden,true);
+ assert.equal(controls.children.length,2);
+ assert.equal(controls.children[1].hidden,true);
  assert.match(tiles.textContent,/Health context 9/);
  assert.ok(main.children.findIndex(x=>x.className==='complete-evidence collapsed-evidence')<main.children.findIndex(x=>x.className==='what-now'));
 });
 
-test('GA4 follows exact introduction and aggregate savings appear only in the action plan',async()=>{
+test('GA4 follows exact introduction and site-wide savings never appear in the personal plan',async()=>{
  assert.match(HTML,/Public records do not replace a test of your own tap water\.<\/p><aside id="public-impact"/);
  const [main]=await render(false);
  const plan=main.children.find(x=>x.className==='access-plan action-plan-clean');
  assert.equal(plan.children[1].textContent,'Here is what to do next');
  const savings=plan.children.filter(x=>x.className==='clean-money aggregate-savings');
- assert.equal(savings.length,1);assert.match(savings[0].textContent,/Potential testing savings identified.*\$25/);
- assert.match(savings[0].textContent,/do not mean someone bought a test or saved this money/);
+ assert.equal(savings.length,0);assert.match(plan.textContent,/Your potential testing savings.*\$10/);
+ assert.doesNotMatch(plan.textContent,/Across completed lookups|\$25/);
 });
 
 test('saved records show a simple dated notice and keep different counts distinct',async()=>{
