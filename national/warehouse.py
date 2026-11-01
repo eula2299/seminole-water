@@ -35,6 +35,11 @@ class StorageBudgetExceeded(ValueError):
   super().__init__('Persistent storage budget exceeded; publication paused')
   self.used=used;self.additional=additional;self.maximum=maximum
 
+class PublicationBusy(ValueError):
+ def __init__(self,expires):
+  super().__init__('Another warehouse publisher holds the storage lease')
+  self.expires=expires
+
 def capacity_retry_ready(failure,used,maximum,now):
  # Retry only after real recovery, with enough room for the failed reservation.
  # A failed lease reservation cannot predict the full publication, so require
@@ -194,6 +199,11 @@ class Store:
   actual=self.inventory()['bytes']
   if actual+self.pending_bytes+additional>self.max_total:raise StorageBudgetExceeded(actual,self.pending_bytes+additional,self.max_total)
   return actual
+ def check_publication_lease(self):
+  # Read-only preflight prevents a waiting importer from downloading and
+  # rebuilding an entire national archive while another publisher is active.
+  existing=self.json('v2/publication-lease.json')
+  if existing and existing.get('expires',0)>time.time():raise PublicationBusy(existing['expires'])
  @contextlib.contextmanager
  def publication_lock(self):
   key='v2/publication-lease.json';owner=str(uuid.uuid4());stop=threading.Event()
@@ -201,7 +211,7 @@ class Store:
   # A crashed publisher's lease expires, so restart does not require deletion.
   self.ensure_capacity(1024)
   existing,etag=self.json(key,with_etag=True)
-  if existing and existing.get('expires',0)>time.time():raise ValueError('Another warehouse publisher holds the storage lease')
+  if existing and existing.get('expires',0)>time.time():raise PublicationBusy(existing['expires'])
   condition={'IfNoneMatch':'*'}
   if existing:condition={'IfMatch':etag}
   payload=json.dumps({'owner':owner,'expires':time.time()+LEASE_SECONDS}).encode()
@@ -444,15 +454,20 @@ def pws_report(pwsid):
 
 def loop(stop=None,store_factory=Store,discover_fn=discover):
  global ENVIRONMENTAL_ARCHIVE,COMPLIANCE_ARCHIVE,WELL_ARCHIVE
- stop=stop or threading.Event();store=None;next_catalogue=0;capacity_paused={}
+ stop=stop or threading.Event();store=None;next_catalogue=0;pending_retries={}
  def attempt(source,action):
   try:
-   action();capacity_paused.pop(source,None)
+   if hasattr(store,'check_publication_lease'):store.check_publication_lease()
+   action();pending_retries.pop(source,None)
    with LOCK:STATE['errors'].pop(source,None)
    if source=='compliance':log('compliance-archive-ready',rows=COMPLIANCE_ARCHIVE.status()['retained_association_rows'])
   except Exception as e:
-   if isinstance(e,StorageBudgetExceeded):capacity_paused[source]={'error':e,'at':time.monotonic(),'action':action}
-   else:capacity_paused.pop(source,None)
+   if isinstance(e,StorageBudgetExceeded):pending_retries[source]={'error':e,'at':time.monotonic(),'action':action}
+   elif isinstance(e,PublicationBusy):
+    # Recheck the small lease record at most once a minute so an early
+    # release recovers promptly; the preflight never starts a download while held.
+    pending_retries[source]={'error':e,'retry_at':time.monotonic()+max(5,min(60,e.expires-time.time())),'action':action}
+   else:pending_retries.pop(source,None)
    with LOCK:STATE['errors'][source]=str(e)[:250]
    log('compliance-import-error' if source=='compliance' else 'ingest-error',source=source,error=str(e)[:250])
   finally:
@@ -487,10 +502,13 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
     WELL_ARCHIVE=WellArchive(store,ROOT/'wells')
    except Exception as e:log('well-restore-error',error=str(e)[:250])
   if time.monotonic()<next_catalogue:
-   for source,failure in list(capacity_paused.items()):
+   for source,failure in list(pending_retries.items()):
     if stop.is_set():break
-    if capacity_retry_ready(failure,inventory['bytes'],store.max_total,time.monotonic()):
-     log('capacity-recovered-retry',source=source,reclaimed_bytes=failure['error'].used-inventory['bytes'])
+    capacity=isinstance(failure['error'],StorageBudgetExceeded)
+    ready=capacity_retry_ready(failure,inventory['bytes'],store.max_total,time.monotonic()) if capacity else time.monotonic()>=failure['retry_at']
+    if ready:
+     if capacity:log('capacity-recovered-retry',source=source,reclaimed_bytes=failure['error'].used-inventory['bytes'])
+     else:log('publication-lease-retry',source=source)
      attempt(source,failure['action'])
      # Re-read accounting before another source can start; every publication
      # still uses the existing lease and full capacity checks.
@@ -498,7 +516,7 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
      except Exception:break
      with LOCK:
       STATE['ingestion_status']='cycle-complete-with-gaps' if STATE['errors'] else 'cycle-complete'
-      STATE['current_archive']=None;STATE['last_capacity_retry_at']=utc()
+      STATE['current_archive']=None;STATE['last_capacity_retry_at' if capacity else 'last_publication_retry_at']=utc()
    if WELL_ARCHIVE:
     try:
      if WELL_ARCHIVE.step():log('well-archive-step',records=WELL_ARCHIVE.status()['source_well_records'],errors=WELL_ARCHIVE.status()['errors'])

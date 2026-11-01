@@ -300,13 +300,13 @@
         "published snapshots",
         "object evidence archive"
       ],
-      "coverage": "Retained data readable; checksum freshness checks at existing database limit; lossless archive compaction deployed",
+      "coverage": "Retained data readable;21 indexes verified losslessly compressed; capacity and publication-lock retries",
       "test_files": [
         "tests/national_warehouse.test.js",
         "tests/test_national_warehouse.py",
         "tests/test_national_compliance_archive.py"
       ],
-      "remaining": "Changed PostgreSQL snapshots still need a space-efficient import strategy; archive batch recovery in progress without budget increase"
+      "remaining": "Changed PostgreSQL snapshots remain capacity-paused; verify fresh archive publication after space recovery"
     }
   ],
   "continuation_verification": {
@@ -316,7 +316,7 @@
     "national_tests_skipped": 1,
     "original_node_tests_passed": 197,
     "original_python_tests_passed": 4,
-    "warehouse_compliance_python_tests_passed": 26,
+    "warehouse_compliance_python_tests_passed": 33,
     "environmental_python_tests_passed": 14,
     "browser_checks": [
       "Denver example: 132.95 base + 27.50 drought + 20.91 fixed = 181.36",
@@ -327,7 +327,9 @@
       "Live help-AI request preserves synthetic lead quote, unit, date and unconfirmed status",
       "Live results: four initial findings, See more adds four, See all expands full list",
       "Contact and feedback desktop layout inspected",
-      "Live Gemini handshake: 900 seconds, audio packets and captions received"
+      "Live Gemini handshake: 900 seconds, audio packets and captions received",
+      "Contact and feedback have no horizontal overflow at 390px",
+      "Postdeploy voice: shared budget accepted call; 20 audio packets, captions, and greeting completed"
     ],
     "real_lookup_checks": [
       "Washington DC public address: matched, DC0000002, 105 findings",
@@ -341,9 +343,12 @@
     ],
     "archive_recovery": {
       "first_verified_bytes_reclaimed": 55113334,
-      "additional_batch": "running",
+      "batch_verified_bytes_reclaimed": 1061740604,
+      "batch_indexes": 20,
+      "status": "complete",
       "budget_raised": false,
       "plan_upgraded": false
-    }
+    },
+    "deployed_resident_release": "43abeb65d6ea08889fded5a49c46a000ac8afc38"
   }
 }
