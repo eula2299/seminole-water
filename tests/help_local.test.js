@@ -37,3 +37,13 @@ test('specific program links outrank news and navigation, and page text excludes
  const finder=createLocalHelp({ai:{enabled:true,discover:async()=>{throw Error('SEARCH_PAUSED');},discoverPages:async()=>({items:[]})},readPage:async url=>{reads.push(url);return {url,title:'Official page',text:'Public information.',links:url==='https://seattle.gov/'?[{title:'Seattle water wins award',url:'https://seattle.gov/news/award'},{title:'Seattle news',url:'https://seattle.gov/news'},{title:'Help paying your water bill',url:target}]:[]};}});
  await finder.search({city:'Seattle',state:'WA',kind:'assistance'});assert.ok(reads.includes(target));assert.ok(!reads.includes('https://seattle.gov/news/award'));
 });
+test('official state city directories and redirects can identify municipal .com websites',async()=>{
+ const city='Lake Mary',cityUrl='https://www.lakemaryfl.com/',program=cityUrl+'178/Utility-Customer-Service',reads=[];
+ const finder=createLocalHelp({ai:{enabled:true,discover:async()=>{throw Error('SEARCH_PAUSED');},discoverPages:async({final})=>final?{items:[{url:program,quote:'Call customer service for help with your water bill.'}]}:{items:[],candidate_urls:[program]}},readPage:async url=>{reads.push(url);return {url,title:'Utility customer service',text:url===program?'Call customer service for help with your water bill.':'Official city directory.',links:url.includes('fl-cities')?[{url:cityUrl,title:'Lake Mary'}]:[]};}});
+ const r=await finder.search({city,state:'FL',kind:'assistance'});assert.ok(reads.includes(cityUrl));assert.equal(r.items[0].url,program);
+});
+test('municipal financing is never presented as household bill assistance',async()=>{
+ const url='https://fixture.gov/funding',quote='Free financial assistance for public water and wastewater systems.';
+ const finder=createLocalHelp({ai:{enabled:true,discover:async()=>({result:{items:[{url,quote}]},grounding:{groundingChunks:[{web:{uri:url}}]}})},readPage:async()=>({url,title:'Free Financial and Technical Assistance for Public Water and Wastewater Systems',text:quote})});
+ assert.deepEqual((await finder.search({city:'Dallas',state:'TX',kind:'assistance'})).items,[]);
+});

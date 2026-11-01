@@ -49,17 +49,21 @@ function createLocalHelp({ai,readPage=page,now=Date.now}={}){
    // Read the official directories directly when the search provider has no quota or no usable sources.
    // This uses public agency pages and the ordinary explanation API, not another search key/model.
    if(!fetched.length&&ai.discoverPages){
-    const kinds=kind==='meetings'?['local','state']:kind==='pipes'||kind==='repairs'?['water','local','social']:['social','water','consumer'];
-    const seed=await Promise.allSettled([...new Set([...direct.local_offices.slice(0,2).map(r=>r.url),...kinds.map(k=>direct.region.routes[k]?.url)].filter(Boolean))].map(url=>readPage(url)));
+    const kinds=kind==='meetings'?['local','state']:kind==='pipes'||kind==='repairs'?['water','local','social']:['local','social','water','consumer'];
+    const officeUrls=new Set(direct.local_offices.slice(0,2).map(r=>r.url));
+    const seed=await Promise.allSettled([...new Set([...officeUrls,...kinds.map(k=>direct.region.routes[k]?.url)].filter(Boolean))].map(async url=>({...await readPage(url),cityOffice:officeUrls.has(url),localDirectory:url===direct.region.routes.local?.url})));
     const pages=seed.filter(r=>r.status==='fulfilled').map(r=>r.value),chosen=[];
+    const cityLinks=new Set(pages.filter(p=>p.localDirectory).flatMap(p=>(p.links||[]).filter(l=>place(l.title).replace(/^(cityof|townof|villageof)/,'')===place(city)).map(l=>l.url)));
     for(const p of pages){
-     const links=(p.links||[]).filter(l=>linkScore(l,kind)>0);
-     links.sort((a,b)=>linkScore(b,kind)-linkScore(a,kind));
+     const score=link=>linkScore(link,kind)+(cityLinks.has(link.url)?100:0);
+     const links=(p.links||[]).filter(l=>score(l)>0);
+     links.sort((a,b)=>score(b)-score(a));
      for(const link of links.slice(0,2))if(!chosen.includes(link.url)&&!pages.some(p=>p.url===link.url))chosen.push(link.url);
     }
-    const extra=await Promise.allSettled(chosen.slice(0,4).map(url=>readPage(url)));pages.push(...extra.filter(r=>r.status==='fulfilled').map(r=>r.value));
+    chosen.sort((a,b)=>Number(cityLinks.has(b))-Number(cityLinks.has(a)));
+    const extra=await Promise.allSettled(chosen.slice(0,4).map(async url=>({...await readPage(url),cityOffice:cityLinks.has(url)})));pages.push(...extra.filter(r=>r.status==='fulfilled').map(r=>r.value));
     const cityHosts=new Set(direct.local_offices.map(r=>new URL(r.url).hostname.replace(/^www\./,'')));
-    const cityPages=pages.filter(p=>cityHosts.has(new URL(p.url).hostname.replace(/^www\./,'')));
+    const cityPages=pages.filter(p=>p.cityOffice||cityHosts.has(hostOf(p.url)));
     const deeper=[...new Set(cityPages.flatMap(p=>(p.links||[]).filter(l=>linkScore(l,kind)>0&&!pages.some(p=>p.url===l.url))).sort((a,b)=>linkScore(b,kind)-linkScore(a,kind)).map(l=>l.url))].slice(0,4);
     const more=await Promise.allSettled(deeper.map(url=>readPage(url)));pages.push(...more.filter(r=>r.status==='fulfilled').map(r=>r.value));
     if(pages.length){
@@ -67,7 +71,7 @@ function createLocalHelp({ai,readPage=page,now=Date.now}={}){
       let items=await ai.discoverPages({pages,city,state,kind});
       // Model-proposed routes are only search hints. Fetch and quote-check them before display.
       // Keep these reads on the exact official hosts already matched to this city/state.
-      const hosts=new Set([...direct.local_offices.map(r=>hostOf(r.url)),...Object.values(direct.region.routes).map(r=>hostOf(r.url))]);
+      const hosts=new Set([...direct.local_offices.map(r=>hostOf(r.url)),...cityPages.map(p=>hostOf(p.url)),...Object.values(direct.region.routes).map(r=>hostOf(r.url))]);
       const hints=[...new Set((Array.isArray(items.candidate_urls)?items.candidate_urls:[]).filter(url=>{
        try{const u=new URL(url);return u.protocol==='https:'&&!u.username&&!u.password&&!u.search&&!u.hash&&hosts.has(hostOf(url))&&!pages.some(p=>normalizeUrl(p.url)===normalizeUrl(url));}catch{return false;}
       }))].slice(0,4);
@@ -89,6 +93,7 @@ function createLocalHelp({ai,readPage=page,now=Date.now}={}){
     if(!matched||!matched.directoryLinked&&!permitted(new URL(matched.page.url).hostname))continue;
     const quote=plain(clean(item.quote,550));
     if(quote.length<15||!matched.page.text.toLowerCase().includes(quote.toLowerCase()))continue;
+    if(['assistance','bill'].includes(kind)&&/technical assistance for|assistance for (?:public )?(?:water|wastewater).*systems|water restoration assistance|state revolving fund/i.test(matched.page.title))continue;
     const dateLabel=clean(item.date_label,70),deadline=clean(item.deadline_label,100);
     const verifiedDate=dateLabel&&quote.includes(dateLabel)?dateLabel:null;
     const verifiedDeadline=deadline&&quote.includes(deadline)?deadline:null;

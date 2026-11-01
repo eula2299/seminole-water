@@ -26,7 +26,7 @@ window.WaterHelpLocal={create(c){
    const direct=await api('/api/help/agencies?'+new URLSearchParams({state:state.value,city:city.value.trim(),tribal:String(tribal.checked)}));if(thisRun!==generation)return;routes(direct);
    try{
     const data=await api('/api/help/local',{city:city.value.trim(),state:state.value,kind:kind.value,language:I.language});if(thisRun!==generation)return;
-    if(data.items.length){const section=box(output);section.append(el('h2',t('nearYou')));
+    if(data.items.length){const section=box(output);output.prepend(section);section.append(el('h2',t('nearYou')));
      for(const item of data.items){const row=box(section);const a=link(row,item.title,item.url,'source');if(a)a.textContent=item.title;row.append(el('blockquote',item.quote));if(item.deadline_label)row.append(el('p',t('sourceDeadline')+': '+item.deadline_label));else if(kind.value==='meetings')text(row,'checkSpeakingTime','fine');
       row.append(el('p',t('checkedOn')+' '+new Date(item.checked_at).toLocaleDateString(I.language),'fine'));
       if(I.language!=='en')button(row,'translatePage',async()=>{const translated=await api('/api/help/translate',{consent:true,language:I.language,texts:[item.title,item.quote]});const values=translated.translations;if(Array.isArray(values))row.append(el('p',values.join('\n'),'card soft'));},'quiet');
