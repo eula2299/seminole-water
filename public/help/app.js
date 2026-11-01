@@ -124,6 +124,7 @@
   }
   function page(title, intro, back = home) {
     viewVersion++;
+    window.WaterVoice?.stop();
     if (window.speechSynthesis) speechSynthesis.cancel();
     reading = false;
     main.replaceChildren();
@@ -939,13 +940,22 @@
       return { ...memory.location };
     };
   }
-  function pipeForm() {
+  function pipeForm(edit=false) {
     page("pipes", "pipeIntro", repairs);
     const b = box(main),
       values = locationFields(b, true);
-    button(b, "lookupPipes", async () => {
-      const data = await api("/api/help/pipes", values());
-      if(data.status!=="found")return X.local("pipes");
+    const lookup=button(b, "lookupPipes", async () => {
+      const request=values(),version=viewVersion;
+      const data = await api("/api/help/pipes", request);
+      if(version!==viewVersion)return;
+      if(data.status!=="found"){
+        page("pipes","pipeCaution",()=>pipeForm(true));
+        main.append(el("p",[request.address,request.city,request.state].join(', '),'card'));
+        text(main,data.status==="unavailable"?"sourceUnavailable":"pipeNotFound","card");
+        button(main,"requestInspection",()=>requestWizard("inspection",{facts:[request.address,request.city,request.state].join(', ')}));
+        button(main,"officialMap",()=>X.local("pipes"),"quiet");
+        return;
+      }
       page("pipes", "pipeCaution", pipeForm);
       if (data.status !== "found")
         text(
@@ -1018,6 +1028,7 @@
         }),
       );
     });
+    if(!edit&&memory.location.address&&memory.location.city&&/^[A-Z]{2}$/.test(memory.location.state))lookup.click();
   }
   function wizard(title, intro, fields, complete, values = {}, back = home) {
     let index = 0;
@@ -1315,6 +1326,16 @@
       }));
     }
     const own = check(main, "ownHome");
+    const talk=el('button','Fill this out by voice');talk.type='button';main.append(talk);
+    talk.onclick=async()=>{if(!own.checked){own.focus();return;}talk.disabled=true;const version=viewVersion;try{
+      const response=await api('/api/national/form-voice',{fields:basic.map(f=>({id:f.name,label:t(f.key),type:'text',filled:!!saved[f.name]}))});
+      if(version!==viewVersion)return;
+      const voiceBox=box(main),answers=el('dl');main.append(answers);
+      const paint=()=>{answers.replaceChildren();for(const f of basic)answers.append(el('dt',t(f.key)),el('dd',String(saved[f.name]||'')));};paint();
+      WaterVoice.mount(voiceBox,{voice_token:response.voice_token,form_mode:true,onFormAnswer:answer=>{if(version!==viewVersion)return;if(basic.some(f=>f.name===answer.field_id)){saved[answer.field_id]=answer.value;paint();}}});
+      button(main,'review',()=>reviewForm(saved));
+    }catch{talk.disabled=false;toast(t('error'));}};
+
     button(main, "fillForm", () => {
       if (!own.checked) {
         own.focus();

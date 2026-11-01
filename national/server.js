@@ -8,14 +8,14 @@ const seo=require('./seo');
 function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false,metrics=null,voice=null,testingCatalog=require('./testing_catalog'),contacts=require('./action_contacts').createContactService()}={}){
  const help=require('../justice/server').createHelpHandler({trustProxy});
  const buckets=new Map();let active=0;
- const security={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; script-src 'self' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; connect-src 'self' wss://www.ismywaterok.com wss://ismywaterok.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com; img-src 'self' https://*.google-analytics.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",'Permissions-Policy':'geolocation=(), camera=(), microphone=(self)'};
+ const security={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; script-src 'self' https://accounts.google.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; frame-src https://accounts.google.com; connect-src 'self' https://accounts.google.com https://www.googleapis.com https://gmail.googleapis.com wss://www.ismywaterok.com wss://ismywaterok.com https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com; img-src 'self' https://*.google-analytics.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",'Permissions-Policy':'geolocation=(), camera=(), microphone=(self)'};
  function send(res,status,body,type='application/json; charset=utf-8',headers={}){res.writeHead(status,{...security,'Content-Type':type,...headers});res.end(type.startsWith('application/json')?JSON.stringify(body):body);}
  function allowed(req){const now=Date.now();for(const[k,v]of buckets)if(v.expires<now)buckets.delete(k);const key=clientKey(req,trustProxy);if(!buckets.has(key)&&buckets.size>=10000)return false;const b=buckets.get(key)||{expires:now+60000,count:0};b.count++;buckets.set(key,b);return b.count<=30;}
  const server=http.createServer(async(req,res)=>{
   try{
    const u=new URL(req.url,'http://localhost');
    if(await help(req,res,u))return;
-   const voiceFiles={'/water-actions-data.js':'application/javascript; charset=utf-8','/water-actions.js':'application/javascript; charset=utf-8','/water-actions.css':'text/css; charset=utf-8','/water-voice.js':'application/javascript; charset=utf-8','/water-voice-worklet.js':'application/javascript; charset=utf-8','/water-voice.css':'text/css; charset=utf-8'};
+   const voiceFiles={'/water-gmail.js':'application/javascript; charset=utf-8','/water-actions-data.js':'application/javascript; charset=utf-8','/water-actions.js':'application/javascript; charset=utf-8','/water-actions.css':'text/css; charset=utf-8','/water-voice.js':'application/javascript; charset=utf-8','/water-voice-worklet.js':'application/javascript; charset=utf-8','/water-voice.css':'text/css; charset=utf-8'};
    if(req.method==='GET'&&voiceFiles[u.pathname])return send(res,200,require('node:fs').readFileSync(require('node:path').join(__dirname,'..','public',u.pathname.slice(1)),'utf8'),voiceFiles[u.pathname],{'Cache-Control':'public, max-age=300'});
    if(req.method==='POST'&&u.pathname==='/api/national/action-contact'){
     if(req.headers.origin&&req.headers.origin!=='https://'+req.headers.host&&req.headers.origin!=='http://'+req.headers.host)return send(res,403,{message:'Origin not permitted.'});
@@ -23,6 +23,12 @@ function createServer({engine=createEngine(),maxConcurrent=24,trustProxy=false,m
     if(!allowed(req))return send(res,429,{message:'Please try again shortly.'});
     const body=await readJson(req,2048);if(!body||typeof body.token!=='string'||!Object.hasOwn(require('../public/water-actions-data').labels,body.lane))return send(res,400,{message:'Choose a help option.'});
     return send(res,200,await contacts.resolve(body.token,body.lane,body.goal));
+   }
+   if(req.method==='POST'&&u.pathname==='/api/national/form-voice'){
+    if(!req.headers.origin||!['https://'+req.headers.host,'http://'+req.headers.host].includes(req.headers.origin))return send(res,403,{message:'Request blocked.'});
+    if(!allowed(req))return send(res,429,{message:'Please try again shortly.'});
+    if(!voice?.config().enabled)return send(res,503,{message:'Voice could not connect. Please try again.'});
+    try{const body=await readJson(req,40000);const fields=require('./form_voice').formFields(body.fields);return send(res,200,{voice_token:voice.remember({form_fields:fields})});}catch{return send(res,400,{message:'This form needs clearer field labels before voice can fill it.'});}
    }
    if(req.method==='GET'&&u.pathname==='/api/national/voice-config')return send(res,200,voice?.config()||{enabled:false});
    if(req.method==='GET'&&(u.pathname==='/national'||u.pathname==='/national/')){res.writeHead(301,{Location:'/',...security});return res.end();}

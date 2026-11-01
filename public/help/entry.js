@@ -18,7 +18,7 @@
     reportContext = {
       action_token: e.detail?.action_token,
       brief: e.detail?.help_context,
-      location: addressValues(),
+      location: addressValues(),resolvedLocation:e.detail?.location,
     };
   });
   document.addEventListener("click", (e) => {
@@ -34,7 +34,7 @@
       sessionStorage.setItem(
         "water-help-context",
         JSON.stringify({
-          location: current,
+          location: reportContext && JSON.stringify(current)===JSON.stringify(reportContext.location) ? reportContext.resolvedLocation||current : current,
           brief: reportContext && JSON.stringify(current) === JSON.stringify(reportContext.location) ? reportContext.brief : null,
           action_token:
             reportContext &&
