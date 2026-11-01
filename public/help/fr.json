@@ -566,5 +566,6 @@
   "supportedWaterTotal": "Frais d’eau attendus présentés ici",
   "denverScope": "Denver Water, une maison, facture mensuelle normale de 2026. Saisissez les gallons et les frais de consommation sans les frais fixes ni de sécheresse. Les autres services, crédits et anciens soldes restent séparés.",
   "denverDetails": "Utilisez le type de service, la taille du compteur et la limite hivernale confirmés par Denver Water. La limite est de 5,000–15,000 gallons. Indiquez les dates de consommation, pas de paiement. Si la période couvre le 1er mai, demandez au fournisseur comment les frais de sécheresse sont appliqués.",
-  "gallonsUsed": "Eau utilisée (gallons américains)"
+  "gallonsUsed": "Eau utilisée (gallons américains)",
+  "tryAgain": "Réessayer"
 }

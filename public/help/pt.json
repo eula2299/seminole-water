@@ -566,5 +566,6 @@
   "supportedWaterTotal": "Cobranças de água esperadas mostradas aqui",
   "denverScope": "Denver Water, uma casa, conta mensal normal de 2026. Informe os galões e a cobrança de consumo sem as cobranças por seca e fixas. Outros serviços, créditos e saldos anteriores ficam separados.",
   "denverDetails": "Use o tipo de serviço, tamanho do medidor e limite de consumo de inverno confirmados pela Denver Water. O limite é de 5,000–15,000 galões. Informe as datas de consumo, não de pagamento. Se a conta atravessar 1º de maio, peça à companhia que explique a cobrança por seca.",
-  "gallonsUsed": "Água usada (galões dos EUA)"
+  "gallonsUsed": "Água usada (galões dos EUA)",
+  "tryAgain": "Tentar novamente"
 }

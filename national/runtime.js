@@ -14,8 +14,10 @@ const {withServiceLines}=require('./service_lines');
 // No user address is stored in the warehouse or passed to ingestion workers.
 function createNationalRuntime(){
  const warehouse=createWarehouse();
+ const directory=require('./directory');
+ const servingWarehouse=directory.withArchiveDirectory(warehouse,directory.createDirectory());
  const metrics=require('./public_metrics').createPublicMetrics();
- const engine=withServiceLines(createEngine({warehouse,archive:createArchive(),context:createContext(),propertyContext:createPropertyContext(),advisories:createAdvisories()}));
+ const engine=withServiceLines(createEngine({warehouse:servingWarehouse,archive:createArchive(),context:createContext(),propertyContext:createPropertyContext(),advisories:createAdvisories()}));
  const voice=require('./voice').createVoiceService();
  const server=createServer({engine,metrics,voice,trustProxy:!!process.env.RAILWAY_ENVIRONMENT_ID});
  let worker=null,closed=false,timer=null;

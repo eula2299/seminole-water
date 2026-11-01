@@ -9,6 +9,16 @@ const validNumber=x=>x!==null&&x!==undefined&&String(x).trim()!==''&&Number.isFi
 const quantity=x=>validNumber(x)?Number(x).toLocaleString('en-US',{maximumSignificantDigits:6}):null;
 function sourceLink(value){try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password?u.href:null;}catch{return null;}}
 function providerName(system,candidates){return candidates.find(c=>c.pwsid===system.pwsid)?.name||system.warehouse?.system?.name||system.records?.[0]?.data?.PWSName||'Water provider';}
+function preferredUcmr5Source(system){
+ const archive=system.archive;
+ const newer=(archive?.checked_sources||archive?.sources||[]).find(s=>s.id==='ucmr5');
+ const stored=system.warehouse?.sources?.find(s=>s.source==='ucmr5');
+ if(!newer||archive.serving_ready===false||archive.retrieval?.status==='unavailable')return 'warehouse';
+ const archiveDate=Date.parse(newer.retrieved_at),storedDate=Date.parse(stored?.completed_at);
+ // Select one publication. A chemical removed by a newer official correction
+ // must not reappear from an older copy just because its name no longer matches.
+ return Number.isFinite(archiveDate)&&Number.isFinite(storedDate)&&storedDate>archiveDate?'warehouse':'archive';
+}
 function comparison(row){
  // Educational comparisons of reported system monitoring, not compliance
  // calculations (which can depend on averaging, location and regulatory dates).
@@ -26,7 +36,7 @@ function finding(row,provider,source){
  if(qualitative)result=Number(row.present_results)>0?'Present in '+row.present_results+' reported tests':'Reported absent in the displayed tests';
  else if(validNumber(row.min_detect)&&validNumber(row.max_detect)&&Number(row.min_detect)<=Number(row.max_detect))result=quantity(row.min_detect)+(Number(row.min_detect)!==Number(row.max_detect)?'–'+quantity(row.max_detect):'')+' '+(row.unit||'unit not reported');
  else if(!Number(row.nondetects))result='See the original report for the reported result';
- return {name,provider,scope:row.scope,detected:hasDetection,result,first_sample:row.first_date,last_sample:row.last_date,source_name:source?.label||source?.id||'EPA monitoring records',source_url:sourceLink(source?.catalogue_url||source?.source_url||source?.url),reported_results:Number(row.n)||null,non_detects:Number(row.nondetects)||0,health:health.matched?{title:health.label,text:health.summary,action:health.practical_step,sources:health.sources}:null,comparison:comparison(row)};
+ return {name,provider,scope:row.scope,detected:hasDetection,result,first_sample:row.first_date,last_sample:row.last_date,source_name:source?.label||source?.id||'EPA monitoring records',source_url:sourceLink(source?.catalogue_url||source?.source_url||source?.url),source_checked_at:source?.retrieved_at||source?.completed_at||null,source_sha256:source?.sha256||source?.source_sha256||null,reported_results:Number(row.n)||null,non_detects:Number(row.nondetects)||0,health:health.matched?{title:health.label,text:health.summary,action:health.practical_step,sources:health.sources}:null,comparison:comparison(row)};
 }
 function addressQuality(data,findings,compliance){
  const candidates=data.provider?.candidates||[],families={
@@ -111,11 +121,11 @@ function buildResidentReport(data){
  const privateWell=data.supply?.type==='private-well',candidates=data.provider?.candidates||[],findings=[],providers=[];
  if(!privateWell)for(const system of data.systems||[]){
   const name=providerName(system,candidates);providers.push({id:system.pwsid,name});
-  for(const row of system.archive?.summaries||[]){if(Number(row.invalid_identity_date)>0||!row.analyte)continue;findings.push(finding(row,name,system.archive.sources?.find(s=>s.id===row.source_id)));}
+  const ucmr5=preferredUcmr5Source(system);
+  for(const row of system.archive?.summaries||[]){if(Number(row.invalid_identity_date)>0||!row.analyte||row.source_id==='ucmr5'&&ucmr5==='warehouse')continue;findings.push(finding(row,name,system.archive.sources?.find(s=>s.id===row.source_id)));}
   const group=data.occurrence?.summary?.find(s=>s.pwsid===system.pwsid);
   for(const row of group?.analytes||[]){if(!row.analyte)continue;const source=system.warehouse?.sources?.find(s=>s.source==='ucmr5');
-   // UCMR5 already occurs in the historical archive; do not count it twice.
-   if(system.archive?.summaries?.some(r=>r.source_id==='ucmr5'&&r.analyte===row.analyte&&r.unit===row.unit))continue;
+   if(ucmr5==='archive')continue;
    findings.push(finding({analyte:row.analyte,unit:row.unit,n:row.sample_results,detects:Number(row.sample_results)-Number(row.non_detects),nondetects:row.non_detects,min_detect:row.minimum_detected,max_detect:row.maximum_detected,first_date:row.first_sample,last_date:row.last_sample,scope:'system-sampling-context-unspecified',health_context:row.health_context},name,source));
   }
  }
@@ -143,15 +153,31 @@ function buildResidentReport(data){
  else actions.push({title:providers.length?'Check today’s water notices':'Confirm who supplies your home',text:providers.length?'Use the name on your water bill to check current notices and the latest water-quality report.':'Your water bill or local water department can confirm who supplies the home.',url:'https://www.epa.gov/ccr'});
  actions.push({title:privateWell?'Use a certified laboratory':'Check what reaches your own tap',text:privateWell?'A certified laboratory can explain sampling instructions and the tests appropriate for your well.':'Home plumbing can change water quality. For lead concerns, ask the water provider about the pipe serving your home and a certified lab about testing your tap.',url:privateWell?LAB:LEAD});
  const risk_profile=addressRiskProfile(data,findings,compliance,privateWell),accuracy_check=addressQuality(data,findings,compliance);
+ const retrieved=(privateWell?[]:data.systems||[]).flatMap(x=>[x.archive?.retrieval,x.archive?.compliance?.retrieval]).filter(Boolean);
+ const saved=retrieved.filter(x=>x.status==='saved');
+ const coversStored=system=>preferredUcmr5Source(system)==='archive'&&system.archive?.truncated!==true;
+ const sourceMissing=(data.audit||[]).some(x=>x.status==='unavailable'&&/^(historical-archive:|stored-evidence:|environmental-context$|archived-environmental-context$|property-and-groundwater-evidence$|state-well-records$|current-official-advisories$)/.test(x.agent)&&(!x.agent.startsWith('stored-evidence:')||!(data.systems||[]).some(system=>x.agent==='stored-evidence:'+system.pwsid&&coversStored(system))));
+ const observationMissing=!privateWell&&(data.systems||[]).some(x=>x.warehouse?.observation_status==='unavailable'&&!coversStored(x));
+ const archiveMissing=!privateWell&&(data.systems||[]).some(x=>x.archive&&(x.archive.retrieval?.status==='unavailable'||x.archive.serving_ready===false||['qualified-archives-unavailable','validation-update-pending'].includes(x.archive.status)||['unavailable','busy','not-acquired'].includes(x.archive.compliance?.status)));
+ const data_status={status:saved.length?'saved':sourceMissing||archiveMissing||observationMissing?'partial':'available',last_verified_at:saved.map(x=>x.checked_at).filter(Boolean).sort()[0]||null,refresh_available:saved.length>0||sourceMissing||archiveMissing||observationMissing};
+ // Missing history is not a negative test result. Existing elevated findings
+ // remain visible, while a partial response cannot become an all-clear label.
+ if(data_status.status!=='available'&&risk_profile.overall==='screened')risk_profile.overall='verify';
  const access_plan=buildAccessPlan(data,{privateWell,findings,compliance,providers,serviceLine:service});
- const source_availability=(data.audit||[]).map(x=>({source:x.agent,status:x.status,error_code:x.error_code||null})).sort((a,b)=>a.source.localeCompare(b.source));
+ const source_availability=(data.audit||[]).map(x=>({source:x.agent,status:x.status,retrieval_status:x.retrieval_status||null,verified_at:x.verified_at||null,error_code:x.error_code||null})).sort((a,b)=>a.source.localeCompare(b.source));
  const warehouse_observation_rows=(data.systems||[]).reduce((sum,x)=>sum+Number(x.warehouse?.counts?.observation||0),0);
  const warehouse_violation_rows=(data.systems||[]).reduce((sum,x)=>sum+Number(x.warehouse?.counts?.violation||0),0);
  const loaded_observation_rows=(data.systems||[]).reduce((sum,x)=>sum+(x.warehouse?.observations?.length||0),0);
  const archive_summary_rows=(data.systems||[]).reduce((sum,x)=>sum+(x.archive?.summaries?.length||0),0);
+ const sample_record_sources=(data.systems||[]).filter(x=>Number(x.warehouse?.counts?.observation)>0).map(system=>{
+  const source=system.warehouse?.sources?.find(x=>x.source==='ucmr5');
+  return {provider:providerName(system,candidates),records:Number(system.warehouse.counts.observation),source_checked_at:source?.completed_at||null,source_sha256:source?.source_sha256||null,used_for_findings:preferredUcmr5Source(system)==='warehouse'};
+ });
  const truncation={
    warehouse_observations:(data.systems||[]).some(x=>x.warehouse?.truncated?.observations===true),
    warehouse_violations:(data.systems||[]).some(x=>x.warehouse?.truncated?.violation_records===true),
+   historical_water_summaries:(data.systems||[]).some(x=>x.archive?.truncated===true),
+   compliance_history:(data.systems||[]).some(x=>x.archive?.compliance?.truncated===true),
    live_environment:data.environment?.status==='partial',
    nearby_wells:data.property?.wells?.truncated===true||data.well_records?.truncated===true,
    cleanup_sites:data.property?.cleanup_sites?.truncated===true
@@ -162,6 +188,7 @@ function buildResidentReport(data){
    water_findings:findings.length,
    underlying_water_observation_rows:warehouse_observation_rows,
    loaded_water_observation_rows:loaded_observation_rows,
+   sample_record_sources,
    historical_water_summaries:archive_summary_rows,
    warehouse_violation_rows,
    compliance_groups:compliance.length,
@@ -176,8 +203,8 @@ function buildResidentReport(data){
    truncation,
    environmental_archive_state:data.coverage?.completion?.environmental_archive||null,
    source_availability,
-   count_note:'These counts describe different evidence types and are not added into one misleading total. Water findings are summaries; underlying sample rows can be much larger.'
+   count_note:'One water finding can summarize many tests of the same substance. Individual test records are kept from the dated source copies listed below. The counts overlap and should not be added together.'
  };
- return {version:'resident-report/5',headline,summary,address:data.address?.matched_address||null,address_choices:data.address?.candidates||[],providers,provider_match_method:data.provider?.method||'service-area',provider_ambiguity:candidates.length>1||data.provider?.method==='local-directory'||data.provider?.conflict===true,private_well:privateWell,findings,detected_substances:detectedNames.size,compliance,actions,access_plan,complete_evidence,service_line:service||null,location:data.address?.geography||{},scope_note:'This address screening combines all evidence available to the lookup and labels each signal by what produced it. Use the detailed records below to inspect the evidence behind each tile.',advisories:notices,current_advisories_checked:(notices.checks||[]).some(c=>c.status==='checked'),advisories_comprehensive:false,household_safety:'not-determined',address_risk_level:risk_profile.overall,risk_profile,accuracy_check,generated_at:data.generated_at};
+ return {version:'resident-report/5',headline,summary,address:data.address?.matched_address||null,address_choices:data.address?.candidates||[],providers,provider_match_method:data.provider?.method||'service-area',provider_ambiguity:candidates.length>1||data.provider?.method==='local-directory'||data.provider?.conflict===true,private_well:privateWell,findings,detected_substances:detectedNames.size,compliance,actions,access_plan,complete_evidence,data_status,service_line:service||null,location:data.address?.geography||{},scope_note:'This address screening combines all evidence available to the lookup and labels each signal by what produced it. Use the detailed records below to inspect the evidence behind each tile.',advisories:notices,current_advisories_checked:(notices.checks||[]).some(c=>c.status==='checked'),advisories_comprehensive:false,household_safety:'not-determined',address_risk_level:risk_profile.overall,risk_profile,accuracy_check,generated_at:data.generated_at};
 }
-module.exports={buildResidentReport,comparison,sourceLink,addressRiskProfile,addressQuality,distanceMeters};
+module.exports={buildResidentReport,comparison,sourceLink,addressRiskProfile,addressQuality,distanceMeters,preferredUcmr5Source};

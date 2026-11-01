@@ -566,5 +566,6 @@
   "supportedWaterTotal": "Cargos de agua esperados que se muestran aquí",
   "denverScope": "Denver Water, una vivienda, factura mensual normal de 2026. Introduce los galones y el cargo por consumo sin los cargos por sequía ni los fijos. Otros servicios, créditos y saldos anteriores van aparte.",
   "denverDetails": "Usa el tipo de servicio, tamaño del medidor y límite de consumo invernal confirmados por Denver Water. El límite es de 5,000–15,000 galones. Introduce las fechas de consumo, no la de pago. Si la factura cruza el 1 de mayo, pide a la compañía que explique el cargo por sequía.",
-  "gallonsUsed": "Agua consumida (galones de EE. UU.)"
+  "gallonsUsed": "Agua consumida (galones de EE. UU.)",
+  "tryAgain": "Intentar de nuevo"
 }

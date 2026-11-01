@@ -92,17 +92,18 @@ function residentClient(){
  }
  function renderEverythingFound(r,data,main){
   const counts=r.complete_evidence||{};
-  const findings=counts.unique_water_findings||0,rows=counts.underlying_water_observation_rows||0;
+  const findings=counts.water_findings??counts.unique_water_findings??0;
   const section=n('details',undefined,'complete-evidence collapsed-evidence');
-  section.append(n('summary','See everything we found'+(findings||rows?' · '+findings+' findings'+(rows?' · '+Number(rows).toLocaleString('en-US')+' records checked':''):'')));
+  section.append(n('summary','See everything we found'+(findings?' · '+Number(findings).toLocaleString('en-US')+' water findings':'')));
   section.append(n('h2','All records for this address'));
   p(section,'Explore the source records here, or continue below for affordable testing and next steps.','complete-intro');
   p(section,'Reading the numbers: mg/L means milligrams per liter; µg/L or ug/L means micrograms per liter, a thousand times smaller. These units describe how much is in the sample. “Below the reporting limit” means the lab could not measure an amount that small; it does not mean zero.','muted');
   const countGrid=n('div',undefined,'evidence-counts');
   for(const [value,label] of [
    [Math.min(4,(r.risk_profile?.priority_risks||r.risk_profile?.risks||[]).length),'priority results shown first'],
-   [counts.unique_water_findings||0,'unique water findings'],
-   [counts.underlying_water_observation_rows||0,'water sample records checked'],
+   [findings,'water-test findings'],
+   [counts.underlying_water_observation_rows||0,'individual test records in saved copies'],
+   [counts.historical_water_summaries||0,'older and recent test summaries'],
    [counts.compliance_issues||0,'past system issues'],
    [counts.nearby_environmental_records||0,'nearby environmental records returned'],
    [counts.nearby_well_records||0,'nearby well records returned'],
@@ -111,10 +112,13 @@ function residentClient(){
   ]){const box=n('article');box.append(n('strong',Number(value).toLocaleString('en-US')),n('span',label));countGrid.append(box);}
   section.append(countGrid);
   p(section,counts.count_note||'One result may combine several samples. The counts below show results and sample records separately.','muted');
+  for(const source of counts.sample_record_sources||[])p(section,source.provider+': '+Number(source.records).toLocaleString('en-US')+' individual test records'+(source.source_checked_at?' from the source checked on '+date(source.source_checked_at):' in the saved source copy')+'.'+(source.used_for_findings?'':' The water findings above use a newer or more complete source copy.'),'muted');
   if(counts.environmental_archive_state&&/backfill|incremental|active/i.test(String(counts.environmental_archive_state)))p(section,'We are still adding older environmental records. New results may appear as more public information becomes available.','attention');
   const capped=[];
   if(counts.truncation?.warehouse_observations)capped.push('water sample results');
   if(counts.truncation?.warehouse_violations)capped.push('past water-system issues');
+  if(counts.truncation?.historical_water_summaries)capped.push('older water-test results');
+  if(counts.truncation?.compliance_history)capped.push('older water-system issues');
   if(counts.truncation?.live_environment)capped.push('live environmental readings');
   if(counts.truncation?.nearby_wells)capped.push('nearby wells');
   if(counts.truncation?.cleanup_sites)capped.push('cleanup sites');
@@ -166,7 +170,8 @@ function residentClient(){
   const status=n('details',undefined,'source-ledger');status.append(n('summary','Where these results came from'));
   p(status,'Each check below shows whether we received a response. A test of your tap is the way to check the water in your home.','muted');
   const statusList=n('div');
-  for(const source of counts.source_availability||[]){const row=n('div',undefined,'source-ledger-row '+(source.status==='completed'?'source-ok':'source-missing'));row.append(n('strong',source.source),n('span',source.status==='completed'?'Checked':'Could not check this time'));statusList.append(row);}
+  const sourceNames={'address-resolution':'Address match','provider-candidates':'Water provider map','boundary-ambiguity-screen':'Nearby provider boundaries','published-local-water-systems':'Local provider listings','matched-city-water-systems':'Local provider listings','environmental-context':'Nearby water records','archived-environmental-context':'Older nearby water records','property-and-groundwater-evidence':'Property and groundwater records','state-well-records':'Well records','current-official-advisories':'Current water notices','census-access-context':'Community assistance context','public-system':'Water provider records','stored-evidence':'Recent water-test records','historical-archive':'Water-test history'};
+  for(const source of counts.source_availability||[]){const row=n('div',undefined,'source-ledger-row '+(source.status==='completed'?'source-ok':'source-missing'));const name=sourceNames[source.source]||sourceNames[String(source.source||'').split(':')[0]]||'Public water records';row.append(n('strong',name),n('span',source.retrieval_status==='saved'?'Showing saved records from '+date(source.verified_at):source.status==='completed'?'Checked':'Not checked this time'));statusList.append(row);}
   status.append(statusList);section.append(status);
 
   const technical=n('p',undefined,'technical-link');technical.append(a('Open the separate technical report →','/water-details'));section.append(technical);
@@ -178,6 +183,11 @@ function residentClient(){
   main.append(n('p','YOUR WATER RESULTS','mini-kicker'),n('h2',label));
   p(main,r.address||input.value,'report-address');
   p(main,'Start with these results. They describe available records, not a test of your faucet. Health effects depend on the amount and length of exposure.','snapshot-intro');
+  if(r.data_status?.refresh_available){
+   const notice=n('div',undefined,'record-status');notice.setAttribute('role','status');
+   p(notice,r.data_status.status==='saved'?'Showing verified records last checked on '+date(r.data_status.last_verified_at)+'. We could not refresh every source this time.':'Some records could not be checked this time. Showing the verified records available.','attention');
+   const retry=n('button','Check again','secondary');retry.type='button';retry.addEventListener('click',()=>submitLookup());notice.append(retry);main.append(notice);
+  }
 
   const tiles=n('div',undefined,'risk-tiles');
   const profile=(r.risk_profile?.priority_risks||r.risk_profile?.risks||[]).slice(0,4);

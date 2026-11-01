@@ -6,11 +6,12 @@ class Element{
  set textContent(v){this._text=String(v);this.children=[];}get textContent(){return this._text+this.children.map(x=>x.textContent).join(' ');}
  append(...nodes){this.children.push(...nodes);}replaceChildren(...nodes){this._text='';this.children=nodes;}setAttribute(k,v){this.attrs[k]=v;}addEventListener(k,v){this.listeners[k]=v;}focus(){}scrollIntoView(){}reportValidity(){return true;}
 }
-async function render(privateWell,extraFindings=[]){
+async function render(privateWell,extraFindings=[],reportFields={}){
  let client=CLIENT;
  if(process.env.LIVE_ORIGIN){assert.equal(process.env.LIVE_ORIGIN,'https://www.ismywaterok.com');const r=await fetch(process.env.LIVE_ORIGIN+'/national-client.js',{signal:AbortSignal.timeout(30000)});assert.equal(r.status,200);client=await r.text();assert.ok(client.length<100000);}
  const ids=['lookup-form','address','supply','lookup-button','message','results','how-it-works','progress','public-impact'];const nodes=Object.fromEntries(ids.map(id=>[id,new Element('div')]));nodes.address.value='Synthetic test only';nodes.supply.value=privateWell?'private-well':'public';
  const report={headline:'Fixture report',summary:'Fixture only',private_well:privateWell,providers:[],access_plan:{money_summary:{potential_savings_low:10,potential_savings_high:10,savings_test:'Fixture test'},personalized:{},option_inventory:{}},actions:[{title:'Concrete next step',text:'Contact the verified source.'}],findings:privateWell?[]:[...extraFindings,{name:'Example analyte',provider:'Fixture system',result:'Below reporting limit',scope:'system-monitoring',first_sample:'2020-01-01',last_sample:'2020-01-01'}],risk_profile:{overall:'watch',risks:[{title:'Example analyte',level:'watch',meaning:'Fixture meaning',action:'Fixture action',evidence:'Fixture source'}]},compliance:[],generated_at:'2026-09-18',advisories:{records:[{title:'Fixture urgent notice',area:'Fixture area',affected_population:'All',guidance:'Follow the source',source_is_recent:true}],checks:[]}};
+ Object.assign(report,reportFields);
  vm.runInNewContext(client,{document:{getElementById:id=>nodes[id],createElement:t=>new Element(t)},URL,Date,Map,AbortController,setTimeout,clearTimeout,fetch:async url=>({ok:true,json:async()=>url==='/api/national/impact'?{analytics:{views:12345,users:6789,updated_at:'2026-10-14T12:00:00Z'},savings:{potential_savings:25,since:'2026-10-14'}}:{resident_report:report}})});
  nodes['lookup-form'].listeners.submit({preventDefault(){}});for(let i=0;i<5;i++)await new Promise(setImmediate);
  assert.equal(nodes.message.textContent,'Your report is ready.');assert.match(nodes['public-impact'].textContent,/Lifetime views 12,345 Total users 6,789/);assert.doesNotMatch(nodes['public-impact'].textContent,/savings|\$/i);return nodes.results.children;
@@ -40,4 +41,11 @@ test('GA4 follows exact introduction and aggregate savings appear only in the ac
  const savings=plan.children.filter(x=>x.className==='clean-money aggregate-savings');
  assert.equal(savings.length,1);assert.match(savings[0].textContent,/Potential testing savings identified.*\$25/);
  assert.match(savings[0].textContent,/do not mean someone bought a test or saved this money/);
+});
+
+test('saved records show a simple dated notice and keep different counts distinct',async()=>{
+ const [main]=await render(false,[],{data_status:{status:'saved',refresh_available:true,last_verified_at:'2026-10-30T12:00:00Z'},complete_evidence:{water_findings:200,underlying_water_observation_rows:30,historical_water_summaries:200,source_availability:[{source:'historical-archive:NY0000001',status:'completed',retrieval_status:'saved',verified_at:'2026-10-30T12:00:00Z'}]}});
+ const notice=main.children.find(x=>x.className==='record-status');assert.match(notice.textContent,/Showing verified records last checked on.*2026/);assert.equal(notice.children[1].textContent,'Check again');
+ assert.match(main.textContent,/200 water findings/);assert.match(main.textContent,/30 individual test records in saved copies/);assert.doesNotMatch(main.textContent,/records checked|unique water findings|historical-archive|NY0000001/);
+ assert.ok(main.children.indexOf(notice)<main.children.findIndex(x=>x.className==='risk-tiles'));
 });

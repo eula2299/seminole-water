@@ -19,6 +19,24 @@ function defaultPostgresSources(env=process.env){
  if(String(env.NATIONAL_POSTGRES_VIOLATIONS_ENABLED||'').toLowerCase()==='true')sources.push('sdwis-violations');
  return sources;
 }
+// A verified, current archive is the serving source; PostgreSQL remains an
+// intact fallback. Do not allocate another full snapshot merely to duplicate it.
+function archiveServingSource(source,inventory,{now=Date.now(),freshnessMs=7*86400000}={}){
+ if(inventory?.schema!=='occurrence-warehouse/2'||inventory.serving_ready!==true)return null;
+ let receipt;
+ if(source==='sdwis'){
+  const directory=inventory.compliance_archive?.directory;
+  if(directory?.status!=='available'||!(Number(directory.source_rows)>0))return null;
+  receipt=directory.source;
+ }else if(source==='ucmr5'){
+  const item=inventory.sources?.ucmr5;
+  if(item?.count_state!=='published'||item.parser_current!==true||!(Number(item.eligible_source_records)>0))return null;
+  receipt=item;
+ }else return null;
+ const checked=Date.parse(receipt?.checked_at||receipt?.retrieved_at);
+ if(receipt?.url!==SOURCES[source].url||!(/^[a-f0-9]{64}$/i).test(receipt?.sha256||'')||!Number.isFinite(checked)||checked>now+300000||now-checked>freshnessMs)return null;
+ return {source,status:'archive-serving',source_url:receipt.url,source_sha256:receipt.sha256,checked_at:receipt.checked_at||receipt.retrieved_at,postgres_snapshot:'retained-fallback'};
+}
 function approved(value){const u=new URL(value);if(u.protocol!=='https:'||u.port&&u.port!=='443'||u.username||u.password||!['www.epa.gov','echo.epa.gov'].includes(u.hostname))throw new Error('UNAPPROVED_DOWNLOAD_URL');return u;}
 async function request(url,options={},fetchImpl=fetch){
  let u=approved(url);
@@ -81,12 +99,16 @@ async function importArchive(file,source,job,{url=SOURCES[source]?.url,batchSize
   await flush();return {source_rows:sourceRows,kinds:[...kinds]};
  }catch(e){child.kill('SIGTERM');await exited.catch(()=>{});throw e;}finally{lines.close();}
 }
-async function syncSource(source,{warehouse,fetchImpl=fetch,inputFile,sourceUrl,force=false,freshnessMs=7*86400000,log=console.log}={}){
+async function syncSource(source,{warehouse,fetchImpl=fetch,inputFile,sourceUrl,force=false,freshnessMs=7*86400000,archive,log=console.log}={}){
  if(!SOURCES[source])throw new Error('UNKNOWN_SOURCE');
  const own=!warehouse;if(own)warehouse=createWarehouse();
  let job,temp,capacityProbe=null;
  try{
   if(!force&&!inputFile){
+   try{
+    const serving=archive===undefined?require('./archive').createArchive({fetchImpl}):archive;
+    if(serving){const result=archiveServingSource(source,await serving.status(),{freshnessMs});if(result){log({event:'source-served-from-verified-archive',...result});return result;}}
+   }catch{/* Keep the existing database refresh/fallback path on archive failure. */}
    const status=await warehouse.status();const active=status.sources.find(s=>s.source===source);
    if(active?.run_id&&Date.now()-new Date(active.checked_at||active.completed_at).getTime()<freshnessMs)return {source,status:'fresh',run_id:active.run_id};
    // Keep checking unchanged sources even when a new snapshot cannot fit.
@@ -150,4 +172,4 @@ if(require.main===module){
  if(args.includes('--help')){console.log('node national/sync.js --source ucmr5|sdwis|sdwis-violations|all [--input-file official.zip]\nDefault all imports UCMR5 + SDWIS system directory. Full violation/enforcement history is served by the object-store compliance archive; set NATIONAL_POSTGRES_VIOLATIONS_ENABLED=true to include the duplicate Postgres snapshot.');}
  else (async()=>{const source=val('--source')||'all';for(const s of source==='all'?defaultPostgresSources():[source]){try{console.log(JSON.stringify(await syncSource(s,{inputFile:val('--input-file'),force:args.includes('--force'),log:e=>console.log(JSON.stringify(e))})));}catch(e){console.error(JSON.stringify({source:s,status:'failed',error_code:e.code||String(e.message).split(':')[0]}));process.exitCode=1;}}})().catch(e=>{console.error('National import failed:',e.code||'IMPORT_FAILED');process.exitCode=1;});
 }
-module.exports={SOURCES,defaultPostgresSources,approved,request,discoverUcmr,download,importArchive,syncSource,startBackgroundSync};
+module.exports={SOURCES,defaultPostgresSources,archiveServingSource,approved,request,discoverUcmr,download,importArchive,syncSource,startBackgroundSync};
