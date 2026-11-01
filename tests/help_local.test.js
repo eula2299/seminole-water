@@ -13,3 +13,7 @@ test('local finder displays only grounded pages with independently matched quote
 test('fabricated quotes and nonofficial source hosts cannot become verified assistance',async()=>{
  const url='https://fixture.gov/help';const finder=createLocalHelp({ai:{enabled:true,discover:async()=>({result:{items:[{url,quote:'Everyone is paid $500 today.'}]},grounding:{groundingChunks:[{web:{uri:url}}]}})},readPage:async()=>({url,title:'Help',text:'Call the office for program details.'})});assert.deepEqual((await finder.search({city:'Example',state:'NY'})).items,[]);
 });
+test('official-directory reading continues when the search provider rejects its quota',async()=>{
+ let reads=0;const finder=createLocalHelp({ai:{enabled:true,discover:async()=>{throw Error('SEARCH_PAUSED');},discoverPages:async({pages})=>({items:[{url:pages[0].url,quote:'Call our office for help paying your water bill.',date_label:'',deadline_label:''}]})},readPage:async url=>{reads++;return {url,title:'Official assistance',text:'Call our office for help paying your water bill.',links:[]};}});
+ const r=await finder.search({city:'Example',state:'NY',kind:'assistance'});assert.equal(r.items.length,1);assert.equal(r.status,'verified_pages');assert.ok(reads>=1);
+});

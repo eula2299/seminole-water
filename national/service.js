@@ -4,7 +4,9 @@ const {getHealthContext}=require('./health_context');
 const {buildResidentReport}=require('./resident');
 const {modelReadiness}=require('./model_readiness');
 const {parseAcsContext}=require('./access_plan');
+const neighborhoodSource=require('./neighborhood');
 const ENDPOINTS=Object.freeze({
+  ...neighborhoodSource.ENDPOINTS,
   acs:'https://api.census.gov/data/2024/acs/acs5',
   census:'https://geocoding.geo.census.gov/geocoder/geographies/address',
   censusOneLine:'https://geocoding.geo.census.gov/geocoder/geographies/onelineaddress',
@@ -39,6 +41,7 @@ function transport({fetchImpl=globalThis.fetch,timeoutMs=6500,maxBytes=2000000}=
 }
 function query(base,params){const u=new URL(base);for(const[k,v]of Object.entries(params))if(v!==''&&v!=null)u.searchParams.set(k,String(v));return u.toString();}
 function createEngine({request=transport(),warehouse=null,archive=null,context=null,propertyContext=null,advisories=null,now=()=>new Date(),deadlineMs=28000}={}){
+ const neighborhood=neighborhoodSource.createNeighborhood();
  async function lookup(raw){
   const input=validateInput(raw),signal=AbortSignal.timeout(deadlineMs),audit=[];
   async function stage(name,fn){const started=now().toISOString();try{signal.throwIfAborted();const value=await fn();audit.push({agent:name,type:'deterministic',status:'completed',retrieved_at:started});return value;}catch(e){audit.push({agent:name,type:'deterministic',status:'unavailable',retrieved_at:started,error_code:e.code||'SOURCE_UNAVAILABLE'});return null;}}
@@ -68,8 +71,9 @@ function createEngine({request=transport(),warehouse=null,archive=null,context=n
   const propertyJob=propertyContext&&address?.status==='matched'?stage('property-and-groundwater-evidence',()=>propertyContext(address,{signal,supplyType:input.supply_type})):Promise.resolve(null);
   const wellArchiveJob=archive?.lookupWells&&address?.status==='matched'?stage('state-well-records',()=>archive.lookupWells(address)):Promise.resolve(null);
   const equityJob=address?.status==='matched'&&address.geography?.tract?.geoid&&address.geography?.county?.geoid?stage('census-access-context',async()=>{
+   if(!process.env.CENSUS_API_KEY)return neighborhood(address,get);
    const tract=String(address.geography.tract.geoid),county=String(address.geography.county.geoid);
-   const params={get:'NAME,B19013_001E,B17001_001E,B17001_002E,B25003_001E,B25003_003E,B25034_001E,B25034_007E,B25034_008E,B25034_009E,B25034_010E,B25034_011E',for:'tract:'+tract.slice(-6),in:'state:'+tract.slice(0,2)+' county:'+county.slice(-3)};
+   const params={key:process.env.CENSUS_API_KEY,get:'NAME,B19013_001E,B17001_001E,B17001_002E,B25003_001E,B25003_003E,B25034_001E,B25034_007E,B25034_008E,B25034_009E,B25034_010E,B25034_011E',for:'tract:'+tract.slice(-6),in:'state:'+tract.slice(0,2)+' county:'+county.slice(-3)};
    return parseAcsContext(await get(query(ENDPOINTS.acs,params)),address);
   }):Promise.resolve(null);
   let candidates=[],boundaryStatus='not-requested',nearby=[],nearbyStatus='not-requested';

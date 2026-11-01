@@ -20,7 +20,8 @@ function parseAcsContext(payload,address={}){
   if(!Array.isArray(payload)||payload.length<2||!Array.isArray(payload[0])||!Array.isArray(payload[1]))return null;
   const header=payload[0],row=payload[1],values={};for(let i=0;i<header.length;i++)values[header[i]]=row[i];
   const housingTotal=finite(values.B25034_001E);
-  const older=['B25034_007E','B25034_008E','B25034_009E','B25034_010E','B25034_011E'].reduce((sum,key)=>sum+(finite(values[key])||0),0);
+  const olderValues=['B25034_007E','B25034_008E','B25034_009E','B25034_010E','B25034_011E'].map(key=>finite(values[key]));
+  const older=olderValues.every(v=>v!==null)?olderValues.reduce((sum,value)=>sum+value,0):null;
   const median=finite(values.B19013_001E);
   return {
     source:'U.S. Census Bureau 2024 ACS 5-year estimates',
@@ -30,7 +31,7 @@ function parseAcsContext(payload,address={}){
     median_household_income:median,
     poverty_percent:percent(values.B17001_002E,values.B17001_001E),
     renter_percent:percent(values.B25003_003E,values.B25003_001E),
-    pre_1980_housing_percent:housingTotal>0?Math.round(older/housingTotal*1000)/10:null,
+    pre_1980_housing_percent:housingTotal>0&&older!==null?Math.round(older/housingTotal*1000)/10:null,
     household_inference:false,
     note:'Neighborhood-level estimates only. They do not identify this household\'s income, race, tenure, or ability to pay.'
   };
