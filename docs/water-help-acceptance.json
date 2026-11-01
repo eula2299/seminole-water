@@ -1,0 +1,312 @@
+{
+  "checked_at": "2026-11-01",
+  "baseline_commit": "e471eb3f5738d026e284a8bff9637519eae3693d",
+  "nationwide_complete": false,
+  "features": [
+    {
+      "feature": "address results",
+      "route": "/api/national/lookup",
+      "implementation": [
+        "national/service.js",
+        "national/ui.js"
+      ],
+      "sources": [
+        "EPA SDWIS/UCMR",
+        "Census",
+        "USGS/WQP",
+        "official service areas"
+      ],
+      "coverage": "Nationwide input; source and exact-property coverage varies",
+      "test_files": [
+        "tests/national_resident_layout.test.js"
+      ],
+      "remaining": "Broader rural, tribal, territory and ambiguous-address production acceptance"
+    },
+    {
+      "feature": "live analytics and savings",
+      "route": "/api/national/impact",
+      "implementation": [
+        "national/public_metrics.js",
+        "national/ui.js"
+      ],
+      "sources": [
+        "GA4",
+        "persisted potential savings"
+      ],
+      "coverage": "Views are page views; savings remain potential",
+      "test_files": [
+        "tests/national_resident_layout.test.js"
+      ],
+      "remaining": "Fresh production values must be checked after deploy"
+    },
+    {
+      "feature": "testing options and contacts",
+      "route": "/api/national/testing-options; /api/national/action-contact",
+      "implementation": [
+        "national/testing_catalog.js",
+        "national/action_contacts.js"
+      ],
+      "sources": [
+        "official published programs",
+        "verified catalog"
+      ],
+      "coverage": "Nationwide routes with selected priced products and local programs",
+      "test_files": [
+        "tests/national_actions.test.js",
+        "tests/national_action_contacts.test.js"
+      ],
+      "remaining": "Continue local provider and assistance coverage; do not invent prices or recipients"
+    },
+    {
+      "feature": "voice and five next actions",
+      "route": "/api/national/voice-config",
+      "implementation": [
+        "national/voice.js",
+        "national/ui.js"
+      ],
+      "sources": [
+        "Gemini",
+        "lookup context"
+      ],
+      "coverage": "15-minute calls; resident controls drafts",
+      "test_files": [
+        "tests/national_voice.test.js",
+        "tests/national_action_ui.test.js"
+      ],
+      "remaining": "Full live audio-call acceptance remains unrecorded"
+    },
+    {
+      "feature": "contact and feedback",
+      "route": "/contact; /feedback",
+      "implementation": [
+        "server.js"
+      ],
+      "sources": [
+        "private message system"
+      ],
+      "coverage": "Existing routes retained",
+      "test_files": [
+        "tests/simple_frontend.test.js",
+        "tests/community.test.js"
+      ],
+      "remaining": "Browser regression after release"
+    },
+    {
+      "feature": "lab upload and explanations",
+      "route": "/help; /api/help/analyze",
+      "implementation": [
+        "public/help/documents.js",
+        "public/help/logic.js",
+        "justice/ai.js"
+      ],
+      "sources": [
+        "resident-selected document",
+        "consented Gemini"
+      ],
+      "coverage": "Local text/OCR; 10 MB and 12 PDF pages; user reviews extracted facts",
+      "test_files": [
+        "tests/help_logic.test.js",
+        "tests/help_ai_groups.test.js"
+      ],
+      "remaining": "Expand malformed/scanned-document and slow-device acceptance"
+    },
+    {
+      "feature": "filter costs and maintenance",
+      "route": "/api/help/filters",
+      "implementation": [
+        "justice/filter-catalog.json",
+        "public/help/extended-logic.js"
+      ],
+      "sources": [
+        "dated exact product/cartridge catalog"
+      ],
+      "coverage": "Selected catalog; first/three-year pack costs and earlier time/volume replacement",
+      "test_files": [
+        "tests/help_logic.test.js",
+        "tests/help_expanded.test.js"
+      ],
+      "remaining": "Recurring official price and certification re-verification"
+    },
+    {
+      "feature": "bill arithmetic and tariffs",
+      "route": "/api/help/rates",
+      "implementation": [
+        "justice/research-rates-status.json",
+        "justice/extended-sources.js",
+        "public/help/extended-logic.js"
+      ],
+      "sources": [
+        "Minneapolis 2026",
+        "Denver Water 2026"
+      ],
+      "coverage": "Minneapolis use line; Denver single-family confirmed class/meter/allowance/dates",
+      "test_files": [
+        "tests/help_expanded.test.js"
+      ],
+      "remaining": "Other utilities and 2027 tariffs require verified adapters"
+    },
+    {
+      "feature": "official forms",
+      "route": "/help",
+      "implementation": [
+        "justice/local-sources.json",
+        "public/help/documents.js"
+      ],
+      "sources": [
+        "USDA RD3550-35",
+        "resident-uploaded fillable PDF"
+      ],
+      "coverage": "Mapped USDA intake plus recognized PDF fields; excludes signature/government ID autofill",
+      "test_files": [
+        "tests/help_expanded.test.js"
+      ],
+      "remaining": "More exact official form mappings; USDA form expiry 2026-11-30"
+    },
+    {
+      "feature": "property pipes",
+      "route": "/api/help/pipes",
+      "implementation": [
+        "justice/sources.js",
+        "justice/local-sources.json",
+        "national/service_lines.js"
+      ],
+      "sources": [
+        "Denver",
+        "Pittsburgh",
+        "Minneapolis",
+        "NYC national connector",
+        "EPA utility inventory"
+      ],
+      "coverage": "Selected exact-address inventories; EPA aggregate is not household evidence",
+      "test_files": [
+        "tests/help_sources.test.js"
+      ],
+      "remaining": "More official exact-property connectors; ambiguity now preserved"
+    },
+    {
+      "feature": "repair status",
+      "route": "/api/help/request-status",
+      "implementation": [
+        "justice/extended-sources.js"
+      ],
+      "sources": [
+        "Pittsburgh 311/WPRDC"
+      ],
+      "coverage": "Exact case number and year; NYC receipt portal only",
+      "test_files": [
+        "tests/help_expanded.test.js"
+      ],
+      "remaining": "More verified receipt-compatible read-only feeds"
+    },
+    {
+      "feature": "meetings and participation",
+      "route": "/api/help/meetings",
+      "implementation": [
+        "justice/sources.js"
+      ],
+      "sources": [
+        "Denver Legistar",
+        "Pittsburgh Legistar",
+        "official local pages"
+      ],
+      "coverage": "Two direct calendars; user-controlled calendar download",
+      "test_files": [
+        "tests/help_sources.test.js",
+        "tests/help_expanded.test.js"
+      ],
+      "remaining": "More official feeds, cancellations and authorized alert delivery"
+    },
+    {
+      "feature": "local assistance and rights",
+      "route": "/api/help/local; /api/help/agencies",
+      "implementation": [
+        "justice/local-help.js",
+        "justice/agencies.json",
+        "justice/governments.json",
+        "justice/program-pages.json"
+      ],
+      "sources": [
+        "official jurisdiction directories",
+        "protected official-page fetches"
+      ],
+      "coverage": "56 jurisdiction routes and city registry; quoted household-help evidence",
+      "test_files": [
+        "tests/help_local.test.js"
+      ],
+      "remaining": "Discovery does not guarantee every local program or eligibility"
+    },
+    {
+      "feature": "private evidence and follow-up",
+      "route": "/help",
+      "implementation": [
+        "public/help/vault.js",
+        "public/help/extended.js"
+      ],
+      "sources": [
+        "resident records"
+      ],
+      "coverage": "Encrypted device vault or session-only mode; exports and user-submitted requests",
+      "test_files": [
+        "tests/help_vault.test.js",
+        "tests/help_expanded.test.js"
+      ],
+      "remaining": "Broader quota, interrupted-write and assistive-device acceptance"
+    },
+    {
+      "feature": "shared requests and commitments",
+      "route": "/api/help/groups; /api/help/promises/list",
+      "implementation": [
+        "justice/groups.js",
+        "justice/promises.js"
+      ],
+      "sources": [
+        "consented resident contributions",
+        "public official source links"
+      ],
+      "coverage": "Postgres storage, owner permissions, private supporter details",
+      "test_files": [
+        "tests/help_ai_groups.test.js",
+        "tests/help_expanded.test.js"
+      ],
+      "remaining": "No seeded public commitments; repeat isolated production write lifecycle only when necessary"
+    },
+    {
+      "feature": "AI resilience and languages",
+      "route": "/api/help/config",
+      "implementation": [
+        "justice/ai-budget.js",
+        "justice/ai.js",
+        "public/help/i18n.js"
+      ],
+      "sources": [
+        "Gemini",
+        "shared PostgreSQL UTC-day counter"
+      ],
+      "coverage": "Six languages; Arabic RTL; deployment-wide help-AI daily cap",
+      "test_files": [
+        "tests/help_expanded.test.js",
+        "tests/help_server.test.js"
+      ],
+      "remaining": "Live screen-reader/audio and global voice budget remain separate checks"
+    },
+    {
+      "feature": "national imports and archive",
+      "route": "/api/national/status",
+      "implementation": [
+        "national/warehouse.js",
+        "national/runtime.js"
+      ],
+      "sources": [
+        "published snapshots",
+        "object evidence archive"
+      ],
+      "coverage": "Retained data readable; fresh imports capacity-paused",
+      "test_files": [
+        "tests/national_warehouse.test.js",
+        "tests/test_national_warehouse.py",
+        "tests/test_national_compliance_archive.py"
+      ],
+      "remaining": "Storage approval and fresh publication verification required"
+    }
+  ]
+}

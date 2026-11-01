@@ -85,3 +85,14 @@ Six public-address checks returned 174–478 water findings in Seattle, New York
 The local finder also uses the official CISA .gov registry to match public city/county office websites by exact city and state. Only domain, organization, city, state and organization type are retained; security-contact email addresses are excluded. Relevant linked pages are fetched with the same IP/redirect protections and quotes are verified before display. An office's registered city is not proof of household service or program eligibility.
 
 The finder prioritizes program links over navigation and news, extracts article text without repeated site menus, and can verify additional AI-suggested informational routes on the exact official hostnames already matched to the location. These suggestions are never displayed as results unless the page is retrieved and its quote matches. Query-string, credential-bearing and unrelated-host hints are rejected.
+
+
+### Continuation: November 1, 2026
+
+The rate registry now exposes Denver Water's 2026 single-family schedule as a tiered adapter, alongside Minneapolis's existing water-use comparison. Denver requires confirmed service class, meter size, winter allowance and usage dates. It compares base water use, temporary drought and fixed charges separately; it does not include credits, other services or old balances in the tariff subtotal. Crossing May 1, missing details and 2027 reads do not produce a guessed comparison. UI labels and results support all six languages without discarding entered values.
+
+Help-AI daily attempts now use an atomic PostgreSQL counter when DATABASE_URL is present. All help-AI instances share the UTC-day limit, including restarts. Database failure prevents a provider request instead of bypassing the cap. Local development without a database retains the process cap. This does not replace Gemini quotas or the separate voice service's limits. The public config reports `ai_budget_scope`; the budget table contains dates and counts only. In-flight concurrency remains bounded per process.
+
+Property pipe inventory reads reject truncated or malformed responses. Multiple exact-address records return `ambiguous`, preserving the records without choosing one pipe material. The resident flow continues to official local help.
+
+See `docs/water-help-acceptance.json` for the maintained feature/source/verification inventory and `docs/storage-investigation-2026-11-01.json` for measured capacity and the approval-dependent plan. These do not assert nationwide completion.

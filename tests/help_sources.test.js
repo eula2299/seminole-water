@@ -101,3 +101,11 @@ test("comment deadline is only derived for known meeting types, retaining timezo
   );
   assert.equal(deadline(e, { ...client, client: "denver" }), null);
 });
+test('truncated pipe inventory is unavailable and multiple exact records remain ambiguous',async()=>{
+ const input={address:'123 MAIN ST',city:'Pittsburgh',state:'PA'};
+ const attributes={Address:input.address,FinalReportedMaterialPublic:'Lead',FinalReportedMaterialPrivate:'Unknown'};
+ const truncated=await pipes(input,mock({exceededTransferLimit:true,features:[{attributes}]}));
+ assert.equal(truncated.status,'unavailable');assert.equal(truncated.records.length,0);
+ const multiple=await pipes(input,mock({features:[{attributes},{attributes:{...attributes,FinalReportedMaterialPublic:'NonLead'}}]}));
+ assert.equal(multiple.status,'ambiguous');assert.equal(multiple.records.length,2);
+});

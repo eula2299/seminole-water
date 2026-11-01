@@ -1,7 +1,15 @@
 'use strict';
 const evidence=require('./research-rates-status.json');
 const advocacyEvidence=require('./research-complaints-coverage.json');
-const rates=evidence.water_rates.filter(r=>r.id==='minneapolis-residential-water-2026').map(r=>({id:r.id,name:r.provider+' · 2026',perUnit:r.volume_rate_usd_per_unit,unit:'CCF',from:r.effective_from,through:'2026-12-31',source:r.source_url,date_source:r.effective_date_source,scope:r.supported_scope,checked_at:evidence.checked_at}));
+const rates=evidence.water_rates.map(r=>({
+ id:r.id,name:r.provider+' · 2026',unit:r.base_tier_rates_usd_per_1000_gallons?'gallons':'CCF',
+ from:r.effective_from,through:'2026-12-31',source:r.source_url,date_source:r.effective_date_source,
+ scope:r.supported_scope,checked_at:evidence.checked_at,
+ ...(r.base_tier_rates_usd_per_1000_gallons?{
+   model:'denver-single-family',tiers:r.base_tier_rates_usd_per_1000_gallons,
+   fixed:r.monthly_fixed_water_usd_by_meter_inches,drought:r.drought,drought_source:r.drought_source_url
+ }:{model:'flat-use',perUnit:r.volume_rate_usd_per_unit})
+}));
 const routes={
  provider:{titleKey:'routeProvider',descriptionKey:'routeProviderHelp',url:'https://www.epa.gov/ground-water-and-drinking-water/local-drinking-water-information'},
  drinkingWater:{titleKey:'routeDrinkingWater',descriptionKey:'routeDrinkingWaterHelp',url:advocacyEvidence.sources.epa_primacy.url},

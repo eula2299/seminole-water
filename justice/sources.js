@@ -65,8 +65,8 @@ async function pipes(input, fetcher = fetch) {
     });
     try {
       const data = await json(u, fetcher);
-      if (data.error) throw Error();
-      for (const f of data.features || []) {
+      if (data.error || data.exceededTransferLimit || !Array.isArray(data.features) || data.features.length>5) throw Error("INCOMPLETE_INVENTORY");
+      for (const f of data.features) {
         const a = f.attributes;
         if (norm(a[s.address_field]) !== address) continue;
         if (a.PREM_CITY && norm(a.PREM_CITY) !== city) continue;
@@ -96,6 +96,8 @@ async function pipes(input, fetcher = fetch) {
   return {
     status: unavailable
       ? "unavailable"
+      : records.length>1
+        ? "ambiguous"
       : !connectors.length
         ? "not_connected"
         : records.length

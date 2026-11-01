@@ -59,6 +59,7 @@ function createAi({
   model = process.env.WATER_HELP_AI_MODEL || "gemini-3.5-flash-lite",
   fetcher = fetch,
   dailyLimit = Number(process.env.WATER_HELP_AI_DAILY_LIMIT || 200),
+  budget = require("./ai-budget").createAiBudget(),
 } = {}) {
   let searchRetryAfter=0;
   let active = 0,
@@ -77,6 +78,11 @@ function createAi({
     active++;
     calls++;
     try {
+      // Never bypass the shared cap when the database is unavailable.
+      let allowed;
+      try { allowed=await budget.take(dailyLimit); }
+      catch { throw Object.assign(Error("AI_UNAVAILABLE"),{status:503}); }
+      if(!allowed)throw Object.assign(Error("AI_BUSY"),{status:429});
       const response = await fetcher(
         "https://generativelanguage.googleapis.com/v1beta/models/" +
           encodeURIComponent(model) +
@@ -125,6 +131,8 @@ function createAi({
   }
   return {
     enabled: !!key,
+    budgetScope: budget.shared ? "deployment" : "process",
+    close: () => budget.close(),
     languages: LANGUAGES,
     async discover({city,state,kind,language="en",official={}}){
       return generate("Today is "+new Date().toISOString().slice(0,10)+". Find up to four current official pages for "+JSON.stringify({city,state,kind})+". Search for "+({assistance:"help paying water bills and free or reduced-cost water testing",meetings:"upcoming local council or water utility public meetings and speaking registration deadlines",pipes:"the official property address lead service line inventory map",repairs:"water pipe inspection and replacement financial assistance",bill:"the water utility's official billing rates and billing assistance",support:"water utility customer assistance and local water help"}[kind])+". Starting official directories: "+JSON.stringify(official)+". Use government .gov or municipal .us pages and listed agencies. Return JSON {items:[{url,quote,date_label,deadline_label}]}. url must be the exact original source URL. quote must be one exact continuous passage of 15 to 500 characters from that page, not a paraphrase. For meetings include the event date in the quote; date_label and deadline_label must be exact substrings of the quote or empty strings. Do not infer a deadline or date. Return current pages even when they give instructions instead of a scheduled date. Never claim a household qualifies or that an application was submitted. Do not include a private street address. Explanations should be in "+(LANGUAGES[language]||"English")+"; quotations stay in their original language.",null,true);
