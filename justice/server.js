@@ -7,6 +7,7 @@ const { createGroups } = require("./groups");
 const sources = require("./sources");
 const extended = require("./extended-sources");
 const { createPromises } = require("./promises");
+const {createLocalHelp}=require("./local-help");
 const root = path.resolve(__dirname, "..");
 const staticFiles = {};
 for (const file of [
@@ -21,6 +22,7 @@ for (const file of [
   "entry.css",
   "extended.js",
   "extended-logic.js",
+  "local-help.js",
 ])
   staticFiles["/help/" + file] = path.join(root, "public/help", file);
 for (const language of ["en", "es", "fr", "pt", "ht", "ar"])
@@ -79,6 +81,7 @@ function createHelpHandler({
   fetcher = fetch,
   trustProxy = false,
 } = {}) {
+  const localHelp=createLocalHelp({ai});
   const buckets = new Map();
   const headers = {
     "Cache-Control": "no-store",
@@ -86,7 +89,7 @@ function createHelpHandler({
     "Referrer-Policy": "no-referrer",
     "Permissions-Policy": "camera=(), microphone=(self), geolocation=()",
     "Content-Security-Policy":
-      "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://tessdata.projectnaptha.com; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+      "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://tessdata.projectnaptha.com; font-src 'self'; frame-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
   };
   function send(
     res,
@@ -144,6 +147,7 @@ function createHelpHandler({
         "/help/guides",
         "/help/status",
         "/help/pipes",
+        "/help/local",
       ];
       if (
         req.method === "GET" &&
@@ -177,6 +181,11 @@ function createHelpHandler({
           },
         );
         return true;
+      }
+      if(req.method==='GET'&&u.pathname==='/api/help/agencies'){send(res,200,localHelp.agencies({state:u.searchParams.get('state')||'',tribal:u.searchParams.get('tribal')==='true'}));return true;}
+      if(req.method==='GET'&&/^\/help\/search-suggestions\/[A-Za-z0-9_-]{24}$/.test(u.pathname)){
+        const html=localHelp.getSuggestions(u.pathname.split('/').at(-1));
+        send(res,html?200:404,html||'', 'text/html; charset=utf-8',{'Content-Security-Policy':"sandbox allow-popups allow-popups-to-escape-sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src https: data:; base-uri 'none'; frame-ancestors 'self'"});return true;
       }
       if (req.method === "GET" && u.pathname === "/api/help/config") {
         send(res, 200, {
@@ -254,7 +263,8 @@ function createHelpHandler({
       }
       if (!body || typeof body !== "object" || Array.isArray(body))
         throw Object.assign(Error("INVALID_REQUEST"), { status: 400 });
-      if (u.pathname === "/api/help/analyze") {
+      if(u.pathname === "/api/help/local"){send(res,200,await localHelp.search(body));}
+      else if (u.pathname === "/api/help/analyze") {
         if (body.consent !== true)
           throw Object.assign(Error("CONSENT_REQUIRED"), { status: 400 });
         send(res, 200, await ai.analyze(body));

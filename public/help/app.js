@@ -115,7 +115,7 @@
           : { "Content-Type": "application/json", ...headers },
       body: body === undefined ? undefined : JSON.stringify(body),
       credentials: "same-origin",
-      signal: AbortSignal.timeout(55000),
+      signal: AbortSignal.timeout(95000),
     });
     const data = await r.json();
     if (!r.ok) throw Error(data.error || "FAILED");
@@ -260,6 +260,7 @@
     tile(tiles, "repairs", "pipeHelpHint", repairs);
     tile(tiles, "rights", "advocacyHint", rights);
     tile(tiles, "formHelp", "formHelpHint", X.forms);
+    button(main,"findLocalHelp",()=>X.local(),"quiet");
     button(main,"allTools",X.directory,"quiet");
     button(main,"plainGuides",X.guideLibrary,"quiet");
     button(main, "progress", () => navigate(progress), "quiet");
@@ -270,6 +271,7 @@
   }
   function costs() {
     page("costs");
+    button(main,"findLocalHelp",()=>X.local("assistance"),"quiet");
     localOptions(main);
     const tiles = box(main, "tiles");
     tile(tiles, "filters", "filtersHint", filterForm);
@@ -284,6 +286,7 @@
   }
   function repairs() {
     page("repairs");
+    button(main,"findLocalHelp",()=>X.local("repairs"),"quiet");
     const tiles = box(main, "tiles");
     tile(tiles, "pipes", "pipesHint", pipeForm);
     tile(tiles,"pipeMap","pipeMapIntro",X.pipeMaps);
@@ -296,6 +299,7 @@
   }
   function rights() {
     page("rights");
+    button(main,"findLocalHelp",()=>X.local("support"),"quiet");
     const tiles = box(main, "tiles");
     tile(tiles, "complaint", "complaintHint", () => requestWizard("complaint"));
     tile(tiles, "treatment", "treatmentHint", X.treatment);
@@ -1857,6 +1861,7 @@
       "/help/progress": progress,
       "/help/forms":X.forms,
       "/help/tools":X.directory,
+      "/help/local":X.local,
       "/help/filters":filterForm,
       "/help/bills":billUpload,
       "/help/maintenance":X.maintenance,

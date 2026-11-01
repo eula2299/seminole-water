@@ -1,0 +1,2058 @@
+{
+  "checked_at": "2026-11-01",
+  "sources": {
+    "water": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data",
+    "local": "https://www.usa.gov/local-governments",
+    "social": "https://www.usa.gov/state-social-services",
+    "health": "https://www.usa.gov/state-health",
+    "consumer": "https://www.usa.gov/state-consumer",
+    "state": "https://www.usa.gov/state-governments"
+  },
+  "jurisdictions": [
+    {
+      "code": "AL",
+      "name": "Alabama",
+      "routes": {
+        "state": {
+          "title": "Alabama (AL)",
+          "url": "https://www.usa.gov/states/alabama",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Alabama (AL)",
+          "url": "https://www.sos.alabama.gov/index.php/city-county-lookup",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Alabama (AL)",
+          "url": "https://dhr.alabama.gov/family-services/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Alabama (AL)",
+          "url": "https://www.alabamapublichealth.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Alabama (AL)",
+          "url": "https://www.alabamaag.gov/consumer-complaint/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Alabama Department of Environmental Management - Drinking Water Branch",
+          "url": "https://adem.alabama.gov/programs/water/drinkingwater.cnt",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "AK",
+      "name": "Alaska",
+      "routes": {
+        "state": {
+          "title": "Alaska (AK)",
+          "url": "https://www.usa.gov/states/alaska",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Alaska (AK)",
+          "url": "https://alaska.gov/communit.html",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Alaska (AK)",
+          "url": "https://dfcs.alaska.gov/Pages/default.aspx",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Alaska (AK)",
+          "url": "https://health.alaska.gov/Pages/default.aspx",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Alaska (AK)",
+          "url": "https://www.law.alaska.gov/department/civil/consumer/cpindex.html",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Alaska Department of Environmental Conservation - Drinking Water Program",
+          "url": "https://dec.alaska.gov/eh/dw/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "AS",
+      "name": "American Samoa",
+      "routes": {
+        "state": {
+          "title": "American Samoa (AS)",
+          "url": "https://www.usa.gov/states/american-samoa",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "consumer": {
+          "title": "American Samoa (AS)",
+          "url": "https://legalaffairs.as.gov/consumers",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "American Samoa Environmental Protection Agency — Drinking Water",
+          "url": "https://www.asepa.gov/drinking-water",
+          "source": "https://www.asepa.gov/drinking-water"
+        },
+        "local": {
+          "title": "American Samoa (AS)",
+          "url": "https://www.usa.gov/states/american-samoa",
+          "source": "https://www.usa.gov/state-governments",
+          "directory": true
+        },
+        "social": {
+          "title": "American Samoa (AS)",
+          "url": "https://www.usa.gov/states/american-samoa",
+          "source": "https://www.usa.gov/state-governments",
+          "directory": true
+        },
+        "health": {
+          "title": "American Samoa (AS)",
+          "url": "https://www.usa.gov/states/american-samoa",
+          "source": "https://www.usa.gov/state-governments",
+          "directory": true
+        }
+      }
+    },
+    {
+      "code": "AZ",
+      "name": "Arizona",
+      "routes": {
+        "state": {
+          "title": "Arizona (AZ)",
+          "url": "https://www.usa.gov/states/arizona",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Arizona (AZ)",
+          "url": "https://www.azcounties.org",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Arizona (AZ)",
+          "url": "https://des.az.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Arizona (AZ)",
+          "url": "https://www.azdhs.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Arizona (AZ)",
+          "url": "https://www.azag.gov/consumer",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Arizona Department of Environmental Quality - Water Quality Division - Safe Drinking Water",
+          "url": "https://azdeq.gov/safe-drinking-water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "AR",
+      "name": "Arkansas",
+      "routes": {
+        "state": {
+          "title": "Arkansas (AR)",
+          "url": "https://www.usa.gov/states/arkansas",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Arkansas (AR)",
+          "url": "https://portal.arkansas.gov/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Arkansas (AR)",
+          "url": "https://humanservices.arkansas.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Arkansas (AR)",
+          "url": "https://www.healthy.arkansas.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Arkansas (AR)",
+          "url": "https://arkansasag.gov/divisions/public-protection/consumer-protection/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Arkansas Department of Health - Drinking Water - Safety",
+          "url": "https://www.healthy.arkansas.gov/programs-services/topics/drinking-water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "CA",
+      "name": "California",
+      "routes": {
+        "state": {
+          "title": "California (CA)",
+          "url": "https://www.usa.gov/states/california",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "California (CA)",
+          "url": "https://www.counties.org/county-websites-profile-information",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "California (CA)",
+          "url": "https://www.cdss.ca.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "California (CA)",
+          "url": "https://www.cdph.ca.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "California (CA)",
+          "url": "https://www.dca.ca.gov/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "California Water Boards - Drinking Water Program",
+          "url": "https://www.waterboards.ca.gov/drinking_water/programs/index.shtml",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "CO",
+      "name": "Colorado",
+      "routes": {
+        "state": {
+          "title": "Colorado (CO)",
+          "url": "https://www.usa.gov/states/colorado",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Colorado (CO)",
+          "url": "https://dola.colorado.gov/lgis/lgActiveAlpha.jsf",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Colorado (CO)",
+          "url": "https://cdhs.colorado.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Colorado (CO)",
+          "url": "https://cdphe.colorado.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Colorado (CO)",
+          "url": "https://coag.gov/office-sections/consumer-protection/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Colorado Department of Public Health and Environment - Water Quality Control Division",
+          "url": "https://cdphe.colorado.gov/dwinfo",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "CT",
+      "name": "Connecticut",
+      "routes": {
+        "state": {
+          "title": "Connecticut (CT)",
+          "url": "https://www.usa.gov/states/connecticut",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Connecticut (CT)",
+          "url": "https://portal.ct.gov/en/Government/Cities-and-Towns",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Connecticut (CT)",
+          "url": "https://portal.ct.gov/dsshome",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Connecticut (CT)",
+          "url": "https://portal.ct.gov/dph",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Connecticut (CT)",
+          "url": "https://portal.ct.gov/dcp",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Connecticut State Department of Public Health - Drinking Water Section",
+          "url": "https://www.ct.gov/dph/publicdrinkingwater",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "DE",
+      "name": "Delaware",
+      "routes": {
+        "state": {
+          "title": "Delaware (DE)",
+          "url": "https://www.usa.gov/states/delaware",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Delaware (DE)",
+          "url": "https://delaware.gov/guides/municipalities/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Delaware (DE)",
+          "url": "https://www.dhss.delaware.gov/dhss/dss/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Delaware (DE)",
+          "url": "https://www.dhss.delaware.gov/dhss/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Delaware (DE)",
+          "url": "https://attorneygeneral.delaware.gov/fraud/cpu/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Delaware Department of Health and Social Services - Division of Public Health - Office of Drinking Water",
+          "url": "https://www.dhss.delaware.gov/dhss/dph/hsp/odw.html",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "DC",
+      "name": "District of Columbia",
+      "routes": {
+        "state": {
+          "title": "District of Columbia (DC)",
+          "url": "https://www.usa.gov/states/district-of-columbia",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "District of Columbia (DC)",
+          "url": "https://dccouncil.gov/the-council/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "District of Columbia (DC)",
+          "url": "https://dhs.dc.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "District of Columbia (DC)",
+          "url": "https://dchealth.dc.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "District of Columbia (DC)",
+          "url": "https://oag.dc.gov/consumer-protection",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "District of Columbia - Department of Energy & Environment - Water in the District",
+          "url": "https://ddoe.dc.gov/service/water-district",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "FL",
+      "name": "Florida",
+      "routes": {
+        "state": {
+          "title": "Florida (FL)",
+          "url": "https://www.usa.gov/states/florida",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Florida (FL)",
+          "url": "https://dos.myflorida.com/library-archives/research/florida-information/government/local-resources/fl-cities/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Florida (FL)",
+          "url": "https://www.myflfamilies.com/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Florida (FL)",
+          "url": "https://www.floridahealth.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Florida (FL)",
+          "url": "https://www.fdacs.gov/Divisions-Offices/Consumer-Services",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Florida Department of Environmental Protection - Source & Drinking Water Program",
+          "url": "https://floridadep.gov/water/source-drinking-water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "GA",
+      "name": "Georgia",
+      "routes": {
+        "state": {
+          "title": "Georgia (GA)",
+          "url": "https://www.usa.gov/states/georgia",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Georgia (GA)",
+          "url": "https://www.gacities.com/Directories/Member-Cities.aspx",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Georgia (GA)",
+          "url": "https://dhs.georgia.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Georgia (GA)",
+          "url": "https://dph.georgia.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Georgia (GA)",
+          "url": "https://consumer.georgia.gov/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Georgia Environmental Protection Division - Drinking Water",
+          "url": "https://epd.georgia.gov/watershed-protection-branch/drinking-water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "GU",
+      "name": "Guam",
+      "routes": {
+        "state": {
+          "title": "Guam (GU)",
+          "url": "https://www.usa.gov/states/guam",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "social": {
+          "title": "Guam (GU)",
+          "url": "https://dphss.guam.gov/division-of-public-welfare/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Guam (GU)",
+          "url": "https://dphss.guam.gov/dph/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "water": {
+          "title": "Guam Environmental Protection Agency - Water Division - Safe Drinking Water Program",
+          "url": "https://epa.guam.gov/sdw/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        },
+        "local": {
+          "title": "Guam (GU)",
+          "url": "https://www.usa.gov/states/guam",
+          "source": "https://www.usa.gov/state-governments",
+          "directory": true
+        },
+        "consumer": {
+          "title": "Guam (GU)",
+          "url": "https://www.usa.gov/states/guam",
+          "source": "https://www.usa.gov/state-governments",
+          "directory": true
+        }
+      }
+    },
+    {
+      "code": "HI",
+      "name": "Hawaii",
+      "routes": {
+        "state": {
+          "title": "Hawaii (HI)",
+          "url": "https://www.usa.gov/states/hawaii",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Hawaii (HI)",
+          "url": "https://portal.ehawaii.gov/government/county-governments/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Hawaii (HI)",
+          "url": "https://humanservices.hawaii.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Hawaii (HI)",
+          "url": "https://health.hawaii.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Hawaii (HI)",
+          "url": "https://cca.hawaii.gov/ocp/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "State of Hawaii - Department of Health - Safe Drinking Water Branch",
+          "url": "https://health.hawaii.gov/sdwb/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "ID",
+      "name": "Idaho",
+      "routes": {
+        "state": {
+          "title": "Idaho (ID)",
+          "url": "https://www.usa.gov/states/idaho",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Idaho (ID)",
+          "url": "https://idaho.gov/counties/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Idaho (ID)",
+          "url": "https://healthandwelfare.idaho.gov/services-programs/children-families",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Idaho (ID)",
+          "url": "https://healthandwelfare.idaho.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Idaho (ID)",
+          "url": "https://www.ag.idaho.gov/consumer-protection/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Idaho Department of Environmental Quality - Drinking Water Bureau",
+          "url": "https://www.deq.idaho.gov/water-quality/drinking-water/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "IL",
+      "name": "Illinois",
+      "routes": {
+        "state": {
+          "title": "Illinois (IL)",
+          "url": "https://www.usa.gov/states/illinois",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Illinois (IL)",
+          "url": "https://apps.ilsos.gov/isa/localgovnameindexsrch.jsp",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Illinois (IL)",
+          "url": "https://www.dhs.state.il.us/page.aspx",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Illinois (IL)",
+          "url": "https://dph.illinois.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Illinois (IL)",
+          "url": "https://illinoisattorneygeneral.gov/consumer-protection/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Illinois Environmental Protection Agency - Drinking Water",
+          "url": "https://epa.illinois.gov/topics/drinking-water.html",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "IN",
+      "name": "Indiana",
+      "routes": {
+        "state": {
+          "title": "Indiana (IN)",
+          "url": "https://www.usa.gov/states/indiana",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Indiana (IN)",
+          "url": "https://www.in.gov/counties/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Indiana (IN)",
+          "url": "https://www.in.gov/fssa/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Indiana (IN)",
+          "url": "https://www.in.gov/health/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Indiana (IN)",
+          "url": "https://www.in.gov/attorneygeneral/consumer-protection-division/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Indiana Department of Environmental Management - Drinking Water Branch",
+          "url": "https://www.in.gov/idem/cleanwater/drinking-water/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "IA",
+      "name": "Iowa",
+      "routes": {
+        "state": {
+          "title": "Iowa (IA)",
+          "url": "https://www.usa.gov/states/iowa",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Iowa (IA)",
+          "url": "https://www.iowa.gov/local-government",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Iowa (IA)",
+          "url": "https://hhs.iowa.gov/programs-and-services",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Iowa (IA)",
+          "url": "https://hhs.iowa.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Iowa (IA)",
+          "url": "https://www.iowaattorneygeneral.gov/about-us/divisions/consumer-protection",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Iowa Department of Natural Resources - Drinking Water Compliance",
+          "url": "https://www.iowadnr.gov/Environmental-Protection/Water-Quality/Drinking-Water-Compliance",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "KS",
+      "name": "Kansas",
+      "routes": {
+        "state": {
+          "title": "Kansas (KS)",
+          "url": "https://www.usa.gov/states/kansas",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Kansas (KS)",
+          "url": "https://portal.kansas.gov/government/county-list/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Kansas (KS)",
+          "url": "https://www.dcf.ks.gov/Pages/default.aspx",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Kansas (KS)",
+          "url": "https://www.kdhe.ks.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Kansas (KS)",
+          "url": "https://www.ag.ks.gov/divisions/public-protection/consumer-protection",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Kansas Department of Health and Environment - Division of Environment - Public Water Supply Section",
+          "url": "https://www.kdhe.ks.gov/409/Public-Water-Supply",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "KY",
+      "name": "Kentucky",
+      "routes": {
+        "state": {
+          "title": "Kentucky (KY)",
+          "url": "https://www.usa.gov/states/kentucky",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Kentucky (KY)",
+          "url": "https://www.kentucky.gov/government/Pages/local.aspx",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Kentucky (KY)",
+          "url": "https://www.chfs.ky.gov/Pages/Social-Services.aspx",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Kentucky (KY)",
+          "url": "https://www.chfs.ky.gov/agencies/dph/Pages/default.aspx",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Kentucky (KY)",
+          "url": "https://www.ag.ky.gov/about/Office-Divisions/OCP/Pages/default.aspx",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Kentucky Energy and Environment Cabinet - Division of Water - Drinking Water",
+          "url": "https://eec.ky.gov/Environmental-Protection/Water/Drinking/Pages/Drinking%20Water.aspx",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "LA",
+      "name": "Louisiana",
+      "routes": {
+        "state": {
+          "title": "Louisiana (LA)",
+          "url": "https://www.usa.gov/states/louisiana",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Louisiana (LA)",
+          "url": "https://www.louisiana.gov/local-louisiana/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Louisiana (LA)",
+          "url": "https://www.dcfs.louisiana.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Louisiana (LA)",
+          "url": "https://ldh.la.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Louisiana (LA)",
+          "url": "https://www.ag.state.la.us/Division/PublicProtection#consumer-protection",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Louisiana Department of Health - Safe Drinking Water Program",
+          "url": "https://ldh.la.gov/index.cfm/page/963",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "ME",
+      "name": "Maine",
+      "routes": {
+        "state": {
+          "title": "Maine (ME)",
+          "url": "https://www.usa.gov/states/maine",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Maine (ME)",
+          "url": "https://aroostook.me.us/maine-counties/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Maine (ME)",
+          "url": "https://www.maine.gov/dhhs/programs-services/human-services",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Maine (ME)",
+          "url": "https://www.maine.gov/dhhs/programs-services/health-prevention-services",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Maine (ME)",
+          "url": "https://www.maine.gov/ag/consumer/index.shtml",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Maine Department of Health and Human Services - Maine Center for Disease Control & Prevention - Division of Environmental and Community Health - Drinking Water Program",
+          "url": "https://www.maine.gov/dhhs/mecdc/environmental-health/water/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "MD",
+      "name": "Maryland",
+      "routes": {
+        "state": {
+          "title": "Maryland (MD)",
+          "url": "https://www.usa.gov/states/maryland",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Maryland (MD)",
+          "url": "https://www.maryland.gov/pages/nearme.aspx",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Maryland (MD)",
+          "url": "https://dhs.maryland.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Maryland (MD)",
+          "url": "https://health.maryland.gov/pages/home.aspx",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Maryland (MD)",
+          "url": "https://www.marylandattorneygeneral.gov/Pages/CPD/default.aspx",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Maryland Department of the Environment - Water Supply Program",
+          "url": "https://mde.maryland.gov/programs/Water/water_supply/Pages/index.aspx",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "MA",
+      "name": "Massachusetts",
+      "routes": {
+        "state": {
+          "title": "Massachusetts (MA)",
+          "url": "https://www.usa.gov/states/massachusetts",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Massachusetts (MA)",
+          "url": "https://www.mass.gov/lists/massachusetts-city-and-town-websites",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Massachusetts (MA)",
+          "url": "https://www.mass.gov/topics/health-social-services",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Massachusetts (MA)",
+          "url": "https://www.mass.gov/orgs/department-of-public-health",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Massachusetts (MA)",
+          "url": "https://www.mass.gov/orgs/office-of-consumer-affairs-and-business-regulation",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Massachusetts Department of Environmental Protection - Drinking Water",
+          "url": "https://www.mass.gov/topics/drinking-water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "MI",
+      "name": "Michigan",
+      "routes": {
+        "state": {
+          "title": "Michigan (MI)",
+          "url": "https://www.usa.gov/states/michigan",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Michigan (MI)",
+          "url": "https://www.michigan.gov/som/about-michigan/michigan-counties",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Michigan (MI)",
+          "url": "https://www.michigan.gov/mdhhs/adult-child-serv",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Michigan (MI)",
+          "url": "https://www.michigan.gov/mdhhs/keep-mi-healthy",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Michigan (MI)",
+          "url": "https://www.michigan.gov/consumerprotection",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Michigan Department of Environment, Great Lakes, and Energy - Drinking Water and Environmental Health Division",
+          "url": "https://www.michigan.gov/egle/about/organization/drinking-water-and-environmental-health",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "MN",
+      "name": "Minnesota",
+      "routes": {
+        "state": {
+          "title": "Minnesota (MN)",
+          "url": "https://www.usa.gov/states/minnesota",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Minnesota (MN)",
+          "url": "https://mn.gov/portal/government/local/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Minnesota (MN)",
+          "url": "https://mn.gov/portal/residents/social-services.jsp",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Minnesota (MN)",
+          "url": "https://www.health.state.mn.us/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Minnesota (MN)",
+          "url": "https://www.ag.state.mn.us/default.asp",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Minnesota Department of Health - Drinking Water Protection",
+          "url": "https://www.health.state.mn.us/communities/environment/water/dwp.html",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "MS",
+      "name": "Mississippi",
+      "routes": {
+        "state": {
+          "title": "Mississippi (MS)",
+          "url": "https://www.usa.gov/states/mississippi",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Mississippi (MS)",
+          "url": "https://sos.ms.gov/communications-publications/2020-2024-mississippi-blue-book",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Mississippi (MS)",
+          "url": "https://www.mdhs.ms.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Mississippi (MS)",
+          "url": "https://msdh.ms.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Mississippi (MS)",
+          "url": "https://attorneygenerallynnfitch.com/divisions/consumer-protection/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Mississippi State Department of Health - Bureau of Public Water Supply",
+          "url": "https://msdh.ms.gov/msdhsite/_static/30,0,76.html",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "MO",
+      "name": "Missouri",
+      "routes": {
+        "state": {
+          "title": "Missouri (MO)",
+          "url": "https://www.usa.gov/states/missouri",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Missouri (MO)",
+          "url": "https://www.mo.gov/government/city-county-government/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Missouri (MO)",
+          "url": "https://dss.mo.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Missouri (MO)",
+          "url": "https://health.mo.gov/index.php",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Missouri (MO)",
+          "url": "https://ago.mo.gov/civil-division/consumer",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Missouri Department of Natural Resources - The Water We Drink",
+          "url": "https://dnr.mo.gov/water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "MT",
+      "name": "Montana",
+      "routes": {
+        "state": {
+          "title": "Montana (MT)",
+          "url": "https://www.usa.gov/states/montana",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Montana (MT)",
+          "url": "https://www.mtcounties.org/counties/contact-a-county/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Montana (MT)",
+          "url": "https://dphhs.mt.gov/familysupports",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Montana (MT)",
+          "url": "https://dphhs.mt.gov/publichealthinthe406",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Montana (MT)",
+          "url": "https://dojmt.gov/office-of-consumer-protection/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Montana Department of Environmental Quality - Public Water Supply Bureau",
+          "url": "https://deq.mt.gov/water/Programs/dw",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "NE",
+      "name": "Nebraska",
+      "routes": {
+        "state": {
+          "title": "Nebraska (NE)",
+          "url": "https://www.usa.gov/states/nebraska",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Nebraska (NE)",
+          "url": "https://www.nebraska.gov/attractions/city-county/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Nebraska (NE)",
+          "url": "https://dhhs.ne.gov/Pages/Children-and-Family-Services.aspx",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Nebraska (NE)",
+          "url": "https://dhhs.ne.gov/Pages/public-health.aspx",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Nebraska (NE)",
+          "url": "https://protectthegoodlife.nebraska.gov/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Nebraska Department of Environment and Energy - Drinking Water Section",
+          "url": "https://dee.nebraska.gov/water/drinking-water/drinking-water-monitoring-compliance",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "NV",
+      "name": "Nevada",
+      "routes": {
+        "state": {
+          "title": "Nevada (NV)",
+          "url": "https://www.usa.gov/states/nevada",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Nevada (NV)",
+          "url": "https://ce.naco.org/?find=true",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Nevada (NV)",
+          "url": "https://dwss.nv.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Nevada (NV)",
+          "url": "https://dpbh.nv.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Nevada (NV)",
+          "url": "https://ag.nv.gov/About/Consumer_Protection/Bureau_of_Consumer_Protection/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Nevada Division of Environmental Protection - Bureau of Safe Drinking Water",
+          "url": "https://ndep.nv.gov/water/drinking-water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "NH",
+      "name": "New Hampshire",
+      "routes": {
+        "state": {
+          "title": "New Hampshire (NH)",
+          "url": "https://www.usa.gov/states/new-hampshire",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "New Hampshire (NH)",
+          "url": "https://www.nh.gov/government/cities-towns",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "New Hampshire (NH)",
+          "url": "https://www.dhhs.nh.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "New Hampshire (NH)",
+          "url": "https://www.dhhs.nh.gov/programs-services/health-care",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "New Hampshire (NH)",
+          "url": "https://www.doj.nh.gov/citizens/consumer-protection-antitrust-bureau",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "New Hampshire Department of Environmental Services - Drinking Water and Groundwater Bureau",
+          "url": "https://www.des.nh.gov/water/drinking-water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "NJ",
+      "name": "New Jersey",
+      "routes": {
+        "state": {
+          "title": "New Jersey (NJ)",
+          "url": "https://www.usa.gov/states/new-jersey",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "New Jersey (NJ)",
+          "url": "https://www.nj.gov/nj/gov/county/localgov.shtml",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "New Jersey (NJ)",
+          "url": "https://www.nj.gov/humanservices/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "New Jersey (NJ)",
+          "url": "https://www.nj.gov/health/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "New Jersey (NJ)",
+          "url": "https://www.njconsumeraffairs.gov/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "State of New Jersey - Department of Environmental Protection - Division of Water Supply and Geoscience",
+          "url": "https://www.state.nj.us/dep/watersupply/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "NM",
+      "name": "New Mexico",
+      "routes": {
+        "state": {
+          "title": "New Mexico (NM)",
+          "url": "https://www.usa.gov/states/new-mexico",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "social": {
+          "title": "New Mexico (NM)",
+          "url": "https://www.hca.nm.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "New Mexico (NM)",
+          "url": "https://www.nmhealth.org/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "New Mexico (NM)",
+          "url": "https://nmdoj.gov/about-the-office/consumer-affairs/#consumer-protection",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "New Mexico Environment Department - Drinking Water Bureau",
+          "url": "https://www.env.nm.gov/water/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        },
+        "local": {
+          "title": "New Mexico (NM)",
+          "url": "https://www.usa.gov/states/new-mexico",
+          "source": "https://www.usa.gov/state-governments",
+          "directory": true
+        }
+      }
+    },
+    {
+      "code": "NY",
+      "name": "New York",
+      "routes": {
+        "state": {
+          "title": "New York (NY)",
+          "url": "https://www.usa.gov/states/new-york",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "New York (NY)",
+          "url": "https://www.ny.gov/counties",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "New York (NY)",
+          "url": "https://www.ny.gov/services/social-programs",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "New York (NY)",
+          "url": "https://www.health.ny.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "New York (NY)",
+          "url": "https://dos.ny.gov/consumer-protection",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "New York State - Department of Health - Drinking Water Protection Program",
+          "url": "https://www.health.ny.gov/environmental/water/drinking/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "NC",
+      "name": "North Carolina",
+      "routes": {
+        "state": {
+          "title": "North Carolina (NC)",
+          "url": "https://www.usa.gov/states/north-carolina",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "North Carolina (NC)",
+          "url": "https://www.sog.unc.edu/resources/microsites/knapp-library/counties-north-carolina",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "North Carolina (NC)",
+          "url": "https://www.ncdhhs.gov/divisions/social-services",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "North Carolina (NC)",
+          "url": "https://www.ncdhhs.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "North Carolina (NC)",
+          "url": "https://ncdoj.gov/protecting-consumers/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "North Carolina Department of Environmental Quality- Public Water Supply Section",
+          "url": "https://deq.nc.gov/about/divisions/water-resources/drinking-water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "ND",
+      "name": "North Dakota",
+      "routes": {
+        "state": {
+          "title": "North Dakota (ND)",
+          "url": "https://www.usa.gov/states/north-dakota",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "North Dakota (ND)",
+          "url": "https://www.nd.gov/government/local-government",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "North Dakota (ND)",
+          "url": "https://www.hhs.nd.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "North Dakota (ND)",
+          "url": "https://www.hhs.nd.gov/health",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "North Dakota (ND)",
+          "url": "https://attorneygeneral.nd.gov/consumer-resources/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "North Dakota Department of Environmental Quality - Division of Municipal Facilities",
+          "url": "https://deq.nd.gov/MF/default.aspx",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "MP",
+      "name": "Northern Mariana Islands",
+      "routes": {
+        "state": {
+          "title": "Northern Mariana Islands (MP)",
+          "url": "https://www.usa.gov/states/northern-mariana-islands",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "health": {
+          "title": "Northern Mariana Islands (MP)",
+          "url": "https://www.chcc.health/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Northern Mariana Islands (MP)",
+          "url": "https://www.cnmioag.org/divisions/consumer-protection/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Commonwealth of the Northern Mariana Islands Bureau of Environmental and Coastal Quality - Division of Environmental Quality - Safe Drinking Water Branch",
+          "url": "https://www.deq.gov.mp/safe-drinking-water.html",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        },
+        "local": {
+          "title": "Northern Mariana Islands (MP)",
+          "url": "https://www.usa.gov/states/northern-mariana-islands",
+          "source": "https://www.usa.gov/state-governments",
+          "directory": true
+        },
+        "social": {
+          "title": "Northern Mariana Islands (MP)",
+          "url": "https://www.usa.gov/states/northern-mariana-islands",
+          "source": "https://www.usa.gov/state-governments",
+          "directory": true
+        }
+      }
+    },
+    {
+      "code": "OH",
+      "name": "Ohio",
+      "routes": {
+        "state": {
+          "title": "Ohio (OH)",
+          "url": "https://www.usa.gov/states/ohio",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Ohio (OH)",
+          "url": "https://ohio.gov/government/topic-hubs/local-government/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Ohio (OH)",
+          "url": "https://jfs.ohio.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Ohio (OH)",
+          "url": "https://odh.ohio.gov/home",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Ohio (OH)",
+          "url": "https://www.ohioattorneygeneral.gov/about-ag/service-divisions/consumer-protection",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Ohio Environmental Protection Agency - Division of Drinking & Ground Waters",
+          "url": "https://epa.ohio.gov/divisions-and-offices/drinking-and-ground-waters/welcome",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "OK",
+      "name": "Oklahoma",
+      "routes": {
+        "state": {
+          "title": "Oklahoma (OK)",
+          "url": "https://www.usa.gov/states/oklahoma",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Oklahoma (OK)",
+          "url": "https://www.travelok.com/cities-and-regions",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Oklahoma (OK)",
+          "url": "https://oklahoma.gov/okdhs.html",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Oklahoma (OK)",
+          "url": "https://oklahoma.gov/health.html",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Oklahoma (OK)",
+          "url": "https://oklahoma.gov/oag/about/divisions/cpu.html",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Oklahoma Department of Environmental Quality - Water Quality Division - Public Water Supply",
+          "url": "https://www.deq.ok.gov/water-quality-division/public-water-supply/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "OR",
+      "name": "Oregon",
+      "routes": {
+        "state": {
+          "title": "Oregon (OR)",
+          "url": "https://www.usa.gov/states/oregon",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Oregon (OR)",
+          "url": "https://sos.oregon.gov/blue-book/Pages/local.aspx",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Oregon (OR)",
+          "url": "https://www.oregon.gov/odhs/pages/default.aspx",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Oregon (OR)",
+          "url": "https://www.oregon.gov/OHA/PH/Pages/index.aspx",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Oregon (OR)",
+          "url": "https://www.doj.state.or.us/consumer-protection/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Oregon Health Authority - Drinking Water Services",
+          "url": "https://public.health.oregon.gov/HEALTHYENVIRONMENTS/DRINKINGWATER/Pages/index.aspx",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "PA",
+      "name": "Pennsylvania",
+      "routes": {
+        "state": {
+          "title": "Pennsylvania (PA)",
+          "url": "https://www.usa.gov/states/pennsylvania",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Pennsylvania (PA)",
+          "url": "https://www.pacounties.org/who-we-are/pennsylvania-county-by-class",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Pennsylvania (PA)",
+          "url": "https://www.pa.gov/en/agencies/dhs.html",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Pennsylvania (PA)",
+          "url": "https://www.health.pa.gov/Pages/default.aspx",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Pennsylvania (PA)",
+          "url": "https://www.attorneygeneral.gov/protect-yourself/consumer-advisories/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Pennsylvania Department of Environmental Protection - Public Drinking Water",
+          "url": "https://www.dep.pa.gov/Citizens/My-Water/PublicDrinkingWater/Pages/default.aspx",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "PR",
+      "name": "Puerto Rico",
+      "routes": {
+        "state": {
+          "title": "Puerto Rico (PR)",
+          "url": "https://www.usa.gov/states/puerto-rico",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "health": {
+          "title": "Puerto Rico (PR)",
+          "url": "https://www.salud.pr.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Puerto Rico (PR)",
+          "url": "https://www.daco.pr.gov/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Puerto Rico Health Department - Drinking Water Section | Puerto Rico Departamento de Salud - Sección de Agua Potable",
+          "url": "https://www.salud.pr.gov/CMS/611",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        },
+        "local": {
+          "title": "Puerto Rico (PR)",
+          "url": "https://www.usa.gov/states/puerto-rico",
+          "source": "https://www.usa.gov/state-governments",
+          "directory": true
+        },
+        "social": {
+          "title": "Puerto Rico (PR)",
+          "url": "https://www.usa.gov/states/puerto-rico",
+          "source": "https://www.usa.gov/state-governments",
+          "directory": true
+        }
+      }
+    },
+    {
+      "code": "RI",
+      "name": "Rhode Island",
+      "routes": {
+        "state": {
+          "title": "Rhode Island (RI)",
+          "url": "https://www.usa.gov/states/rhode-island",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Rhode Island (RI)",
+          "url": "https://opengov.sos.ri.gov/GOVDirectoryPublic/OfficialSearch?topmenuId=104&amp;page=IdxMuni",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Rhode Island (RI)",
+          "url": "https://dhs.ri.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Rhode Island (RI)",
+          "url": "https://health.ri.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Rhode Island (RI)",
+          "url": "https://riag.ri.gov/consumerprotection",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "State of Rhode Island - Department of Health - Drinking Water Quality",
+          "url": "https://www.health.ri.gov/water/about/yourwater/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "SC",
+      "name": "South Carolina",
+      "routes": {
+        "state": {
+          "title": "South Carolina (SC)",
+          "url": "https://www.usa.gov/states/south-carolina",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "South Carolina (SC)",
+          "url": "https://sc.gov/government",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "South Carolina (SC)",
+          "url": "https://dss.sc.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "South Carolina (SC)",
+          "url": "https://dph.sc.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "South Carolina (SC)",
+          "url": "https://consumer.sc.gov/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "South Carolina Department of Environmental Services - Bureau of Water - Drinking Water",
+          "url": "https://des.sc.gov/programs/bureau-water/drinking-water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "SD",
+      "name": "South Dakota",
+      "routes": {
+        "state": {
+          "title": "South Dakota (SD)",
+          "url": "https://www.usa.gov/states/south-dakota",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "South Dakota (SD)",
+          "url": "https://www.sdcounties.org/counties/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "South Dakota (SD)",
+          "url": "https://dss.sd.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "South Dakota (SD)",
+          "url": "https://doh.sd.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "South Dakota (SD)",
+          "url": "https://consumer.sd.gov/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "South Dakota Department of Agriculture & Natural Resources - Drinking Water Program",
+          "url": "https://danr.sd.gov/OfficeOfWater/DrinkingWater/default.aspx",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "TN",
+      "name": "Tennessee",
+      "routes": {
+        "state": {
+          "title": "Tennessee (TN)",
+          "url": "https://www.usa.gov/states/tennessee",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Tennessee (TN)",
+          "url": "https://www.tn.gov/directory/county-city-web-sites.html",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Tennessee (TN)",
+          "url": "https://www.tn.gov/humanservices",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Tennessee (TN)",
+          "url": "https://www.tn.gov/health.html",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Tennessee (TN)",
+          "url": "https://www.tn.gov/attorneygeneral/working-for-tennessee/consumer-affairs.html",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Tennessee Department of Environment & Conservation - Division of Water Resources - Water Supply Program",
+          "url": "https://www.tn.gov/environment/topic/wr-wq-dw-drinking-water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "TX",
+      "name": "Texas",
+      "routes": {
+        "state": {
+          "title": "Texas (TX)",
+          "url": "https://www.usa.gov/states/texas",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Texas (TX)",
+          "url": "https://directory.tml.org/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Texas (TX)",
+          "url": "https://www.hhs.texas.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Texas (TX)",
+          "url": "https://www.dshs.texas.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Texas (TX)",
+          "url": "https://www.texasattorneygeneral.gov/consumer-protection",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Texas Commission on Environmental Quality - Public Drinking Water",
+          "url": "https://www.tceq.texas.gov/drinkingwater",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "VI",
+      "name": "U.S. Virgin Islands",
+      "routes": {
+        "state": {
+          "title": "U.S. Virgin Islands (VI)",
+          "url": "https://www.usa.gov/states/u-s-virgin-islands",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "social": {
+          "title": "U.S. Virgin Islands (VI)",
+          "url": "https://dhs.vi.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "U.S. Virgin Islands (VI)",
+          "url": "https://doh.vi.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "U.S. Virgin Islands (VI)",
+          "url": "https://www.dlca.vi.gov/consumeraffairs/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "U.S. Virgin Islands Department of Planning and Natural Resources - Division of Environmental Protection - Public Water System Supervision",
+          "url": "https://dpnr.vi.gov/environmental-protection/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        },
+        "local": {
+          "title": "U.S. Virgin Islands (VI)",
+          "url": "https://www.usa.gov/states/u-s-virgin-islands",
+          "source": "https://www.usa.gov/state-governments",
+          "directory": true
+        }
+      }
+    },
+    {
+      "code": "UT",
+      "name": "Utah",
+      "routes": {
+        "state": {
+          "title": "Utah (UT)",
+          "url": "https://www.usa.gov/states/utah",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Utah (UT)",
+          "url": "https://www.utah.gov/government/cityCounty.html",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Utah (UT)",
+          "url": "https://dhhs.utah.gov/services/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Utah (UT)",
+          "url": "https://dhhs.utah.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Utah (UT)",
+          "url": "https://dcp.utah.gov/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Utah Department of Environmental Quality - Division of Drinking Water",
+          "url": "https://www.drinkingwater.utah.gov/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "VT",
+      "name": "Vermont",
+      "routes": {
+        "state": {
+          "title": "Vermont (VT)",
+          "url": "https://www.usa.gov/states/vermont",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Vermont (VT)",
+          "url": "https://www.vermont.gov/towns-and-Cities#gsc.tab=0",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Vermont (VT)",
+          "url": "https://humanservices.vermont.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Vermont (VT)",
+          "url": "https://www.healthvermont.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Vermont (VT)",
+          "url": "https://ago.vermont.gov/cap",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Vermont Agency of Natural Resources - Department of Environmental Conservation - Drinking Water and Groundwater - Public Drinking Water Supply Program",
+          "url": "https://dec.vermont.gov/water/drinking-water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "VA",
+      "name": "Virginia",
+      "routes": {
+        "state": {
+          "title": "Virginia (VA)",
+          "url": "https://www.usa.gov/states/virginia",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Virginia (VA)",
+          "url": "https://www.virginia.gov/local-government/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Virginia (VA)",
+          "url": "https://www.dss.virginia.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Virginia (VA)",
+          "url": "https://www.vdh.virginia.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Virginia (VA)",
+          "url": "https://www.oag.state.va.us/consumer-protection/",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Virginia Department of Health - Office of Drinking Water",
+          "url": "https://www.vdh.virginia.gov/drinking-water/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "WA",
+      "name": "Washington",
+      "routes": {
+        "state": {
+          "title": "Washington (WA)",
+          "url": "https://www.usa.gov/states/washington",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Washington (WA)",
+          "url": "https://wa.gov/your-government",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Washington (WA)",
+          "url": "https://www.dshs.wa.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Washington (WA)",
+          "url": "https://doh.wa.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Washington (WA)",
+          "url": "https://www.atg.wa.gov/consumer-protection",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Washington State Department of Health - Office of Drinking Water",
+          "url": "https://doh.wa.gov/community-and-environment/drinking-water/office-drinking-water",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "WV",
+      "name": "West Virginia",
+      "routes": {
+        "state": {
+          "title": "West Virginia (WV)",
+          "url": "https://www.usa.gov/states/west-virginia",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "West Virginia (WV)",
+          "url": "https://www.wv.gov/local/Pages/default.aspx",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "West Virginia (WV)",
+          "url": "https://dhhr.wv.gov/POS/Pages/AllProgams.aspx",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "West Virginia (WV)",
+          "url": "https://dhhr.wv.gov/Pages/default.aspx",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "West Virginia (WV)",
+          "url": "https://ago.wv.gov/consumerprotection/pages/default.aspx",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "West Virginia Department of Health - Environmental Health Services - Environmental Engineering Division",
+          "url": "https://oehs.wvdhhr.org/eed/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "WI",
+      "name": "Wisconsin",
+      "routes": {
+        "state": {
+          "title": "Wisconsin (WI)",
+          "url": "https://www.usa.gov/states/wisconsin",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Wisconsin (WI)",
+          "url": "https://www.wicounties.org/the-counties/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Wisconsin (WI)",
+          "url": "https://dcf.wisconsin.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Wisconsin (WI)",
+          "url": "https://www.dhs.wisconsin.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Wisconsin (WI)",
+          "url": "https://datcp.wi.gov/Pages/Programs_Services/ConsumerProtection.aspx",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Wisconsin Department of Natural Resources - Drinking Water and Groundwater Program",
+          "url": "https://dnr.wi.gov/topic/DrinkingWater/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    },
+    {
+      "code": "WY",
+      "name": "Wyoming",
+      "routes": {
+        "state": {
+          "title": "Wyoming (WY)",
+          "url": "https://www.usa.gov/states/wyoming",
+          "source": "https://www.usa.gov/state-governments"
+        },
+        "local": {
+          "title": "Wyoming (WY)",
+          "url": "https://wyo-wcca.org/county-information/",
+          "source": "https://www.usa.gov/local-governments"
+        },
+        "social": {
+          "title": "Wyoming (WY)",
+          "url": "https://dfs.wyo.gov/",
+          "source": "https://www.usa.gov/state-social-services"
+        },
+        "health": {
+          "title": "Wyoming (WY)",
+          "url": "https://health.wyo.gov/",
+          "source": "https://www.usa.gov/state-health"
+        },
+        "consumer": {
+          "title": "Wyoming (WY)",
+          "url": "https://ag.wyo.gov/law-office-division/consumer-protection-and-antitrust-unit",
+          "source": "https://www.usa.gov/state-consumer"
+        },
+        "water": {
+          "title": "Wyoming Department of Environmental Quality - Water Quality Division - Water & Wastewater Program",
+          "url": "https://deq.wyoming.gov/water-quality/water-wastewater/",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    }
+  ],
+  "tribes": [
+    {
+      "code": "NN",
+      "name": "Navajo Nation",
+      "routes": {
+        "water": {
+          "title": "Navajo Nation Environmental Protection Agency - Surface & Groundwater Protection Department - Public Water Systems Supervision Program",
+          "url": "https://navajoepa.org/public-water-systems-supervision-program",
+          "source": "https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"
+        }
+      }
+    }
+  ],
+  "tribal_directory": {
+    "title": "EPA Tribal Drinking Water Programs",
+    "url": "https://www.epa.gov/tribaldrinkingwater",
+    "source": "https://www.epa.gov/tribaldrinkingwater"
+  }
+}

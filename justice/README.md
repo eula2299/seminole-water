@@ -12,7 +12,7 @@ This adds six help tiles to the existing national lookup and an accessible `/hel
 - Bill extraction and editable arithmetic including credits. This does not validate an unconnected utility tariff, assert an illegal overcharge or stop a shutoff.
 - Step-by-step inspection, assistance, complaint, unfair-treatment, lab-question and follow-up letters. An address check can pass its temporary contact token to help, allowing reuse of the existing verified-contact finder.
 - On-device filling of the verified official USDA RD 3550-35 intake. Unicode font supports the offered languages. No signatures, Social Security numbers, missing facts or eligibility findings are inserted. The resident reviews the original form and submits through USDA's office. Other programs use their official pages; there is no claim that every government's application portal is integrated.
-- Denver and Pittsburgh live meeting calendars, agenda links, applicable speaking-registration deadlines and official signup instructions. Unsupported places get a government directory, not invented meetings.
+- Denver and Pittsburgh live meeting calendars, agenda links, applicable speaking-registration deadlines and official signup instructions. The nationwide finder additionally searches current official pages and verifies exact quotes before showing a meeting or deadline. It links to the published page for speaking instructions.
 - Shared group requests with separate organizer/invitation capabilities. Invitees explicitly consent to their names being given to the organizer for that request. Names are not public and are not represented as verified signatures. Nothing is sent to an official automatically.
 - Device-local progress, attachments, receipts and follow-up dates are encrypted at rest with AES-GCM and a password-derived key. The key stays in memory and locks after inactivity. Password-encrypted export/import works on HTTPS. Residents can instead continue without saving; that option keeps records in memory only and loses them on refresh. Assistance received is distinct from potential savings. Clearing browser storage can erase local data; the UI explains this.
 
@@ -21,7 +21,7 @@ This adds six help tiles to the existing national lookup and an accessible `/hel
 Use the existing Node/Python/PostgreSQL app deployment, with `npm ci` and `npm start`. This is not a static-only site. Runtime dependencies and official form/font assets are part of the repository.
 
 - `GEMINI_API_KEY`: existing AI key; without it the document reader, calculators, letters and local progress still work.
-- `WATER_HELP_AI_MODEL`: optional; default `gemini-3.5-flash-lite`, a current model recommended in Google's model/deprecation documentation, checked 2026-10-31. No grounding/search billing is enabled. The API project's own billing and quota settings remain authoritative.
+- `WATER_HELP_AI_MODEL`: optional; default `gemini-3.5-flash-lite`, a current model recommended in Google's model/deprecation documentation, checked 2026-10-31. The local-help finder uses Google Search grounding with the same bounded AI quota. Only city, state and topic are sent; street addresses and private documents are excluded. The API project's own billing and quota settings remain authoritative.
 - `WATER_HELP_AI_DAILY_LIMIT`: optional; default 200 calls per process per UTC day. Multiple instances need a shared quota if a deployment-wide cap is required.
 - `DATABASE_URL`: existing Postgres connection enables shared requests. The new `water_help_groups` and `water_help_promises` tables are isolated from existing community data. `PGSSLMODE=require` uses certificate verification; supply a trusted CA using standard Node settings if the provider requires one.
 - Group requests expire after 90 days; expired records are inaccessible and purged at startup/use and hourly. Private organizer keys cannot be recovered. Delete is available to the organizer.
@@ -43,7 +43,7 @@ The bundled USDA form's displayed OMB expiration is 2026-11-30. After this date,
 
 ## Release status
 
-The public domain was observed on the existing Railway deployment at base commit `0f71b393396b7e44fe51ada284c38d4bad4e0020`. The user has rejected Railway. This feature branch therefore must not be merged into its automatic deployment before the replacement hosting path is selected and connected. No Railway service or subscription is created by this change.
+The user has authorized permanent Railway hosting and deployment. The app and archive remain in the existing project; no additional service or subscription is created. App deployment watches include `justice/**`. The archive now uses Railway's documented virtual-host S3 URL style and live bucket variable references. Automatic government submission is excluded by design; residents review and use official submission channels.
 
 ## Integrated tools and actual coverage
 
@@ -67,3 +67,11 @@ The public domain was observed on the existing Railway deployment at base commit
 ### Latest verification
 
 51 focused tests passed, including existing resident results/gateway contracts, source matching, SQL access control, bill math, calendar escaping, Unicode form filling, language parity, encrypted at-rest storage and the no-disk-write temporary mode. Browser checks confirmed automatic reading of the actual blank USDA form. The managed browser preview's server could not reach the Pittsburgh status feed (DNS failure); the direct server connector separately returned a real public case. This browser-to-source check remains a deployment verification item. Local AI and hosted database end-to-end checks remain unverified until the target host supplies its existing credentials.
+
+## Nationwide retrieval and local help update
+
+- A transient geocoder failure retries independent address formats. Published active community-water-system city/ZIP listings are searched separately from the boundary map; exact state and full PWSID are preserved. City directory matches are possible providers, never proof of a home connection. The first four candidates are queried even when more candidates exist, and selection retrieves a provider’s records.
+- Fixed the missing Census ACS endpoint in the request allowlist. Cached aggregate coverage status avoids repeating database-wide status work on every lookup. Removed reassuring screened tiles that were produced without completed source checks.
+- `agencies.json` includes 56 jurisdictions, 325 direct official routes and separately identified state-directory routes, sourced from EPA and USAGov. The refreshed six-language `/help/local` tool uses the existing address context and shows relevant offices immediately.
+- Local discovery uses Google Search grounding. A result must match a grounded URL, an allowed official publisher and an exact quote independently fetched from that page. Deadlines must occur in that quote. Search attribution is isolated in a sandboxed iframe; public-page retrieval checks DNS/IPs on each redirect.
+- The existing PostgreSQL database uses about 4.30 GB of its 5 GB disk, and its 3 GB import ceiling has stopped updates. The object archive also reached its 250 GB configured budget. These are operational capacity issues, not evidence that locations lack records. No paid storage expansion or deletion of retained records is part of this release. Existing published snapshots remain readable and dated.

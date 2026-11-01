@@ -518,3 +518,5 @@ dd { margin-inline-start:0; white-space:pre-wrap; }
 .directory-links { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 .directory-links button { justify-content:flex-start; text-align:start; }
 @media(max-width:540px) {.directory-links {grid-template-columns:1fr;}}
+
+.official-route{margin-block:1rem}.search-attribution{border:0;width:100%;min-height:160px}.local-results blockquote{margin:1rem 0;border-inline-start:3px solid #a3c4ba;padding-inline-start:1rem;overflow-wrap:anywhere}

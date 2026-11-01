@@ -2,6 +2,7 @@ window.WaterHelpExtended = { create(c) {
   'use strict';
   const {I,L,V,D,main,page,el,text,box,field,select,check,button,link,actions,detail,save,toast,api,tile,money,requestWizard,home,editStep,progress,configReady,getConfig}=c;
   const E=WaterHelpExtendedLogic,t=(k,v)=>I.t(V.isSessionOnly?.()&&k==='saved'?'keptForNow':V.isSessionOnly?.()&&k==='save'?'keepForVisit':k,v);
+  const local=WaterHelpLocal.create(c);
   let previousModule='water',lastAdvice='';
   const today=()=>new Date().toISOString().slice(0,10);
   async function ensure(fn){if((await V.state()).locked)return vault(fn);return fn();}
@@ -304,5 +305,5 @@ window.WaterHelpExtended = { create(c) {
     for(const id of ['lead','nitrate','arsenic','pfas','forms','bills'])detail(main,'guideTitle_'+id,d=>text(d,'guideText_'+id));
     button(main,'askAdvocate',()=>advocate('guides'),'quiet');
   }
-  return {directory,ensure,vault,forms,maintenance,assistance,billRates,treatment,escalation,submission,repairStatus,complaints,pipeMaps,commitments,promiseForm,updatePromise,advocate,reminder,guideLibrary};
+  return {local,directory,ensure,vault,forms,maintenance,assistance,billRates,treatment,escalation,submission,repairStatus,complaints,pipeMaps,commitments,promiseForm,updatePromise,advocate,reminder,guideLibrary};
 }};

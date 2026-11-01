@@ -141,7 +141,7 @@ class Store:
   import boto3
   from botocore.config import Config
   self.bucket=bucket or os.environ['AWS_S3_BUCKET_NAME']
-  self.client=client or boto3.client('s3',endpoint_url=os.environ['AWS_ENDPOINT_URL'],region_name=os.environ.get('AWS_DEFAULT_REGION','auto'),config=Config(signature_version='s3v4',connect_timeout=10,read_timeout=90,retries={'max_attempts':3},s3={'addressing_style':'path'}))
+  self.client=client or boto3.client('s3',endpoint_url=os.environ['AWS_ENDPOINT_URL'],region_name=os.environ.get('AWS_DEFAULT_REGION','auto'),config=Config(signature_version='s3v4',connect_timeout=10,read_timeout=90,retries={'max_attempts':3},s3={'addressing_style':'virtual' if (provider or os.environ.get('WAREHOUSE_STORAGE_PROVIDER'))=='railway' else 'path'}))
   self.max_total=MAX_TOTAL if max_total is None else max_total
   self.provider=provider or os.environ.get('WAREHOUSE_STORAGE_PROVIDER','s3')
   self.lease=None;self.lease_lock=threading.RLock();self.pending_bytes=0
