@@ -11,7 +11,8 @@
   let config = { ai: false, groups: false, promises: false, forms: [] },
     catalog = null,
     current = () => home(),
-    reading = false;
+    reading = false,
+    viewVersion = 0;
   const memory = {
     labText: "",
     billText: "",
@@ -122,6 +123,7 @@
     return data;
   }
   function page(title, intro, back = home) {
+    viewVersion++;
     if (window.speechSynthesis) speechSynthesis.cancel();
     reading = false;
     main.replaceChildren();
@@ -133,9 +135,23 @@
     window.scrollTo({ top: 0, behavior: "instant" });
     return main;
   }
+  async function openPage(fn) {
+    let version = viewVersion;
+    try {
+      let pending;
+      try { pending = fn(); } finally { version = viewVersion; }
+      await pending;
+    } catch {
+      if (version !== viewVersion) return;
+      const recovery = box(main, "card soft");
+      text(recovery, "error");
+      button(recovery, "tryAgain", () => openPage(fn));
+      button(recovery, "allTools", X.directory, "quiet");
+    }
+  }
   function navigate(fn) {
     current = fn;
-    return fn();
+    return openPage(fn);
   }
   function field(parent, key, type = "text", value = "", hint) {
     const label = el("label", undefined, "field");
@@ -1128,15 +1144,15 @@
       recipient: v.recipient,
       events: [],
     }));
-    officeLinks(main, kind);
+    officeLinks(main, kind, v.useAddressContext !== false);
     aiHelp(main, "letter", () => draft.value);
   }
-  function officeLinks(parent, kind) {
+  function officeLinks(parent, kind, useAddressContext = true) {
     const d = detail(parent, "sendTo", p => {
       text(p,"officeNote");
       const found=box(p,"card soft");
       const show = async () => {
-        if(!memory.action_token){found.remove();return;}
+        if(!useAddressContext||!memory.action_token){found.remove();return;}
         found.replaceChildren(el("p",t("working")));
         try{
           const lane={assistance:"afford",repair:"rent",inspection:"rent",lab:"explain"}[kind]||"followup";
@@ -1153,7 +1169,7 @@
       };
       show();
       const urls=[
-        ["waterOffice",memory.brief?.agency?.url||"https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"],
+        ["waterOffice",(useAddressContext&&memory.brief?.agency?.url)||"https://www.epa.gov/DWdata/primacy-agency-drinking-water-data"],
         ["housingOffice","https://www.usa.gov/tenant-rights"],
         ["legalAid","https://www.lsc.gov/about-lsc/what-legal-aid/i-need-legal-help"]
       ];
@@ -1854,7 +1870,6 @@
   if (location.pathname === "/help/join" && hash.get("id") && hash.get("key")) {
     current = () =>
       groupView(hash.get("id"), hash.get("key"), hash.get("owner") === "1");
-    current();
   } else {
     const route = {
       "/help/report": reportUpload,
@@ -1878,8 +1893,8 @@
       "/help/pipes":pipeForm,
     };
     current = route[location.pathname] || home;
-    current();
   }
+  await openPage(current);
 })().catch(() => {
   document.getElementById("main").textContent =
     "Help could not load. Please refresh this page. / No se pudo cargar la ayuda. Actualiza la página.";

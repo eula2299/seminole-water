@@ -49,3 +49,31 @@ test('main result keeps full evidence collapsed by default and exposes one simpl
  assert.match(CLIENT,/See all ['"]?\+?all\.length|See all /);
  assert.doesNotMatch(CLIENT,/YOUR HOUSEHOLD WATER PASSPORT/);
 });
+
+test('a corrected UCMR publication replaces the older edition instead of resurrecting removed chemicals',()=>{
+ const data=report(),system=data.systems[0];
+ const fresh={id:'ucmr5',url:'https://www.epa.gov/data',retrieved_at:'2026-10-31',sha256:'fresh'};
+ system.archive.sources=[fresh];system.archive.checked_sources=[fresh];
+ system.archive.summaries=[{...summary,source_id:'ucmr5',max_detect:3,min_detect:3}];
+ system.warehouse={sources:[{source:'ucmr5',completed_at:'2026-09-18',source_sha256:'older'}],counts:{observation:30}};
+ data.occurrence={summary:[{pwsid:system.pwsid,analytes:[{analyte:'Arsenic',unit:'µg/L',sample_results:2,non_detects:0,minimum_detected:99,maximum_detected:99},{analyte:'Removed by correction',unit:'µg/L',sample_results:1,non_detects:0,minimum_detected:88,maximum_detected:88}]}]};
+ let r=buildResidentReport(data);assert.equal(r.findings.length,1);assert.equal(r.findings[0].result,'3 µg/L');assert.equal(r.findings[0].source_sha256,'fresh');assert.equal(r.findings[0].source_checked_at,'2026-10-31');assert.equal(r.complete_evidence.water_findings,1);assert.equal(r.complete_evidence.underlying_water_observation_rows,30);
+ // A verified refreshed source with no matching rows must not resurrect the old copy either.
+ system.archive.summaries=[];system.archive.sources=[];r=buildResidentReport(data);assert.equal(r.findings.length,0);
+ // A later completed stored publication becomes the single chosen edition.
+ system.warehouse.sources[0].completed_at='2026-11-01';r=buildResidentReport(data);assert.equal(r.findings.length,2);assert.equal(r.findings[0].source_sha256,'older');
+});
+test('saved records and source gaps never acquire a fresh all-clear label',()=>{
+ const data=report();data.systems[0].archive.summaries=[{...summary,detects:0,nondetects:20,min_detect:null,max_detect:null}];data.systems[0].archive.compliance={status:'no-records-in-snapshot',records:[]};
+ data.systems[0].archive.retrieval={status:'saved',checked_at:'2026-10-30T12:00:00Z'};
+ let r=buildResidentReport(data);assert.equal(r.data_status.status,'saved');assert.equal(r.data_status.last_verified_at,'2026-10-30T12:00:00Z');assert.equal(r.address_risk_level,'verify');
+ delete data.systems[0].archive.retrieval;data.systems[0].archive.compliance.status='unavailable';
+ r=buildResidentReport(data);assert.equal(r.data_status.status,'partial');assert.equal(r.address_risk_level,'verify');assert.equal(r.findings.length,1);
+});
+test('a refreshed provider listing cannot hide missing testing records',()=>{
+ const data=report(),system=data.systems[0];system.warehouse={status:'records-returned',observation_status:'unavailable',sources:[]};
+ let r=buildResidentReport(data);assert.equal(r.data_status.status,'partial');
+ system.archive.checked_sources=[{id:'ucmr5',retrieved_at:'2026-10-31'}];
+ r=buildResidentReport(data);assert.equal(r.data_status.status,'available');
+ system.archive.truncated=true;r=buildResidentReport(data);assert.equal(r.data_status.status,'partial');assert.equal(r.complete_evidence.truncation.historical_water_summaries,true);
+});
