@@ -104,7 +104,7 @@ class ComplianceArchive:
         # is capacity-paused. Both revisions retain independent source hashes.
         directory=D.prepare(raw,work);directory['key']=base+'/'+directory['file']
         same=bool(self.receipt and self.receipt['source']['sha256']==source['sha256'])
-        raw_key=base+'/source.zip'
+        raw_key=self.receipt['raw_key'] if same else base+'/source.zip'
         receipt={'schema':D.SCHEMA,'source':source,'raw_key':raw_key,'directory':directory}
         with self.store.publication_lock():
             self.store.ensure_capacity((0 if same else source['bytes'])+directory['bytes']+1_000_000)
@@ -118,6 +118,19 @@ class ComplianceArchive:
             self.store.put_json(DIRECTORY_PREFIX+'/latest.json',receipt)
         with self.lock:self.directory_receipt=receipt;self.directory_path=directory_path
         return directory
+
+    def warm_directory(self):
+        # Restore the missing small serving index from already retained official
+        # bytes. This does not claim a new source check or rebuild compliance.
+        with self.lock:receipt=self.receipt;available=bool(self.directory_path)
+        if available or not receipt:return False
+        self.store.check_publication_lease()
+        with tempfile.TemporaryDirectory(prefix='directory-',dir=self.root) as temporary:
+            work=pathlib.Path(temporary);raw=work/'source.zip';source=receipt['source']
+            self.store.verify_size(receipt['raw_key'],source['bytes'])
+            self.store.get(receipt['raw_key'],raw,source['sha256'])
+            self.publish_directory(raw,work,source,PREFIX+'/data/'+source['sha256'])
+        return True
 
     def refresh(self):
         self.phase='acquiring';self.error=None

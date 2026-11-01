@@ -502,7 +502,7 @@ def pws_report(pwsid,include_compliance=True):
 
 def loop(stop=None,store_factory=Store,discover_fn=discover):
  global ENVIRONMENTAL_ARCHIVE,COMPLIANCE_ARCHIVE,WELL_ARCHIVE
- stop=stop or threading.Event();store=None;next_catalogue=0;pending_retries={};compactor=CapacityCompactor()
+ stop=stop or threading.Event();store=None;next_catalogue=0;pending_retries={};compactor=CapacityCompactor();directory_bootstrap_attempted=False;chemistry_deferred=False
  with LOCK:STATE['serving_ready']=False;STATE['restore_pending']=[]
  def attempt(source,action):
   try:
@@ -573,6 +573,13 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
      with LOCK:
       STATE['ingestion_status']='cycle-complete-with-gaps' if STATE['errors'] else 'cycle-complete'
       STATE['current_archive']=None;STATE['last_capacity_retry_at' if capacity else 'last_publication_retry_at']=utc()
+   if chemistry_deferred:
+    directory_failure=pending_retries.get('directory')
+    # Resume normal refresh after bootstrap succeeds, or recovery reaches its
+    # existing attempt/candidate bounds. Never hide already restored chemistry.
+    exhausted=directory_failure and isinstance(directory_failure['error'],StorageBudgetExceeded) and not compactor.can_recover(store,pending_retries,inventory['bytes']) and not capacity_retry_ready(directory_failure,inventory['bytes'],store.max_total,time.monotonic()) and time.monotonic()-directory_failure['at']>=60
+    if not directory_failure or exhausted:
+     chemistry_deferred=False;next_catalogue=0;continue
    # Restore blocked published snapshots before spending minutes downloading
    # additional historical backfill. Existing query endpoints remain available.
    capacities=[f for f in pending_retries.values() if isinstance(f['error'],StorageBudgetExceeded)]
@@ -613,6 +620,14 @@ def loop(stop=None,store_factory=Store,discover_fn=discover):
    if restore_pending:
     with LOCK:STATE['ingestion_status']='restoring'
     stop.wait(STORAGE_RETRY_SECONDS);continue
+   if not directory_bootstrap_attempted and COMPLIANCE_ARCHIVE and hasattr(COMPLIANCE_ARCHIVE,'warm_directory'):
+    directory_bootstrap_attempted=True
+    attempt('directory',COMPLIANCE_ARCHIVE.warm_directory)
+    if 'directory' in pending_retries:
+     # Reuse the bounded recovery/retry loop before any full unchanged-source
+     # downloads. HTTP serving is already ready from the verified receipts.
+     chemistry_deferred=True;next_catalogue=time.monotonic()+max(1,int(os.environ.get('WAREHOUSE_REFRESH_HOURS','168')))*3600
+     continue
    for item in items:
     if stop.is_set():break
     attempt(item['id'],lambda item=item:ingest(store,item))

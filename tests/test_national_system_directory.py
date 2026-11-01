@@ -94,6 +94,19 @@ class SystemDirectoryTests(unittest.TestCase):
         self.assertEqual(a.status()['directory']['source']['checked_at'],'2026-11-15T00:00:00Z')
         self.assertEqual(self.create('restart').status()['directory']['source']['checked_at'],'2026-11-15T00:00:00Z')
 
+    def test_missing_directory_warms_from_verified_retained_zip_without_live_fetch_or_compliance_rebuild(self):
+        a=self.create();a.refresh();old=dict(a.receipt);old.pop('directory')
+        with self.store.publication_lock():self.store.put_json(C.PREFIX+'/latest.json',old)
+        self.store.client.objects.pop(C.DIRECTORY_PREFIX+'/latest.json')
+        restarted=self.create('warm');restarted.fetcher=mock.Mock(side_effect=AssertionError('No live source download'))
+        with mock.patch.object(C,'prepare',side_effect=AssertionError('No compliance rebuild')),mock.patch.object(self.store,'put',wraps=self.store.put) as put:
+            self.assertTrue(restarted.warm_directory())
+        self.assertEqual([c.args[0] for c in put.call_args_list],[restarted.directory_receipt['directory']['key']])
+        self.assertEqual(restarted.directory_receipt['source'],old['source'])
+        self.assertEqual(restarted.receipt,old);self.assertEqual(restarted.directory_system('WA0000001')['records'],self.rows)
+        with mock.patch.object(self.store,'get',side_effect=AssertionError('Existing directory stays active')):
+            self.assertFalse(restarted.warm_directory())
+
     def test_receipt_mismatch_and_query_injection_are_rejected_or_literal(self):
         a=self.create();a.refresh();item=dict(a.receipt['directory']);item['source_rows']+=1
         with self.assertRaisesRegex(ValueError,'row-count'):D.restore(self.store,item,self.root/'bad')
