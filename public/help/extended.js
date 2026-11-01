@@ -63,7 +63,18 @@ window.WaterHelpExtended = { create(c) {
         button(main,'downloadForm',async()=>D.download(await D.fillUploadedForm(spec,values),'completed-form-review.pdf'));
         button(main,'submissionHelp',()=>submission({title:spec.name,document:usable.map(f=>(f.label||t('questionNumber',{number:f.number}))+': '+(values[f.id]??'')).join('\n')}),'quiet');
       }
-      step(0);
+      page('formHelp','formHelpIntro',forms);
+      const talk=document.createElement('button');talk.type='button';talk.textContent='Fill this out by voice';main.append(talk);
+      button(main,'continue',()=>step(0),'quiet');
+      talk.onclick=async()=>{talk.disabled=true;try{
+        const response=await api('/api/national/form-voice',{fields:usable.map(f=>({id:f.id,label:f.label,type:f.type,options:f.options,filled:values[f.id]!==''&&values[f.id]!==undefined&&values[f.id]!==false}))});
+        if(!talk.isConnected)return;
+        const voiceBox=box(main),answers=el('dl');main.append(answers);
+        const paint=()=>{answers.replaceChildren();for(const f of usable)answers.append(el('dt',f.label),el('dd',String(values[f.id]??'')));};paint();
+        WaterVoice.mount(voiceBox,{voice_token:response.voice_token,form_mode:true,onFormAnswer:answer=>{if(!voiceBox.isConnected)return;const f=usable.find(f=>f.id===answer.field_id);if(!f)return;values[f.id]=answer.value;paint();}});
+        button(main,'review',()=>{WaterVoice.stop();review();});
+      }catch{talk.disabled=false;toast(t('tryAgain'));}};
+
     }catch{toast(t('readFileError'));}});
     text(b,'readsAutomatically','fine');
   }

@@ -22,6 +22,7 @@
   const status=el('p','Talk through your questions. End the call when you’re done.','voice-status');status.setAttribute('role','status');
   const captions=el('details',null,'voice-captions'),log=el('div',null,'voice-log');captions.append(el('summary','Show conversation captions'),log);
   box.append(top,consent,actions,status,captions,el('p','AI can make mistakes. These are public records, not a test of your own water.','voice-note'));parent.append(box);
+  if(data.form_mode){title.textContent='Let’s fill out your form';heading.lastElementChild.textContent='Answer aloud. Your answers will appear for review before you download the PDF.';consent.firstElementChild.textContent='Google Gemini receives the form questions and what you say. Google may use this information to improve its products, and people at Google may review it. Your PDF stays in your browser. Do not speak passwords, bank details or government ID numbers.';}
   let selectedLane=null;
   let stream=null,ctx=null,source=null,processor=null,silent=null,socket=null,stopped=true,muted=false,ready=false,activeNodes=new Set(),playAt=0,clock=null,deadline=0,attempt=0,lastSpeaker='',captionRow=null,lastTurn=true;
   const stopAudio=()=>{for(const n of activeNodes){try{n.stop();}catch{}}activeNodes.clear();playAt=ctx?.currentTime||0;};
@@ -56,6 +57,7 @@
      if(m.type==='ready'){clearInterval(clock);ready=true;mute.hidden=false;mute.textContent='Mute microphone';mute.setAttribute('aria-pressed','false');box.classList.add('is-live');deadline=m.seconds?Date.now()+m.seconds*1000:Infinity;const tick=()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));status.textContent=(!ready?'Reconnecting your call…':muted?'Microphone muted':'Call connected — speak naturally');if(!left)stop('Your call has ended. Your drafts, testing options, and next steps are still here.');};tick();clock=setInterval(tick,500);}
      else if(m.type==='reconnecting'){ready=false;status.textContent='Reconnecting your call…';}
      else if(m.type==='audio')play(m.data,m.rate);
+     else if(m.type==='form-answer')data.onFormAnswer?.(m.answer);
      else if(m.type==='action')window.WaterActions?.present(m.action);
      else if(m.type==='caption')caption(m.speaker,m.text);
      else if(m.type==='interrupted'){stopAudio();lastTurn=true;}
