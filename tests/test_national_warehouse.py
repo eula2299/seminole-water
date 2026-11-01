@@ -244,11 +244,11 @@ class LosslessCompactionTests(unittest.TestCase):
 class CapacityRecoveryTests(unittest.TestCase):
  def test_retry_needs_time_recovered_bytes_and_complete_reservation(self):
   failure={'error':W.StorageBudgetExceeded(950_000_000,300_000_000,1_000_000_000),'at':100}
-  self.assertFalse(W.capacity_retry_ready(failure,600_000_000,1_000_000_000,1899))
-  self.assertFalse(W.capacity_retry_ready(failure,900_000_000,1_000_000_000,1900))
-  self.assertFalse(W.capacity_retry_ready(failure,800_000_000,1_000_000_000,1900))
-  self.assertTrue(W.capacity_retry_ready(failure,600_000_000,1_000_000_000,1900))
-  self.assertFalse(W.capacity_retry_ready(failure,950_000_000,2_000_000_000,1900))
+  self.assertFalse(W.capacity_retry_ready(failure,600_000_000,1_000_000_000,159))
+  self.assertFalse(W.capacity_retry_ready(failure,900_000_000,1_000_000_000,160))
+  self.assertFalse(W.capacity_retry_ready(failure,800_000_000,1_000_000_000,160))
+  self.assertTrue(W.capacity_retry_ready(failure,600_000_000,1_000_000_000,160))
+  self.assertFalse(W.capacity_retry_ready(failure,950_000_000,2_000_000_000,160))
  def test_storage_exception_carries_exact_reservation_without_changing_limit(self):
   client=MemoryS3();client.put_object(Key='existing',Body=b'1234567')
   store=W.Store(client=client,bucket='test',max_total=10);store.pending_bytes=2
@@ -351,3 +351,61 @@ class PublicationRecoveryTests(unittest.TestCase):
     W.loop(stop=Stop(),store_factory=lambda:store,discover_fn=lambda:[{'id':'ucmr5'}])
    self.assertEqual(calls,[60]);self.assertNotIn('ucmr5',W.STATE['errors'])
   finally:W.STATE.clear();W.STATE.update(saved)
+
+class AutomaticCapacityCompactionTests(unittest.TestCase):
+ def fixture(self,count=30):
+  items=[{'key':f'wqp/v1/data/{i}/source/spatial.sqlite','sha256':str(i).zfill(64)} for i in range(count)]
+  class Client:
+   compressed=set();reads=[]
+   def head_object(self,Bucket,Key):
+    self.reads.append(Key)
+    return {'Metadata':{'water-storage-codec':'gzip-v1'} if Key in self.compressed else {}}
+  class Store:
+   provider='railway';max_total=1_000_000_000;bucket='fixture';busy=False
+   def __init__(self):self.client=Client();self.compacted=[]
+   def check_publication_lease(self):
+    if self.busy:raise W.PublicationBusy(9999)
+   def compact_index(self,key,sha):self.compacted.append((key,sha));return 55_000_000
+  store=Store();factory=mock.Mock(return_value=items)
+  failed={'compliance':{'error':W.StorageBudgetExceeded(950_000_000,300_000_000,store.max_total),'at':0}}
+  return store,factory,failed,items
+ def test_recovery_only_skips_compressed_and_limits_one_attempt_per_minute(self):
+  store,factory,failed,items=self.fixture();compactor=W.CapacityCompactor(factory)
+  self.assertEqual(compactor.step(store,{},950_000_000,0),0)
+  self.assertEqual(compactor.step(store,failed,600_000_000,0),0);factory.assert_not_called()
+  store.client.compressed={items[0]['key']}
+  self.assertEqual(compactor.step(store,failed,950_000_000,0),55_000_000)
+  self.assertEqual(store.compacted,[(items[1]['key'],items[1]['sha256'])])
+  self.assertEqual(compactor.step(store,failed,950_000_000,59),0)
+  self.assertEqual(compactor.step(store,failed,950_000_000,60),55_000_000)
+  self.assertEqual(len(store.compacted),2);factory.assert_called_once_with(store)
+ def test_limit_is_25_attempts_per_process_not_an_unbounded_recovery_job(self):
+  store,factory,failed,items=self.fixture();compactor=W.CapacityCompactor(factory)
+  for minute in range(40):compactor.step(store,failed,950_000_000,minute*60)
+  self.assertEqual(compactor.attempts,25);self.assertEqual(len(store.compacted),25)
+  self.assertEqual(len(store.client.reads),25);factory.assert_called_once()
+ def test_recovery_continues_until_reclaimed_threshold_also_allows_retry(self):
+  store,factory,failed,items=self.fixture();compactor=W.CapacityCompactor(factory)
+  failed['compliance']['error']=W.StorageBudgetExceeded(998_000_000,1_000_000,store.max_total)
+  self.assertFalse(W.capacity_retry_ready(failed['compliance'],900_000_000,store.max_total,60))
+  self.assertEqual(compactor.step(store,failed,900_000_000,60),55_000_000)
+  self.assertTrue(W.capacity_retry_ready(failed['compliance'],845_000_000,store.max_total,120))
+  self.assertEqual(compactor.step(store,failed,845_000_000,120),0)
+ def test_busy_lease_prevents_candidate_download_or_compaction(self):
+  store,factory,failed,items=self.fixture();compactor=W.CapacityCompactor(factory);store.busy=True
+  with self.assertRaises(W.PublicationBusy):compactor.step(store,failed,950_000_000,0)
+  factory.assert_not_called();self.assertEqual(store.compacted,[]);self.assertEqual(compactor.attempts,0)
+  store.busy=False
+  self.assertEqual(compactor.step(store,failed,950_000_000,59),0)
+  self.assertEqual(compactor.step(store,failed,950_000_000,60),55_000_000)
+ def test_no_automatic_mutation_for_other_storage_provider_or_noncapacity_error(self):
+  store,factory,failed,items=self.fixture();compactor=W.CapacityCompactor(factory);store.provider='s3'
+  self.assertEqual(compactor.step(store,failed,950_000_000,0),0)
+  store.provider='railway';failed['compliance']['error']=ValueError('Invalid schema')
+  self.assertEqual(compactor.step(store,failed,950_000_000,0),0);factory.assert_not_called()
+ def test_failed_verification_consumes_a_bounded_attempt_without_reporting_reclaimed_space(self):
+  store,factory,failed,items=self.fixture();compactor=W.CapacityCompactor(factory)
+  store.compact_index=mock.Mock(side_effect=ValueError('Decoded index checksum mismatch'))
+  with self.assertRaisesRegex(ValueError,'checksum'):compactor.step(store,failed,950_000_000,0)
+  self.assertEqual(compactor.attempts,1)
+  self.assertEqual(compactor.step(store,failed,950_000_000,1),0)
