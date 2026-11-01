@@ -100,7 +100,8 @@ function createAi({
         },
       );
       if (!response.ok) {
-        await response.body?.cancel();
+        let reason='';try{reason=String((await response.json())?.error?.status||'').slice(0,80);}catch{}
+        console.warn(JSON.stringify({event:'help-ai-request-failed',http:response.status,reason,model,search}));
         throw Object.assign(Error("AI_UNAVAILABLE"), { status: 503 });
       }
       const raw = await response.text();

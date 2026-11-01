@@ -928,6 +928,7 @@
       values = locationFields(b, true);
     button(b, "lookupPipes", async () => {
       const data = await api("/api/help/pipes", values());
+      if(data.status==="not_connected"||data.status==="unavailable")return X.local("pipes");
       page("pipes", "pipeCaution", pipeForm);
       if (data.status !== "found")
         text(
@@ -1318,6 +1319,7 @@
       values = locationFields(b);
     button(b, "findMeetings", async () => {
       const data = await api("/api/help/meetings", values());
+      if(data.status!=="found")return X.local("meetings");
       page("meetings", "meetingIntro", meetingForm);
       if (data.status !== "found")
         text(

@@ -27,10 +27,10 @@ function createLocalHelp({ai,readPage=page,now=Date.now}={}){
    const direct=agencies({state}),result={...direct,city,kind,items:[],checked_at:new Date(now()).toISOString(),status:'official_routes',suggestions:null};
    if(!ai?.enabled)return result;
    let response;
-   try{response=await ai.discover({city,state,kind,language,official:direct.region.routes});}catch{return result;}
+   try{response=await ai.discover({city,state,kind,language,official:direct.region.routes});}catch(e){console.warn(JSON.stringify({event:"local-help-discovery-failed",reason:e.message,kind}));return result;}
    result.suggestions=suggestion(response.grounding?.searchEntryPoint?.renderedContent);
    const grounded=(response.grounding?.groundingChunks||[]).map(r=>r.web).filter(r=>r&&/^https:\/\//.test(r.uri)).slice(0,8);
-   if(!grounded.length)return result;
+   if(!grounded.length){console.warn(JSON.stringify({event:"local-help-no-grounded-sources",kind}));return result;}
    const pages=await Promise.allSettled(grounded.map(async source=>({source,page:await readPage(source.uri)})));
    const fetched=pages.filter(r=>r.status==='fulfilled').map(r=>r.value);
    const known=new Set(Object.values(direct.region.routes).map(r=>new URL(r.url).hostname));
@@ -47,6 +47,7 @@ function createLocalHelp({ai,readPage=page,now=Date.now}={}){
     result.items.push({title:matched.page.title.slice(0,200),url:matched.page.url,quote,date_label:verifiedDate,deadline_label:verifiedDeadline,checked_at:result.checked_at});
    }
    if(result.items.length)result.status='verified_pages';
+   else console.warn(JSON.stringify({event:'local-help-verification-empty',grounded:grounded.length,fetched:fetched.length,proposed:(response.result?.items||[]).length}));
    const value=result;cache.set(key,{value,expires:now()+6*3600000});if(cache.size>256)cache.delete(cache.keys().next().value);return value;
   })().then(value=>{cache.set(key,{value,expires:now()+6*3600000});if(cache.size>256)cache.delete(cache.keys().next().value);return value;});pending.set(key,work);try{return await work;}finally{pending.delete(key);}
  }
