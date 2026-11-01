@@ -451,7 +451,7 @@
   "savePrivately": "Garder ce dossier privé",
   "promisePublished": "Votre dossier est public. Conservez le lien privé de modification ci-dessous.",
   "publicUnverified": "Dossier ajouté par un utilisateur. Vérifiez la source originale.",
-  "publicUnavailable": "Le partage public n’est pas connecté dans cet aperçu. Vous pouvez préparer un dossier et le garder privé.",
+  "publicUnavailable": "Vous pouvez enregistrer ceci en privé maintenant et réessayer de le partager plus tard.",
   "updatePromise": "Mettre à jour un dossier public",
   "reported": "Enregistré",
   "in_progress": "Travaux signalés en cours",

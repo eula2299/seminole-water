@@ -22,3 +22,18 @@ test('official city registry matches city and state without importing security c
  assert.ok(localOffices('Seattle','WA').some(r=>r.url==='https://seattle.gov/'));assert.ok(!localOffices('Seattle','NY').some(r=>r.url==='https://seattle.gov/'));
  assert.ok(registry.records.length>10000);assert.ok(registry.records.every(r=>r.length===5));assert.ok(!registry.fields.some(f=>/email/i.test(f)));
 });
+test('program search hints must stay on matched official hosts and pass live-page quote verification',async()=>{
+ const valid='https://seattle.gov/utilities/discounts',unrelated='https://different-city.gov/discounts',privateUrl='https://127.0.0.1/discounts',reads=[];
+ const quote='Eligible customers may apply for a discount on their water bill.';
+ const finder=createLocalHelp({ai:{enabled:true,discover:async()=>{throw Error('SEARCH_PAUSED');},discoverPages:async({final,pages})=>final?{items:[{url:valid,quote},{url:valid,quote:'Everyone receives $900 today.'}]}:{items:[],candidate_urls:[valid,unrelated,privateUrl,'https://seattle.gov/payment?amount=10']}},readPage:async url=>{reads.push(url);return {url,title:'Water bill help',text:url===valid?quote:'City public information.',links:[]};}});
+ const r=await finder.search({city:'Seattle',state:'WA',kind:'assistance'});
+ assert.equal(r.items.length,1);assert.equal(r.items[0].url,valid);assert.equal(r.items[0].quote,quote);
+ assert.ok(!reads.includes(unrelated));assert.ok(!reads.includes(privateUrl));assert.ok(!reads.some(url=>url.includes('?amount=')));
+});
+test('specific program links outrank news and navigation, and page text excludes repeated menus',async()=>{
+ const {articleText}=require('../justice/public-pages');
+ assert.equal(articleText('<header>Menu</header><main><h1>Bill help</h1><p>Apply for assistance.</p><script>bad()</script></main><footer>More menus</footer>'),'Bill help Apply for assistance.');
+ const target='https://seattle.gov/utilities/discounts',reads=[];
+ const finder=createLocalHelp({ai:{enabled:true,discover:async()=>{throw Error('SEARCH_PAUSED');},discoverPages:async()=>({items:[]})},readPage:async url=>{reads.push(url);return {url,title:'Official page',text:'Public information.',links:url==='https://seattle.gov/'?[{title:'Seattle water wins award',url:'https://seattle.gov/news/award'},{title:'Seattle news',url:'https://seattle.gov/news'},{title:'Help paying your water bill',url:target}]:[]};}});
+ await finder.search({city:'Seattle',state:'WA',kind:'assistance'});assert.ok(reads.includes(target));assert.ok(!reads.includes('https://seattle.gov/news/award'));
+});
