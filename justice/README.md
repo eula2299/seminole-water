@@ -37,7 +37,7 @@ The bundled USDA form's displayed OMB expiration is 2026-11-30. After this date,
 
 ## Verification
 
-`npm run test:help` covers measurement qualifiers/units, cost calculations, negative bill credits, all translation keys, exact pipe matching, local-date meeting logic, cross-origin and consent checks, official form fields, AI evidence filtering and separate group privileges. Tests execute the group and commitment SQL in the embedded PostgreSQL engine PGlite, in addition to contract tests. The actual deployment still needs an authenticated Postgres smoke test and a consented test-document AI request; local credentials were unavailable. Never load test participants, sample promises or fictional agency responses into production.
+`npm run test:help` covers measurement qualifiers/units, cost calculations, negative bill credits, all translation keys, exact pipe matching, local-date meeting logic, cross-origin and consent checks, official form fields, AI evidence filtering and separate group privileges. Tests execute the group and commitment SQL in the embedded PostgreSQL engine PGlite, in addition to contract tests. The production Postgres smoke test and consented synthetic-document AI request passed on 2026-11-01, as recorded below. Never load test participants, sample promises or fictional agency responses into production.
 
 `npm run test:national` verifies the existing address, reports, action contacts, savings and voice contracts. Use the managed preview for browser checks. The report reader was exercised with a fictional PDF and image, including a less-than result. Do not use real resident records as fixtures.
 
@@ -66,7 +66,7 @@ The user has authorized permanent Railway hosting and deployment. The app and ar
 
 ### Latest verification
 
-51 focused tests passed, including existing resident results/gateway contracts, source matching, SQL access control, bill math, calendar escaping, Unicode form filling, language parity, encrypted at-rest storage and the no-disk-write temporary mode. Browser checks confirmed automatic reading of the actual blank USDA form. The managed browser preview's server could not reach the Pittsburgh status feed (DNS failure); the direct server connector separately returned a real public case. This browser-to-source check remains a deployment verification item. Local AI and hosted database end-to-end checks remain unverified until the target host supplies its existing credentials.
+51 focused tests passed, including existing resident results/gateway contracts, source matching, SQL access control, bill math, calendar escaping, Unicode form filling, language parity, encrypted at-rest storage and the no-disk-write temporary mode. Browser checks confirmed automatic reading of the actual blank USDA form. The managed browser preview's server could not reach the Pittsburgh status feed (DNS failure); the direct server connector separately returned a real public case. The later deployed Pittsburgh read, AI requests and hosted database workflow passed on 2026-11-01; see the live checks below.
 
 ## Nationwide retrieval and local help update
 
@@ -83,3 +83,5 @@ Railway deployments for the app and archive reached SUCCESS. The deployed help A
 Six public-address checks returned 174–478 water findings in Seattle, New York, Denver, Miami, Anchorage and Honolulu, with full provider IDs. This is regional verification, not proof of every property. The separate Census API now requires a key; the neighborhood context uses verified-publisher public ACS layers with exact tract identity and a runtime vintage check when no Census key is configured. Google's grounded-search quota rejected requests, so the finder now also reads verified agency directories and their relevant links directly, with independently checked quotes.
 
 The local finder also uses the official CISA .gov registry to match public city/county office websites by exact city and state. Only domain, organization, city, state and organization type are retained; security-contact email addresses are excluded. Relevant linked pages are fetched with the same IP/redirect protections and quotes are verified before display. An office's registered city is not proof of household service or program eligibility.
+
+The finder prioritizes program links over navigation and news, extracts article text without repeated site menus, and can verify additional AI-suggested informational routes on the exact official hostnames already matched to the location. These suggestions are never displayed as results unless the page is retrieved and its quote matches. Query-string, credential-bearing and unrelated-host hints are rejected.

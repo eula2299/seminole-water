@@ -451,7 +451,7 @@
   "savePrivately": "Manter privado",
   "promisePublished": "Seu registro é público. Guarde o link privado de edição abaixo.",
   "publicUnverified": "Registro enviado por um usuário. Confira a fonte original.",
-  "publicUnavailable": "O compartilhamento público não está conectado nesta prévia. Você pode preparar um registro e mantê-lo privado.",
+  "publicUnavailable": "Você pode salvar isto de forma privada agora e tentar compartilhar novamente mais tarde.",
   "updatePromise": "Atualizar um registro público",
   "reported": "Registrada",
   "in_progress": "Trabalho informado como em andamento",
