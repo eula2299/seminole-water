@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-01",
+  "checked_at": "2026-10-31",
   "baseline_commit": "e471eb3f5738d026e284a8bff9637519eae3693d",
   "nationwide_complete": false,
   "features": [
@@ -68,12 +68,12 @@
         "Gemini",
         "lookup context"
       ],
-      "coverage": "15-minute calls; resident controls drafts",
+      "coverage": "15-minute calls; deployment-wide attempt limit; resident controls drafts",
       "test_files": [
         "tests/national_voice.test.js",
         "tests/national_action_ui.test.js"
       ],
-      "remaining": "Full live audio-call acceptance remains unrecorded"
+      "remaining": "Live Gemini greeting returned audio and captions; actual microphone and full 15-minute conversation remain untested"
     },
     {
       "feature": "contact and feedback",
@@ -89,7 +89,7 @@
         "tests/simple_frontend.test.js",
         "tests/community.test.js"
       ],
-      "remaining": "Browser regression after release"
+      "remaining": "Desktop browser layouts verified; malformed response and private-error protections covered by tests"
     },
     {
       "feature": "lab upload and explanations",
@@ -282,12 +282,12 @@
         "Gemini",
         "shared PostgreSQL UTC-day counter"
       ],
-      "coverage": "Six languages; Arabic RTL; deployment-wide help-AI daily cap",
+      "coverage": "Six languages; Arabic RTL; deployment-wide help-AI and voice daily caps",
       "test_files": [
         "tests/help_expanded.test.js",
         "tests/help_server.test.js"
       ],
-      "remaining": "Live screen-reader/audio and global voice budget remain separate checks"
+      "remaining": "Live screen-reader and microphone acceptance"
     },
     {
       "feature": "national imports and archive",
@@ -300,13 +300,50 @@
         "published snapshots",
         "object evidence archive"
       ],
-      "coverage": "Retained data readable; fresh imports capacity-paused",
+      "coverage": "Retained data readable; checksum freshness checks at existing database limit; lossless archive compaction deployed",
       "test_files": [
         "tests/national_warehouse.test.js",
         "tests/test_national_warehouse.py",
         "tests/test_national_compliance_archive.py"
       ],
-      "remaining": "Storage approval and fresh publication verification required"
+      "remaining": "Changed PostgreSQL snapshots still need a space-efficient import strategy; archive batch recovery in progress without budget increase"
     }
-  ]
+  ],
+  "continuation_verification": {
+    "deployed_initial_release": "38a84456a8cdbf4e9167fcf3bc424eda79799bbe",
+    "help_tests_passed": 39,
+    "national_tests_passed": 257,
+    "national_tests_skipped": 1,
+    "original_node_tests_passed": 197,
+    "original_python_tests_passed": 4,
+    "warehouse_compliance_python_tests_passed": 26,
+    "environmental_python_tests_passed": 14,
+    "browser_checks": [
+      "Denver example: 132.95 base + 27.50 drought + 20.91 fixed = 181.36",
+      "Six languages retain inputs and translate calculated result labels",
+      "Arabic RTL form inspected at 390px",
+      "Keyboard Tab reaches next button",
+      "Live GA4 endpoint returns changing source totals",
+      "Live help-AI request preserves synthetic lead quote, unit, date and unconfirmed status",
+      "Live results: four initial findings, See more adds four, See all expands full list",
+      "Contact and feedback desktop layout inspected",
+      "Live Gemini handshake: 900 seconds, audio packets and captions received"
+    ],
+    "real_lookup_checks": [
+      "Washington DC public address: matched, DC0000002, 105 findings",
+      "Redmond public campus address: unresolved; exposed a cross-state local-directory candidate now excluded",
+      "Private-well-mode regression using a public test address: no public utility records borrowed; not a claim that this property has a well"
+    ],
+    "remaining_critical": [
+      "PostgreSQL full-snapshot import capacity",
+      "More direct official forms, pipes, tariffs, status and meeting integrations",
+      "Full live audio-call and screen-reader acceptance"
+    ],
+    "archive_recovery": {
+      "first_verified_bytes_reclaimed": 55113334,
+      "additional_batch": "running",
+      "budget_raised": false,
+      "plan_upgraded": false
+    }
+  }
 }

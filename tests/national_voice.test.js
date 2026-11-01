@@ -50,3 +50,35 @@ test('a resumed connection still ends at the original call deadline',async t=>{
  await until(()=>h.ups[1]?.sent.length);h.ups[1].receive({setupComplete:{}});await once(c,'close');
  assert.equal(h.ups[1].readyState,3);assert.equal(h.voice._reports.get(token).active,false);
 });
+
+test('voice daily counter is atomic across service restarts and separates voice from help AI',async()=>{
+ const {PGlite}=require('@electric-sql/pglite'),{createVoiceBudget}=require('../national/voice_budget');
+ const db=new PGlite(),pool={query:(q,p)=>db.query(q,p)},first=createVoiceBudget({pool}),second=createVoiceBudget({pool});
+ try{
+  assert.equal(first.shared,true);assert.equal(await first.take(3),true);assert.equal(await second.take(3),true);
+  assert.equal((await Promise.all([first.take(3),second.take(3),first.take(3)])).filter(Boolean).length,1);
+  assert.equal(await createVoiceBudget({pool}).take(3),false);
+  assert.equal((await db.query('SELECT calls FROM water_voice_budget')).rows[0].calls,3);
+  assert.equal((await db.query("SELECT count(*)::int AS n FROM information_schema.tables WHERE table_name='water_help_ai_budget'")).rows[0].n,0);
+ }finally{await db.close();}
+});
+
+test('shared cap and counter outage stop a provider call without exposing database errors',async t=>{
+ for(const take of [async()=>false,async()=>{throw new Error('secret database password');}]){
+  const h=await harness(t,{budget:{shared:true,take,close:async()=>{}}}),token=h.voice.remember(sample),client=await h.client();
+  client.send(JSON.stringify({type:'start',token,consent:true}));const [raw]=await once(client,'message');
+  const result=JSON.parse(raw);assert.equal(result.type,'ended');assert.doesNotMatch(result.message,/secret|database|password/);
+  await once(client,'close');assert.equal(h.ups.length,0);assert.equal(h.voice._reports.get(token).active,false);
+ }
+});
+
+test('pending admission cannot be duplicated or release another active report, and cancellation avoids provider use',async t=>{
+ let resolve;let attempts=0;
+ const h=await harness(t,{maxConcurrent:3,budget:{shared:true,take:()=>{attempts++;return new Promise(r=>{resolve=r;});},close:async()=>{}}});
+ const token=h.voice.remember(sample),first=await h.client(),start=JSON.stringify({type:'start',token,consent:true});
+ first.send(start);first.send(start);await until(()=>attempts===1);
+ const second=await h.client();second.send(start);await once(second,'close');
+ assert.equal(h.voice._reports.get(token).active,true);assert.equal(attempts,1);
+ first.send(JSON.stringify({type:'end'}));await once(first,'close');resolve(true);await sleep(20);
+ assert.equal(h.ups.length,0);assert.equal(h.voice._reports.get(token).active,false);assert.equal(attempts,1);
+});

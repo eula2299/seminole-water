@@ -29,9 +29,9 @@
       credentials: 'same-origin',
       ...options,
       headers: options.body ? { 'Content-Type': 'application/json', ...(options.headers || {}) } : (options.headers || {})
-    });
+    }).catch(() => { throw new Error(t('Please check your connection and try again.', 'Revise su conexión e inténtelo de nuevo.')); });
     let data = {};
-    try { data = await response.json(); } catch {}
+    try { data = await response.json(); } catch { throw new Error(t('We could not finish that. Please try again.', 'No pudimos completar esto. Inténtelo de nuevo.')); }
     if (!response.ok) throw new Error(data.error || 'Something went wrong.');
     return data;
   }

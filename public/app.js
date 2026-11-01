@@ -347,7 +347,7 @@ async function boot() {
       select.insertAdjacentHTML('beforeend', `<option value="${esc(system.pwsid)}">${esc(cleanName(system.name))}</option>`);
     }
   } catch (error) {
-    summary.textContent = 'The water-data service could not be loaded. Start the local server and refresh this page.';
+    summary.textContent = 'We could not load your water information. Please refresh this page.';
   }
 }
 
@@ -377,7 +377,7 @@ document.querySelector('#form').addEventListener('submit', async event => {
     output.innerHTML = simpleReport(data);
     output.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (error) {
-    output.innerHTML = `<section class="empty-state error-state"><div class="state-icon">!</div><h2>We could not complete the check</h2><p>${esc(error.message)}</p></section>`;
+    output.innerHTML = `<section class="empty-state error-state"><div class="state-icon">!</div><h2>We could not complete the check</h2><p>Please check your connection and try again. Your address is still in the form above.</p></section>`;
   }
 });
 

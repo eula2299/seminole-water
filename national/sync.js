@@ -84,16 +84,24 @@ async function importArchive(file,source,job,{url=SOURCES[source]?.url,batchSize
 async function syncSource(source,{warehouse,fetchImpl=fetch,inputFile,sourceUrl,force=false,freshnessMs=7*86400000,log=console.log}={}){
  if(!SOURCES[source])throw new Error('UNKNOWN_SOURCE');
  const own=!warehouse;if(own)warehouse=createWarehouse();
- let job,temp;
+ let job,temp,capacityProbe=null;
  try{
   if(!force&&!inputFile){
    const status=await warehouse.status();const active=status.sources.find(s=>s.source===source);
    if(active?.run_id&&Date.now()-new Date(active.checked_at||active.completed_at).getTime()<freshnessMs)return {source,status:'fresh',run_id:active.run_id};
-   // A persisted capacity failure must not redownload the same national ZIP
-   // every hour or restart while the database still has no import capacity.
-   if(active?.latest_attempt?.error_code==='DATABASE_STORAGE_BUDGET_EXCEEDED'){
+   // Keep checking unchanged sources even when a new snapshot cannot fit.
+   // A full-file checksum is required; HEAD dates and sizes are not proof.
+   // Persisted attempt time bounds this to once per normal refresh interval
+   // (at least one day), including after failed network checks or restarts.
+   if(active?.latest_attempt&&typeof warehouse.importCapacity==='function'){
     const capacity=await warehouse.importCapacity();
-    if(!capacity.can_import){const result={source,status:'storage-paused',...capacity};log({event:'source-capacity-paused',...result});return result;}
+    if(!capacity.can_import){
+     const attempted=Date.parse(active.latest_attempt.started_at);
+     if(!Number.isFinite(attempted)||Date.now()-attempted<Math.max(86400000,freshnessMs)){
+      const result={source,status:'storage-paused',...capacity};log({event:'source-capacity-paused',...result});return result;
+     }
+     capacityProbe=capacity;log({event:'source-capacity-check',source,...capacity});
+    }
    }
   }
   // Lock is acquired before network work to avoid duplicate downloads across web replicas.
@@ -106,6 +114,13 @@ async function syncSource(source,{warehouse,fetchImpl=fetch,inputFile,sourceUrl,
   else {temp=await fsp.mkdtemp(path.join(os.tmpdir(),'national-water-'));file=path.join(temp,'source.zip');meta=await download(url,file,{maxBytes:SOURCES[source].maxBytes,fetchImpl,log});}
   await job.metadata({...meta,url});
   if(await job.activeHash()===meta.sha256){await job.unchanged();log({event:'source-unchanged',source,sha256:meta.sha256});return {source,status:'unchanged',...meta};}
+  // A changed source remains paused before any records are inserted. An
+  // unchanged checksum above refreshes only the last-checked timestamp.
+  if(capacityProbe){
+   await job.fail('DATABASE_STORAGE_BUDGET_EXCEEDED');job=null;
+   const result={source,status:'storage-paused',...capacityProbe,source_changed:true};
+   log({event:'source-capacity-paused',...result});return result;
+  }
   const imported=await importArchive(file,source,job,{url,log});
   await job.publish();log({event:'source-published',source,...imported,...meta});
   return {source,status:'published',...imported,...meta};
