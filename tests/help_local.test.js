@@ -17,3 +17,8 @@ test('official-directory reading continues when the search provider rejects its 
  let reads=0;const finder=createLocalHelp({ai:{enabled:true,discover:async()=>{throw Error('SEARCH_PAUSED');},discoverPages:async({pages})=>({items:[{url:pages[0].url,quote:'Call our office for help paying your water bill.',date_label:'',deadline_label:''}]})},readPage:async url=>{reads++;return {url,title:'Official assistance',text:'Call our office for help paying your water bill.',links:[]};}});
  const r=await finder.search({city:'Example',state:'NY',kind:'assistance'});assert.equal(r.items.length,1);assert.equal(r.status,'verified_pages');assert.ok(reads>=1);
 });
+test('official city registry matches city and state without importing security contacts',()=>{
+ const {localOffices}=require('../justice/local-help');const registry=require('../justice/governments.json');
+ assert.ok(localOffices('Seattle','WA').some(r=>r.url==='https://seattle.gov/'));assert.ok(!localOffices('Seattle','NY').some(r=>r.url==='https://seattle.gov/'));
+ assert.ok(registry.records.length>10000);assert.ok(registry.records.every(r=>r.length===5));assert.ok(!registry.fields.some(f=>/email/i.test(f)));
+});
