@@ -2,6 +2,7 @@
 const crypto=require('node:crypto');
 const catalog=require('./agencies.json');
 const governments=require('./governments.json');
+const programs=require('./program-pages.json');
 const {page,plain}=require('./public-pages');
 const clean=(v,n=120)=>typeof v==='string'?v.trim().replace(/[\x00-\x1f]/g,' ').slice(0,n):'';
 const normalizeUrl=v=>{try{const u=new URL(v);u.hash='';return u.href;}catch{return '';}};
@@ -16,9 +17,9 @@ function localOffices(city,state,tribal=false){
  const name=place(city);if(!name)return [];
  return governments.records.filter(r=>r[4]===state&&place(r[3])===name&&(r[1]!=='Tribal'||tribal)&&(r[1]!=='Special district'||/water|sewer|utilit/i.test(r[2]))).sort((a,b)=>Number(b[0]===name+'.gov')-Number(a[0]===name+'.gov')||Number(b[1]==='City')-Number(a[1]==='City')||a[0].length-b[0].length).slice(0,3).map(r=>({title:r[2],url:'https://'+r[0]+'/',type:r[1],city:r[3],state:r[4],source:governments.source,checked_at:governments.checked_at}));
 }
-function agencies({state='',city='',tribal=false}={}){
+function agencies({state='',city='',kind='',tribal=false}={}){
  const code=clean(state,2).toUpperCase(),region=catalog.jurisdictions.find(r=>r.code===code);
- return {local_offices:localOffices(city,code,tribal),checked_at:catalog.checked_at,jurisdictions:catalog.jurisdictions.map(r=>({code:r.code,name:r.name})),region:region||null,tribal:tribal?catalog.tribal_directory:null,tribes:tribal?catalog.tribes:[]};
+ return {programs:programs.pages.filter(r=>r.state===code&&place(r.city)===place(city)&&(!kind||r.kinds.includes(kind))).map(r=>({...r,checked_at:programs.checked_at})),local_offices:localOffices(city,code,tribal),checked_at:catalog.checked_at,jurisdictions:catalog.jurisdictions.map(r=>({code:r.code,name:r.name})),region:region||null,tribal:tribal?catalog.tribal_directory:null,tribes:tribal?catalog.tribes:[]};
 }
 function createLocalHelp({ai,readPage=page,now=Date.now}={}){
  const cache=new Map(),suggestions=new Map(),pending=new Map();
@@ -36,7 +37,7 @@ function createLocalHelp({ai,readPage=page,now=Date.now}={}){
   if(city.length<2||!catalog.jurisdictions.some(r=>r.code===state)||!['assistance','meetings','pipes','repairs','bill','support'].includes(kind))throw Object.assign(Error('LOCATION_REQUIRED'),{status:400});
   const key=JSON.stringify([city.toLowerCase(),state,kind,language]);const old=cache.get(key);if(old&&old.expires>now())return old.value;if(pending.has(key))return pending.get(key);
   const work=(async()=>{
-   const direct=agencies({state,city}),result={...direct,city,kind,items:[],checked_at:new Date(now()).toISOString(),status:'official_routes',suggestions:null};
+   const direct=agencies({state,city,kind}),result={...direct,city,kind,items:[],checked_at:new Date(now()).toISOString(),status:'official_routes',suggestions:null};
    if(!ai?.enabled)return result;
    let response,fetched=[];
    try{response=await ai.discover({city,state,kind,language,official:direct.region.routes});}catch(e){console.warn(JSON.stringify({event:"local-help-discovery-failed",reason:e.message,kind}));}
@@ -50,7 +51,7 @@ function createLocalHelp({ai,readPage=page,now=Date.now}={}){
    // This uses public agency pages and the ordinary explanation API, not another search key/model.
    if(!fetched.length&&ai.discoverPages){
     const kinds=kind==='meetings'?['local','state']:kind==='pipes'||kind==='repairs'?['water','local','social']:['local','social','water','consumer'];
-    const officeUrls=new Set(direct.local_offices.slice(0,2).map(r=>r.url));
+    const officeUrls=new Set([...direct.programs.map(r=>r.url),...direct.local_offices.slice(0,2).map(r=>r.url)]);
     const seed=await Promise.allSettled([...new Set([...officeUrls,...kinds.map(k=>direct.region.routes[k]?.url)].filter(Boolean))].map(async url=>({...await readPage(url),cityOffice:officeUrls.has(url),localDirectory:url===direct.region.routes.local?.url})));
     const pages=seed.filter(r=>r.status==='fulfilled').map(r=>r.value),chosen=[];
     const cityLinks=new Set(pages.filter(p=>p.localDirectory).flatMap(p=>(p.links||[]).filter(l=>place(l.title).replace(/^(cityof|townof|villageof)/,'')===place(city)).map(l=>l.url)));
@@ -71,7 +72,7 @@ function createLocalHelp({ai,readPage=page,now=Date.now}={}){
       let items=await ai.discoverPages({pages,city,state,kind});
       // Model-proposed routes are only search hints. Fetch and quote-check them before display.
       // Keep these reads on the exact official hosts already matched to this city/state.
-      const hosts=new Set([...direct.local_offices.map(r=>hostOf(r.url)),...cityPages.map(p=>hostOf(p.url)),...Object.values(direct.region.routes).map(r=>hostOf(r.url))]);
+      const hosts=new Set([...direct.local_offices.map(r=>hostOf(r.url)),...direct.programs.map(r=>hostOf(r.url)),...cityPages.map(p=>hostOf(p.url)),...Object.values(direct.region.routes).map(r=>hostOf(r.url))]);
       const hints=[...new Set((Array.isArray(items.candidate_urls)?items.candidate_urls:[]).filter(url=>{
        try{const u=new URL(url);return u.protocol==='https:'&&!u.username&&!u.password&&!u.search&&!u.hash&&hosts.has(hostOf(url))&&!pages.some(p=>normalizeUrl(p.url)===normalizeUrl(url));}catch{return false;}
       }))].slice(0,4);

@@ -1,0 +1,36 @@
+{
+  "checked_at": "2026-11-01",
+  "scope": "Published informational pages. Listing a program does not establish household eligibility or available funds.",
+  "pages": [
+    {
+      "city": "Seattle", "state": "WA", "kinds": ["assistance", "bill"],
+      "title": "Utility Discount Program",
+      "url": "https://www.seattle.gov/utilities/your-services/discounts-and-incentives/utility-discount-program",
+      "source": "https://www.seattle.gov/utilities/your-services/discounts-and-incentives/utility-discount-program"
+    },
+    {
+      "city": "Seattle", "state": "WA", "kinds": ["assistance", "bill"],
+      "title": "Emergency Assistance Program",
+      "url": "https://www.seattle.gov/utilities/your-services/discounts-and-incentives/emergency-assistance-program",
+      "source": "https://www.seattle.gov/utilities/your-services/discounts-and-incentives/emergency-assistance-program"
+    },
+    {
+      "city": "Dallas", "state": "TX", "kinds": ["assistance", "bill"],
+      "title": "Operation WaterShare",
+      "url": "https://www.dallascityhall.com/departments/waterutilities/Pages/water_helping_others.aspx",
+      "source": "https://www.dallascityhall.com/departments/waterutilities/Pages/water_helping_others.aspx"
+    },
+    {
+      "city": "Dallas", "state": "TX", "kinds": ["assistance", "bill", "support"],
+      "title": "Water bill payment plans and assistance",
+      "url": "https://www.dallascityhall.com/departments/waterutilities/Pages/how_to_pay.aspx",
+      "source": "https://www.dallascityhall.com/departments/waterutilities/Pages/how_to_pay.aspx"
+    },
+    {
+      "city": "Dallas", "state": "TX", "kinds": ["repairs"],
+      "title": "Minor Plumbing Repair Program",
+      "url": "https://dallascityhall.com/departments/waterutilities/Pages/Minor-Plumbing-Repair-Program-%28MPRP%29.aspx",
+      "source": "https://dallascityhall.com/departments/waterutilities/Pages/Minor-Plumbing-Repair-Program-%28MPRP%29.aspx"
+    }
+  ]
+}

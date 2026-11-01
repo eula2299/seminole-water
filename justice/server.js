@@ -183,7 +183,7 @@ function createHelpHandler({
         );
         return true;
       }
-      if(req.method==='GET'&&u.pathname==='/api/help/agencies'){send(res,200,localHelp.agencies({state:u.searchParams.get('state')||'',city:u.searchParams.get('city')||'',tribal:u.searchParams.get('tribal')==='true'}));return true;}
+      if(req.method==='GET'&&u.pathname==='/api/help/agencies'){send(res,200,localHelp.agencies({state:u.searchParams.get('state')||'',city:u.searchParams.get('city')||'',kind:u.searchParams.get('kind')||'',tribal:u.searchParams.get('tribal')==='true'}));return true;}
       if(req.method==='GET'&&/^\/help\/search-suggestions\/[A-Za-z0-9_-]{24}$/.test(u.pathname)){
         const html=localHelp.getSuggestions(u.pathname.split('/').at(-1));
         send(res,html?200:404,html||'', 'text/html; charset=utf-8',{'Content-Security-Policy':"sandbox allow-popups allow-popups-to-escape-sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src https: data:; base-uri 'none'; frame-ancestors 'self'"});return true;
