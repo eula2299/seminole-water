@@ -14,7 +14,7 @@ async function render(privateWell,extraFindings=[],reportFields={},fixture={}){
  Object.assign(report,reportFields);
  vm.runInNewContext(client,{document:{getElementById:id=>nodes[id],createElement:t=>new Element(t)},URL,URLSearchParams,Date,Map,AbortController,setTimeout,clearTimeout,fetch:async (url,options)=>{fixture.requests?.push({url,body:options?.body?JSON.parse(options.body):null});return {ok:true,json:async()=>url==='/api/national/impact'?{analytics:{views:12345,users:6789,updated_at:'2026-10-14T12:00:00Z'},savings:{potential_savings:25,since:'2026-10-14'}}:url.startsWith('/api/national/providers?')?{providers:fixture.providers||[]}:{...fixture.data,resident_report:report}};}});
  nodes['lookup-form'].listeners.submit({preventDefault(){}});for(let i=0;i<5;i++)await new Promise(setImmediate);
- assert.equal(nodes.message.textContent,'Your report is ready.');assert.match(nodes['public-impact'].textContent,/Lifetime views 12,345 Total users 6,789/);assert.doesNotMatch(nodes['public-impact'].textContent,/savings|\$/i);return nodes.results.children;
+ assert.equal(nodes.message.textContent,'Your report is ready.');assert.equal(nodes['public-impact'].textContent,'');assert.equal(nodes['public-impact'].hidden,true);assert.doesNotMatch(nodes['public-impact'].textContent,/savings|\$/i);return nodes.results.children;
 }
 test('main result stays concise and puts see-all before next steps',async()=>{const headings=(await render(false)).map(x=>x.children[0]?.textContent);assert.match(headings[0],/YOUR WATER RESULTS/);assert.ok(!headings.includes('What the water tests found'));assert.ok(!headings.includes('Evidence behind this address profile'));});
 test('private-well main result stays concise',async()=>{const headings=(await render(true)).map(x=>x.children[0]?.textContent);assert.match(headings[0],/YOUR WATER RESULTS/);assert.ok(!headings.includes('What to test in your well'));assert.ok(!headings.includes('Water notices to check now'));});
@@ -33,7 +33,7 @@ test('results reveal only four additional entries per click, and keep full recor
  assert.ok(main.children.findIndex(x=>x.className==='complete-evidence collapsed-evidence')<main.children.findIndex(x=>x.className==='what-now'));
 });
 
-test('GA4 follows exact introduction and site-wide savings never appear in the personal plan',async()=>{
+test('public visitor counters stay hidden and site-wide savings never appear in the personal plan',async()=>{
  assert.match(HTML,/Public records do not replace a test of your own tap water\.<\/p><aside id="public-impact"/);
  const [main]=await render(false);
  const plan=main.children.find(x=>x.className==='access-plan action-plan-clean');

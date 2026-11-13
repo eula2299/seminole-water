@@ -12,13 +12,7 @@ function residentClient(){
  async function refreshImpact(){
   const box=$('public-impact');if(!box)return;
   try{const res=await fetch('/api/national/impact');if(!res.ok)return;const stats=await res.json();box.replaceChildren();
-   if(stats.analytics){
-    const totals=n('div',undefined,'reach-totals');
-    for(const [label,value] of [['Lifetime views',stats.analytics.views],['Total users',stats.analytics.users]]){const metric=n('div',undefined,'reach-metric');metric.append(n('span',label),n('strong',Number(value).toLocaleString('en-US')));totals.append(metric);}box.append(totals);
-    p(box,'Views count page views, including repeat visits. Google Analytics counts users over the same time period.','muted');
-    p(box,'Google Analytics · updated '+new Date(stats.analytics.updated_at).toLocaleString()+' · refreshes every minute; Google reporting may be delayed','muted');
-   }
-   box.hidden=!box.children.length;savingsTotals=stats.savings||null;renderSavings();
+   box.hidden=true;savingsTotals=stats.savings||null;renderSavings();
   }catch{}
  }
  refreshImpact();if(typeof window!=='undefined')window.setInterval(refreshImpact,60000);
